@@ -1,0 +1,38 @@
+services:
+  pochak-postgres:
+    image: postgres:16-alpine
+    container_name: pochak-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: pochak
+      POSTGRES_USER: pochak
+      POSTGRES_PASSWORD: pochak_dev_2026
+    volumes:
+      - pochak-pg-data:/var/lib/postgresql/data
+      - ../db/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pochak -d pochak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  pochak-redis:
+    image: redis:7-alpine
+    container_name: pochak-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - pochak-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  pochak-pg-data:
+  pochak-redis-data:

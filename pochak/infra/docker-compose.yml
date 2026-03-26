@@ -1,0 +1,168 @@
+x-service-env: &service-env
+  SPRING_DATASOURCE_URL: jdbc:postgresql://pochak-postgres:5432/pochak
+  SPRING_DATASOURCE_USERNAME: pochak
+  SPRING_DATASOURCE_PASSWORD: pochak_dev_2026
+  SPRING_REDIS_HOST: pochak-redis
+  SPRING_REDIS_PORT: 6379
+
+services:
+  # ── Dependencies ──────────────────────────────────────────────
+  pochak-postgres:
+    image: postgres:16-alpine
+    container_name: pochak-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: pochak
+      POSTGRES_USER: pochak
+      POSTGRES_PASSWORD: pochak_dev_2026
+    volumes:
+      - pochak-pg-data:/var/lib/postgresql/data
+      - ../db/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pochak -d pochak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  pochak-redis:
+    image: redis:7-alpine
+    container_name: pochak-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - pochak-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Application Services ──────────────────────────────────────
+  pochak-gateway:
+    build:
+      context: ../services/pochak-gateway
+    container_name: pochak-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *service-env
+      SERVICES_IDENTITY_URL: http://pochak-identity:8081
+      SERVICES_CONTENT_URL: http://pochak-content:8082
+      SERVICES_COMMERCE_URL: http://pochak-commerce:8083
+      SERVICES_OPERATION_URL: http://pochak-operation:8084
+      SERVICES_ADMIN_URL: http://pochak-admin:8085
+      JWT_SECRET: pochak-jwt-secret-key-for-development-only-minimum-256-bits-long-enough
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3100,http://localhost:8097
+    depends_on:
+      pochak-postgres:
+        condition: service_healthy
+      pochak-redis:
+        condition: service_healthy
+
+  pochak-identity:
+    build:
+      context: ../services
+      dockerfile: pochak-identity-service/Dockerfile
+    container_name: pochak-identity
+    ports:
+      - "8081:8081"
+    environment:
+      <<: *service-env
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: identity
+      KAKAO_REST_API_KEY: ${KAKAO_REST_API_KEY:-change-me}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET:-change-me}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-change-me}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-change-me}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:-change-me}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:-change-me}
+      JWT_SECRET: pochak-jwt-secret-key-for-development-only-minimum-256-bits-long-enough
+    depends_on:
+      pochak-postgres:
+        condition: service_healthy
+
+  pochak-content:
+    build:
+      context: ../services
+      dockerfile: pochak-content-service/Dockerfile
+    container_name: pochak-content
+    ports:
+      - "8082:8082"
+    environment:
+      <<: *service-env
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: content
+    depends_on:
+      pochak-postgres:
+        condition: service_healthy
+
+  pochak-commerce:
+    build:
+      context: ../services
+      dockerfile: pochak-commerce-service/Dockerfile
+    container_name: pochak-commerce
+    ports:
+      - "8083:8083"
+    environment:
+      <<: *service-env
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: commerce
+    depends_on:
+      pochak-postgres:
+        condition: service_healthy
+
+  pochak-operation:
+    build:
+      context: ../services
+      dockerfile: pochak-operation-service/Dockerfile
+    container_name: pochak-operation
+    ports:
+      - "8084:8084"
+    environment:
+      <<: *service-env
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: operation
+    depends_on:
+      pochak-postgres:
+        condition: service_healthy
+
+  pochak-admin:
+    build:
+      context: ../services
+      dockerfile: pochak-admin-service/Dockerfile
+    container_name: pochak-admin
+    ports:
+      - "8085:8085"
+    environment:
+      <<: *service-env
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: admin
+    depends_on:
+      pochak-postgres:
+        condition: service_healthy
+
+  # ── Frontend Services ─────────────────────────────────────────
+  pochak-bo-web:
+    build:
+      context: ../clients/apps/bo-web
+    container_name: pochak-bo-web
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_GATEWAY_URL: http://pochak-gateway:8080
+      NEXT_PUBLIC_API_URL: http://pochak-gateway:8080/admin/api/v1
+    depends_on:
+      - pochak-gateway
+
+  pochak-public-web:
+    build:
+      context: ../clients
+      dockerfile: apps/public-web/Dockerfile
+    container_name: pochak-public-web
+    ports:
+      - "3100:3100"
+    depends_on:
+      - pochak-gateway
+
+volumes:
+  pochak-pg-data:
+  pochak-redis-data:

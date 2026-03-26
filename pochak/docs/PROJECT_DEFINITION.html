@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8">
+<title>Pochak Project Definition</title>
+<style>
+@page { size: A4; margin: 18mm 14mm; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif; font-size: 11px; line-height: 1.6; color: #1a1a1a; }
+h1 { font-size: 24px; color: #111; border-bottom: 3px solid #2563eb; padding-bottom: 8px; }
+h2 { font-size: 18px; color: #1e40af; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 24px; }
+h3 { font-size: 14px; color: #1e3a5f; margin-top: 18px; }
+table { border-collapse: collapse; width: 100%%; margin: 10px 0; font-size: 10px; }
+th { background: #f0f4ff; border: 1px solid #d1d5db; padding: 5px 7px; text-align: left; font-weight: 600; color: #1e40af; }
+td { border: 1px solid #d1d5db; padding: 4px 7px; }
+tr:nth-child(even) { background: #f9fafb; }
+code { background: #f3f4f6; padding: 1px 3px; border-radius: 3px; font-size: 10px; }
+pre { background: #1e293b; color: #e2e8f0; padding: 10px 14px; border-radius: 6px; font-size: 10px; overflow-x: auto; line-height: 1.4; }
+pre code { background: none; color: #e2e8f0; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 20px 0; }
+</style></head><body>
+<h1 id="pochak-ott-platform-project-definition-document">Pochak OTT Platform — Project Definition Document</h1>
+<blockquote>
+<p>Version: 2.0.0 | Last Updated: 2026-03-26
+Policy: POCHAK_POLICY.md v2.0.0 Confirmed</p>
+</blockquote>
+<hr />
+<h2 id="1-system-architecture">1. System Architecture</h2>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────┐
+│                        CLIENTS (Frontend)                               │
+│                                                                          │
+│  ┌─────────────┐   ┌──────────────┐   ┌───────────────┐                │
+│  │  BO Web      │   │  Public Web   │   │  Mobile App    │               │
+│  │  Next.js 16  │   │  React+Vite  │   │  RN + Expo     │               │
+│  │  :3000       │   │  :3100       │   │  :8097         │               │
+│  │  65 pages    │   │  50 pages    │   │  59 screens    │               │
+│  └──────┬───────┘   └──────┬───────┘   └──────┬─────────┘               │
+│         │                  │                   │                          │
+│  ┌──────┴──────────────────┴───────────────────┴──────┐                  │
+│  │              Shared Packages (15 files)             │                  │
+│  │  @pochak/api-client · @pochak/domain-types          │                  │
+│  │  @pochak/design-tokens · @pochak/utils              │                  │
+│  └────────────────────────────────────────────────────┘                  │
+└──────────────────────────────┬───────────────────────────────────────────┘
+                               │ HTTPS / JWT
+                               ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                      API GATEWAY (:8080)                                 │
+│                   Spring Cloud Gateway (Reactive)                        │
+│                                                                          │
+│   Filters: JWT Validation → Redis Rate Limit → Correlation ID            │
+│   Public: /home, /contents, /search, /sports, /schedule, /communities    │
+│   Admin:  /admin/** (BO 전용)                                            │
+└────┬──────────┬──────────┬──────────┬──────────┬────────────────────────┘
+     │          │          │          │          │
+     ▼          ▼          ▼          ▼          ▼
+┌─────────┐┌─────────┐┌─────────┐┌─────────┐┌─────────┐
+│Identity ││Content  ││Commerce ││Operation││ Admin   │
+│ :8081   ││ :8082   ││ :8083   ││ :8084   ││ :8085   │
+│ 66 Java ││241 Java ││ 69 Java ││ 60 Java ││103 Java │
+└────┬────┘└────┬────┘└────┬────┘└────┬────┘└────┬────┘
+     │          │          │          │          │
+     └──────────┴──────────┴──────────┴──────────┘
+                           │
+              ┌────────────┴────────────┐
+              ▼                         ▼
+     ┌──────────────┐         ┌──────────────┐
+     │ PostgreSQL 16│         │   Redis 7    │
+     │   :5432      │         │   :6379      │
+     │  5 schemas   │         │  Rate Limit  │
+     │ 18 migrations│         │  Cache       │
+     └──────────────┘         └──────────────┘
+</code></pre>
+<hr />
+<h2 id="2-service-inventory">2. Service Inventory</h2>
+<h3 id="21-backend-services">2.1 Backend Services</h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Port</th>
+<th>Schema</th>
+<th>Java Files</th>
+<th>Key Domains</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>pochak-gateway</strong></td>
+<td>8080</td>
+<td>—</td>
+<td>11</td>
+<td>JWT, Rate Limit, CORS, Routing</td>
+</tr>
+<tr>
+<td><strong>pochak-identity-service</strong></td>
+<td>8081</td>
+<td>identity</td>
+<td>66</td>
+<td>Auth, Signup (4경로), OAuth2, User Profile</td>
+</tr>
+<tr>
+<td><strong>pochak-content-service</strong></td>
+<td>8082</td>
+<td>content</td>
+<td>241</td>
+<td>Organization (DAG), Competition, Match, Live/VOD/Clip, Tag, Membership, ACL, Search, Recommendation, Community, Home, Follow, Comment, Like, Favorite, Schedule, Highlight, Notification, Upload, Streaming</td>
+</tr>
+<tr>
+<td><strong>pochak-commerce-service</strong></td>
+<td>8083</td>
+<td>commerce</td>
+<td>69</td>
+<td>Product, Purchase, Wallet, Coupon, Refund, Entitlement, GiftBall</td>
+</tr>
+<tr>
+<td><strong>pochak-operation-service</strong></td>
+<td>8084</td>
+<td>operation</td>
+<td>60</td>
+<td>Venue, Camera, Reservation, Studio, Streaming Ingest, VPU</td>
+</tr>
+<tr>
+<td><strong>pochak-admin-service</strong></td>
+<td>8085</td>
+<td>admin</td>
+<td>103</td>
+<td>RBAC, Analytics, Banner, Notice, Popup, Event, Terms, Inquiry, Report, AppVersion, AuditLog</td>
+</tr>
+<tr>
+<td><strong>pochak-common-lib</strong></td>
+<td>—</td>
+<td>—</td>
+<td>14</td>
+<td>ApiResponse, ErrorCode, UserContext, DomainEvent, PageMeta</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-frontend-applications">2.2 Frontend Applications</h3>
+<table>
+<thead>
+<tr>
+<th>App</th>
+<th>Framework</th>
+<th>Port</th>
+<th>Pages/Screens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>BO Web</strong></td>
+<td>Next.js 16 (App Router)</td>
+<td>3000</td>
+<td>65 pages</td>
+</tr>
+<tr>
+<td><strong>Public Web</strong></td>
+<td>React 19 + Vite 8 (SPA)</td>
+<td>3100</td>
+<td>50 pages</td>
+</tr>
+<tr>
+<td><strong>Mobile App</strong></td>
+<td>React Native 0.76 + Expo 52</td>
+<td>8097</td>
+<td>59 screens</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-infrastructure">2.3 Infrastructure</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Version</th>
+<th>Port</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PostgreSQL</td>
+<td>16-alpine</td>
+<td>5432</td>
+<td>Primary DB (5 schemas)</td>
+</tr>
+<tr>
+<td>Redis</td>
+<td>7-alpine</td>
+<td>6379</td>
+<td>Rate Limiting, Cache</td>
+</tr>
+<tr>
+<td>Docker Compose</td>
+<td>—</td>
+<td>—</td>
+<td>10 containers</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-database-schema-map">3. Database Schema Map</h2>
+<pre><code>PostgreSQL (pochak)
+├── identity ─── users, user_auth_accounts, user_consents, user_preferences,
+│                user_status_history, user_refresh_tokens, user_push_tokens,
+│                user_notification_settings, user_relations,
+│                phone_verifications, email_verifications
+│
+├── content ──── sports, sport_tags, organizations, teams, memberships,
+│                competitions, competition_visits, matches, match_participants,
+│                live_assets, vod_assets, clip_assets, asset_tags,
+│                video_acl, view_history, display_sections, favorites,
+│                watch_reservations, notifications, notification_recipients,
+│                comments, follows, highlights, community_posts
+│
+├── commerce ─── products, purchases, wallets, wallet_ledger,
+│                entitlements, refunds, coupons, user_coupons, gift_balls
+│
+├── operation ── venues, cameras, venue_cameras, reservations, studio_sessions
+│
+└── admin ────── admin_users, admin_roles, admin_groups, admin_menus,
+                 admin_functions, admin_group_users, admin_group_roles,
+                 admin_role_menus, admin_role_functions, audit_logs,
+                 banners, popups, notices, events, advertisements,
+                 inquiries, inquiry_answers, reports, terms,
+                 app_versions, system_config, analytics_events
+</code></pre>
+<p><strong>Migration History</strong> (18 files):</p>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Name</th>
+<th>Tables</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>V000</td>
+<td>init_schemas</td>
+<td>5 schemas</td>
+</tr>
+<tr>
+<td>V001</td>
+<td>identity_schema</td>
+<td>11 tables</td>
+</tr>
+<tr>
+<td>V002</td>
+<td>content_schema</td>
+<td>~20 tables</td>
+</tr>
+<tr>
+<td>V003</td>
+<td>commerce_schema</td>
+<td>6 tables</td>
+</tr>
+<tr>
+<td>V004</td>
+<td>operation_schema</td>
+<td>6 tables</td>
+</tr>
+<tr>
+<td>V005</td>
+<td>admin_schema</td>
+<td>15+ tables</td>
+</tr>
+<tr>
+<td>V006</td>
+<td>org_simplification_abac</td>
+<td>4 tables</td>
+</tr>
+<tr>
+<td>V007</td>
+<td>coupon_tables</td>
+<td>2 tables</td>
+</tr>
+<tr>
+<td>V008</td>
+<td>social_features</td>
+<td>3 tables</td>
+</tr>
+<tr>
+<td>V009</td>
+<td>highlights</td>
+<td>1 table</td>
+</tr>
+<tr>
+<td>V010</td>
+<td>analytics</td>
+<td>1 table</td>
+</tr>
+<tr>
+<td>V011</td>
+<td>signup_account_system</td>
+<td>3 tables</td>
+</tr>
+<tr>
+<td>V012</td>
+<td>fix_identity_schema</td>
+<td>fixes</td>
+</tr>
+<tr>
+<td>V013</td>
+<td><strong>organization_v2_fields</strong></td>
+<td>6 columns</td>
+</tr>
+<tr>
+<td>V014</td>
+<td><strong>competition_visibility</strong></td>
+<td>2 columns + 1 table</td>
+</tr>
+<tr>
+<td>V015</td>
+<td><strong>community_posts</strong></td>
+<td>1 table</td>
+</tr>
+<tr>
+<td>V016</td>
+<td><strong>cleanup_deprecated</strong></td>
+<td>data migration</td>
+</tr>
+<tr>
+<td>V100-V101</td>
+<td>seed data</td>
+<td>initial data</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-platform-areas-policy-v2">4. Platform Areas (Policy v2)</h2>
+<h3 id="41-tv">4.1 포착 TV</h3>
+<pre><code>메인 진입점 → 개인화 피드 (추천/인기/최신)
+├── 홈 배너 (BO 관리)
+├── 라이브 경기
+├── VOD 다시보기
+├── 클립 하이라이트
+├── 대회/리그 목록
+└── 검색/추천
+</code></pre>
+<h3 id="42">4.2 포착 시티</h3>
+<pre><code>지역 기반 체육시설 → 예약 현황
+├── 시설 목록 (시/도/시/군/구 필터)
+├── 시설 상세 (예약현황, 영업시간, 연락처)
+├── 인증된 단체 (is_verified=true, BO 인증)
+├── 촬영 예약 (ALL_MEMBERS 정책)
+└── 공개 콘텐츠 (기본 PUBLIC)
+</code></pre>
+<h3 id="43">4.3 포착 클럽</h3>
+<pre><code>B2B/B2C 단체 → 가입 기반 접근
+├── 오픈 단체: 자유 가입 + 공개 콘텐츠
+├── CUG 단체: 단체 정보 공개 + 콘텐츠 제한
+│   ├── 홍보용 영상 (visibility=PUBLIC, 비회원 시청 가능)
+│   └── 회원 전용 영상 (visibility=MEMBERS_ONLY, 가입 후 시청)
+├── 커뮤니티 (소식/구인/모집, 지역 기반)
+└── 가입 정책: OPEN / APPROVAL / INVITE_ONLY
+</code></pre>
+<hr />
+<h2 id="5-api-endpoint-map">5. API Endpoint Map</h2>
+<h3 id="51-identity-service-8081">5.1 Identity Service (:8081)</h3>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/auth/login</code></td>
+<td>POST</td>
+<td>로그인</td>
+</tr>
+<tr>
+<td><code>/auth/signup</code></td>
+<td>POST</td>
+<td>국내 성인 가입</td>
+</tr>
+<tr>
+<td><code>/auth/signup/minor</code></td>
+<td>POST</td>
+<td>미성년 가입</td>
+</tr>
+<tr>
+<td><code>/auth/signup/social</code></td>
+<td>POST</td>
+<td>SNS 가입</td>
+</tr>
+<tr>
+<td><code>/auth/signup/foreign</code></td>
+<td>POST</td>
+<td>해외 가입</td>
+</tr>
+<tr>
+<td><code>/auth/phone/send-code</code></td>
+<td>POST</td>
+<td>SMS 인증코드 발송</td>
+</tr>
+<tr>
+<td><code>/auth/phone/verify-code</code></td>
+<td>POST</td>
+<td>인증코드 검증</td>
+</tr>
+<tr>
+<td><code>/auth/oauth2/callback/{provider}</code></td>
+<td>GET</td>
+<td>OAuth2 콜백</td>
+</tr>
+<tr>
+<td><code>/auth/oauth2/complete-signup</code></td>
+<td>POST</td>
+<td>OAuth 가입 완료</td>
+</tr>
+<tr>
+<td><code>/auth/refresh</code></td>
+<td>POST</td>
+<td>토큰 갱신</td>
+</tr>
+<tr>
+<td><code>/users/me</code></td>
+<td>GET/PUT</td>
+<td>프로필 조회/수정</td>
+</tr>
+<tr>
+<td><code>/users/me/preferences</code></td>
+<td>GET/PUT</td>
+<td>선호 설정</td>
+</tr>
+<tr>
+<td><code>/admin/members</code></td>
+<td>GET</td>
+<td>관리자 회원 목록</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-content-service-8082">5.2 Content Service (:8082)</h3>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/sports</code></td>
+<td>CRUD</td>
+<td>종목 관리</td>
+</tr>
+<tr>
+<td><code>/organizations</code></td>
+<td>CRUD</td>
+<td><strong>단체 관리 (DAG, display_area, CUG, join_policy)</strong></td>
+</tr>
+<tr>
+<td><code>/competitions</code></td>
+<td>CRUD</td>
+<td><strong>대회 관리 (visibility, inviteCode)</strong></td>
+</tr>
+<tr>
+<td><code>/competitions/access</code></td>
+<td>POST</td>
+<td><strong>비공개 대회 접근 (inviteCode 검증)</strong></td>
+</tr>
+<tr>
+<td><code>/competitions/visited</code></td>
+<td>GET</td>
+<td><strong>방문한 비공개 대회 목록</strong></td>
+</tr>
+<tr>
+<td><code>/matches</code></td>
+<td>CRUD</td>
+<td>경기 관리</td>
+</tr>
+<tr>
+<td><code>/contents/live</code></td>
+<td>CRUD</td>
+<td>라이브 에셋</td>
+</tr>
+<tr>
+<td><code>/contents/vod</code></td>
+<td>CRUD</td>
+<td>VOD 에셋</td>
+</tr>
+<tr>
+<td><code>/contents/clips</code></td>
+<td>CRUD</td>
+<td>클립 에셋</td>
+</tr>
+<tr>
+<td><code>/contents/tags</code></td>
+<td>CRD</td>
+<td>태그 관리</td>
+</tr>
+<tr>
+<td><code>/contents/{type}/{id}/access</code></td>
+<td>GET</td>
+<td><strong>콘텐츠 접근 권한 확인 (CUG 포함)</strong></td>
+</tr>
+<tr>
+<td><code>/memberships</code></td>
+<td>CRUD</td>
+<td>멤버십 관리 (승인/거절)</td>
+</tr>
+<tr>
+<td><code>/communities/posts</code></td>
+<td>CRUD</td>
+<td><strong>커뮤니티 게시물 (소식/구인/모집/자유)</strong></td>
+</tr>
+<tr>
+<td><code>/communities/posts/{id}/pin</code></td>
+<td>PUT</td>
+<td>게시물 고정</td>
+</tr>
+<tr>
+<td><code>/communities/posts/{id}/report</code></td>
+<td>POST</td>
+<td>게시물 신고</td>
+</tr>
+<tr>
+<td><code>/home</code></td>
+<td>GET</td>
+<td>홈 데이터</td>
+</tr>
+<tr>
+<td><code>/search</code></td>
+<td>GET</td>
+<td>통합 검색</td>
+</tr>
+<tr>
+<td><code>/recommendations</code></td>
+<td>GET</td>
+<td>추천 콘텐츠</td>
+</tr>
+<tr>
+<td><code>/follows</code></td>
+<td>POST/DELETE</td>
+<td>팔로우</td>
+</tr>
+<tr>
+<td><code>/notifications</code></td>
+<td>CRUD</td>
+<td>알림</td>
+</tr>
+</tbody>
+</table>
+<h3 id="53-commerce-service-8083">5.3 Commerce Service (:8083)</h3>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/products</code></td>
+<td>CRUD</td>
+<td>상품 관리</td>
+</tr>
+<tr>
+<td><code>/purchases</code></td>
+<td>POST/GET</td>
+<td>구매</td>
+</tr>
+<tr>
+<td><code>/wallet</code></td>
+<td>GET</td>
+<td>지갑 잔액</td>
+</tr>
+<tr>
+<td><code>/wallet/charge</code></td>
+<td>POST</td>
+<td>포인트 충전</td>
+</tr>
+<tr>
+<td><code>/wallet/use</code></td>
+<td>POST</td>
+<td>포인트 사용</td>
+</tr>
+<tr>
+<td><code>/coupons</code></td>
+<td>GET/POST</td>
+<td>쿠폰</td>
+</tr>
+<tr>
+<td><code>/refunds</code></td>
+<td>POST/GET/PUT</td>
+<td>환불</td>
+</tr>
+<tr>
+<td><code>/entitlements/check</code></td>
+<td>GET</td>
+<td>시청 권한 확인</td>
+</tr>
+</tbody>
+</table>
+<h3 id="54-operation-service-8084">5.4 Operation Service (:8084)</h3>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/venues</code></td>
+<td>CRUD</td>
+<td>경기장 관리</td>
+</tr>
+<tr>
+<td><code>/venues/search</code></td>
+<td>GET</td>
+<td>경기장 검색</td>
+</tr>
+<tr>
+<td><code>/venues/nearby</code></td>
+<td>GET</td>
+<td>주변 경기장</td>
+</tr>
+<tr>
+<td><code>/cameras</code></td>
+<td>CRUD</td>
+<td>카메라 관리</td>
+</tr>
+<tr>
+<td><code>/reservations</code></td>
+<td>CRUD</td>
+<td>촬영 예약</td>
+</tr>
+<tr>
+<td><code>/reservations/calendar</code></td>
+<td>GET</td>
+<td>캘린더 뷰</td>
+</tr>
+<tr>
+<td><code>/streaming/ingest/*</code></td>
+<td>CRUD</td>
+<td>스트리밍 인제스트</td>
+</tr>
+<tr>
+<td><code>/studio/sessions</code></td>
+<td>GET</td>
+<td>스튜디오 세션</td>
+</tr>
+</tbody>
+</table>
+<h3 id="55-admin-service-8085">5.5 Admin Service (:8085)</h3>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/admin/api/v1/auth/login</code></td>
+<td>POST</td>
+<td>BO 로그인</td>
+</tr>
+<tr>
+<td><code>/admin/api/v1/rbac/*</code></td>
+<td>CRUD</td>
+<td>RBAC 관리</td>
+</tr>
+<tr>
+<td><code>/admin/api/v1/analytics/*</code></td>
+<td>GET/POST</td>
+<td>분석</td>
+</tr>
+<tr>
+<td><code>/admin/api/v1/site/*</code></td>
+<td>CRUD</td>
+<td>배너/공지/팝업/이벤트</td>
+</tr>
+<tr>
+<td><code>/admin/api/v1/cs/*</code></td>
+<td>GET</td>
+<td>고객센터</td>
+</tr>
+<tr>
+<td><code>/admin/api/v1/app/*</code></td>
+<td>CRUD</td>
+<td>앱 버전</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-bo-web-pages-65-pages">6. BO Web Pages (65 pages)</h2>
+<h3 id="menu-structure-19-sections">Menu Structure (19 sections)</h3>
+<pre><code> 1. 종목 관리 ──────────── /sports/list
+ 2. 협회 관리 ──────────── /teams/associations
+ 3. 구장 관리 ──────────── /venues/list
+ 4. 팀/단체 관리 ────────── /teams/elite, club, private-hq, private-branch, public-org
+ 5. 대회/리그 관리 ──────── /competitions/list, schedule
+ 6. VPU 관리 ────────────── /equipment/cameras, vpu-devices, vpu-contracts
+ 7. 촬영예약 관리 ────────── /reservations, reservations/booking
+ 8. 스튜디오 관리 ────────── /studio
+ 9. 컨텐츠 관리 ──────────── /contents/live, vod, clips, tags (+ create, upload)
+10. 회원 관리 ──────────── /members/list, blacklist
+11. 커뮤니티 관리 ────────── /community/posts, reports        ★ Policy v2 신규
+12. 뽈/시즌권/환불 ──────── /commerce/* (9개 서브메뉴)
+13. 사이트 관리 ──────────── /site/popups, banners, notices, events
+14. 앱 관리 ────────────── /app-management
+15. 고객센터 관리 ────────── /support/inquiries, reports, terms
+16. 운영 관리 ──────────── /operations/members, groups, permissions, menus
+17. 모니터링 ────────────── /monitoring
+18. 통계 ──────────────── /statistics/users, views, sales
+19. 스카이라이프 계약 ────── /skylife/activation, vpu-chu
+</code></pre>
+<hr />
+<h2 id="7-key-policy-v2-implementations">7. Key Policy v2 Implementations</h2>
+<h3 id="71-organization-dag">7.1 Organization DAG (단체 자가참조 계층)</h3>
+<pre><code class="language-java">// Organization.java
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = &quot;parent_id&quot;)
+private Organization parent;  // 자가참조 DAG
+
+// 신규 필드
+private DisplayArea displayArea;      // CITY | CLUB
+private Boolean isVerified;           // 시티 인증
+private Boolean isCug;                // CUG 모드
+private JoinPolicy joinPolicy;       // OPEN | APPROVAL | INVITE_ONLY
+private ReservationPolicy reservationPolicy;  // ALL_MEMBERS | MANAGER_ONLY
+private String siGunGuCode;           // 지역 코드
+</code></pre>
+<p><strong>안전성</strong>: 순환참조 감지 + 최대 5단계 깊이 제한 (OrganizationService)</p>
+<h3 id="72-competition-visibility">7.2 Competition Visibility (비공개 대회)</h3>
+<pre><code class="language-java">// Competition.java
+private CompetitionVisibility visibility;  // PUBLIC | PRIVATE
+private String inviteCode;                 // UUID (PRIVATE 시 자동 생성)
+
+// CompetitionVisit.java — 방문 기록
+@Table(uniqueConstraints = @UniqueConstraint({&quot;user_id&quot;, &quot;competition_id&quot;}))
+private Long userId, competitionId;
+private LocalDateTime firstVisitedAt;
+</code></pre>
+<h3 id="73-cug-content-access-control">7.3 CUG Content Access Control</h3>
+<pre><code>VideoAclService.evaluateAccess():
+  1. CUG 단체 확인 (org.isCug)
+  2. visibility=PUBLIC → ALLOW (홍보용)
+  3. visibility=MEMBERS_ONLY → 멤버십 확인
+  4. 비회원 → &quot;가입 후 시청 가능&quot; DENY
+</code></pre>
+<h3 id="74-community-module">7.4 Community Module</h3>
+<pre><code class="language-java">// CommunityPost.java
+PostType: NEWS | RECRUITING | RECRUITMENT | FREE
+siGunGuCode: 지역 기반 노출
+isPinned: 관리자 고정
+
+// API: /communities/posts
+GET (list + filter), POST, PUT, DELETE, PUT pin/unpin, POST report
+</code></pre>
+<hr />
+<h2 id="8-design-system-clas-motif">8. Design System (CLAS Motif)</h2>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Primary</td>
+<td><code>#2563eb</code> (blue-600)</td>
+</tr>
+<tr>
+<td>Primary Light</td>
+<td><code>#dbeafe</code> (blue-100)</td>
+</tr>
+<tr>
+<td>Background</td>
+<td><code>#f8f9fb</code></td>
+</tr>
+<tr>
+<td>Card</td>
+<td><code>#ffffff</code>, border <code>#e5e7eb</code>, rounded-lg, shadow-sm</td>
+</tr>
+<tr>
+<td>Sidebar</td>
+<td>White, 220px, active=blue-50 + left 3px blue border</td>
+</tr>
+<tr>
+<td>Header</td>
+<td>White, 56px, bottom border</td>
+</tr>
+<tr>
+<td>Font</td>
+<td>Pretendard</td>
+</tr>
+<tr>
+<td>Status Chips</td>
+<td>완료=blue, 대기=amber, 실패=red, 활성=green</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-environment-variables">9. Environment Variables</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Service</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JWT_SECRET</td>
+<td>Gateway, Identity</td>
+<td>Yes (min 32 chars)</td>
+</tr>
+<tr>
+<td>CORS_ALLOWED_ORIGINS</td>
+<td>Gateway</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>DB_HOST/PORT/NAME/USER/PASSWORD</td>
+<td>All services</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>REDIS_HOST/PORT</td>
+<td>Gateway, Content</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>KAKAO_REST_API_KEY</td>
+<td>Identity</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>GOOGLE_CLIENT_ID</td>
+<td>Identity</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>NAVER_CLIENT_ID</td>
+<td>Identity</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>COMMERCE_SERVICE_URL</td>
+<td>Content</td>
+<td>Default: localhost:8083</td>
+</tr>
+<tr>
+<td>CDN_BASE_URL</td>
+<td>Content, Operation</td>
+<td>Default: cdn.pochak.co.kr</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10-build-run">10. Build &amp; Run</h2>
+<pre><code class="language-bash"># Full stack (10 containers)
+make all-up
+
+# Development
+make deps-up        # DB + Redis only
+make bo-dev         # BO Web dev server (:3000)
+make web-dev        # Public Web dev server (:3100)
+make mobile-dev     # Expo Metro (:8097)
+
+# Verify
+make status         # Container status
+make logs           # All logs
+</code></pre>
+<hr />
+<h2 id="11-file-counts-summary">11. File Counts Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Files</th>
+<th>Lines (est.)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Backend Java</td>
+<td>550</td>
+<td>~25,000</td>
+</tr>
+<tr>
+<td>BO Web (TSX/TS)</td>
+<td>~120</td>
+<td>~15,000</td>
+</tr>
+<tr>
+<td>Public Web (TSX/TS)</td>
+<td>~80</td>
+<td>~8,000</td>
+</tr>
+<tr>
+<td>Mobile (TSX/TS)</td>
+<td>~90</td>
+<td>~10,000</td>
+</tr>
+<tr>
+<td>SQL Migrations</td>
+<td>18</td>
+<td>~1,600</td>
+</tr>
+<tr>
+<td>Shared Packages</td>
+<td>15</td>
+<td>~500</td>
+</tr>
+<tr>
+<td>Docker/CI/Infra</td>
+<td>10</td>
+<td>~300</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>~883</strong></td>
+<td><strong>~60,000</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>End of Project Definition Document</em></p></body></html>
