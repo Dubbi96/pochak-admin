@@ -26,7 +26,7 @@ public class Competition {
     @JoinColumn(name = "sport_id", nullable = false)
     private Sport sport;
 
-    @Column(nullable = false, length = 200)
+    @Column(name = "name", nullable = false, columnDefinition = "VARCHAR(200)")
     private String name;
 
     @Column(name = "short_name", length = 50)

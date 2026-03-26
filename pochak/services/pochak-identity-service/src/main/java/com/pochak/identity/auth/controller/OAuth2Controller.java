@@ -135,6 +135,11 @@ public class OAuth2Controller {
 
         log.info("OAuth2 callback received: provider={}, state={}", provider, state);
 
+        // Prevent browser caching of OAuth redirects (fixes 304 Not Modified)
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setHeader("Expires", "0");
+
         OAuthCallbackResult result = oAuth2Service.processOAuthCallbackWithResult(provider, code);
 
         // Try to consume PKCE state (only for PKCE-initiated flows with generated state)

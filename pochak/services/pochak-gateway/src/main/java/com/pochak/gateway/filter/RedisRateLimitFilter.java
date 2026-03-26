@@ -86,7 +86,11 @@ public class RedisRateLimitFilter implements GlobalFilter, Ordered {
         String path = exchange.getRequest().getURI().getPath();
         String clientIp = resolveClientIp(exchange);
 
-        boolean isAuthRoute = path.startsWith("/api/v1/auth");
+        // OAuth callback/authorize paths are excluded from strict auth rate limit
+        // — these are redirects from OAuth providers (Google, Kakao, Naver), not user-initiated brute force
+        boolean isOAuthCallback = path.startsWith("/api/v1/auth/oauth2/callback")
+                || path.startsWith("/api/v1/auth/oauth2/authorize");
+        boolean isAuthRoute = !isOAuthCallback && path.startsWith("/api/v1/auth");
         int maxRequests = isAuthRoute ? AUTH_MAX_REQUESTS : API_MAX_REQUESTS;
         String pathPrefix = isAuthRoute ? "auth" : "api";
 

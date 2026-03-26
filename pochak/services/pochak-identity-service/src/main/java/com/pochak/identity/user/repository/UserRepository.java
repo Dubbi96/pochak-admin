@@ -36,14 +36,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
             WHERE (:status IS NULL OR u.status = :status)
               AND (:role IS NULL OR u.role = :role)
               AND (:search IS NULL
-                   OR (:searchType = 'email' AND LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')))
+                   OR (:searchType = 'email' AND LOWER(CAST(u.email AS string)) LIKE LOWER(CAST(CONCAT('%', :search, '%') AS string)))
                    OR (:searchType = 'phone' AND u.phoneNumber LIKE CONCAT('%', :search, '%'))
-                   OR (:searchType = 'nickname' AND LOWER(u.nickname) LIKE LOWER(CONCAT('%', :search, '%')))
-                   OR (:searchType = 'name' AND LOWER(u.name) LIKE LOWER(CONCAT('%', :search, '%')))
+                   OR (:searchType = 'nickname' AND LOWER(CAST(u.nickname AS string)) LIKE LOWER(CAST(CONCAT('%', :search, '%') AS string)))
+                   OR (:searchType = 'name' AND LOWER(CAST(u.name AS string)) LIKE LOWER(CAST(CONCAT('%', :search, '%') AS string)))
                    OR (:searchType IS NULL
-                       AND (LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))
-                            OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :search, '%'))
-                            OR LOWER(u.name) LIKE LOWER(CONCAT('%', :search, '%')))))
+                       AND (LOWER(CAST(u.email AS string)) LIKE LOWER(CAST(CONCAT('%', :search, '%') AS string))
+                            OR LOWER(CAST(u.nickname AS string)) LIKE LOWER(CAST(CONCAT('%', :search, '%') AS string))
+                            OR LOWER(CAST(u.name AS string)) LIKE LOWER(CAST(CONCAT('%', :search, '%') AS string)))))
             """)
     Page<User> searchMembers(@Param("status") User.UserStatus status,
                              @Param("role") User.UserRole role,

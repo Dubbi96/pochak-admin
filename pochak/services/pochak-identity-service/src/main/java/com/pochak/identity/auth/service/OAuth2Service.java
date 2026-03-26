@@ -106,7 +106,9 @@ public class OAuth2Service {
 
         // 2. Check if email exists → LINK_EXISTING
         if (userInfo.getEmail() != null) {
+            log.debug("[OAuth] Looking up user by email: {}", userInfo.getEmail());
             Optional<User> userByEmail = userRepository.findByEmail(userInfo.getEmail());
+            log.info("[OAuth] findByEmail result: present={}", userByEmail.isPresent());
             if (userByEmail.isPresent()) {
                 User existingUser = userByEmail.get();
                 String signupToken = jwtTokenProvider.generateSignupToken(

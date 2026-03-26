@@ -34,12 +34,12 @@ public interface LiveAssetRepository extends JpaRepository<LiveAsset, Long> {
     Optional<LiveAsset> findByIdAndDeletedAtIsNull(Long id);
 
     @Query("SELECT la FROM LiveAsset la LEFT JOIN la.match m WHERE la.deletedAt IS NULL" +
-            " AND (:ownerType IS NULL OR la.ownerType = :ownerType)" +
-            " AND (:venueId IS NULL OR m.venueId = :venueId)" +
-            " AND (:dateFrom IS NULL OR la.startTime >= :dateFrom)" +
-            " AND (:dateTo IS NULL OR la.startTime <= :dateTo)" +
-            " AND (:isDisplayed IS NULL OR la.isDisplayed = :isDisplayed)" +
-            " AND (:visibility IS NULL OR la.visibility = :visibility)" +
+            " AND (CAST(:ownerType AS string) IS NULL OR la.ownerType = :ownerType)" +
+            " AND (CAST(:venueId AS long) IS NULL OR m.venueId = :venueId)" +
+            " AND (CAST(:dateFrom AS localdatetime) IS NULL OR la.startTime >= :dateFrom)" +
+            " AND (CAST(:dateTo AS localdatetime) IS NULL OR la.startTime <= :dateTo)" +
+            " AND (CAST(:isDisplayed AS boolean) IS NULL OR la.isDisplayed = :isDisplayed)" +
+            " AND (CAST(:visibility AS string) IS NULL OR la.visibility = :visibility)" +
             " ORDER BY la.createdAt DESC")
     Page<LiveAsset> findWithFilters(
             @Param("ownerType") LiveAsset.OwnerType ownerType,
@@ -51,7 +51,7 @@ public interface LiveAssetRepository extends JpaRepository<LiveAsset, Long> {
             Pageable pageable);
 
     @Query("SELECT la FROM LiveAsset la LEFT JOIN la.match m WHERE la.deletedAt IS NULL AND la.isDisplayed = true" +
-            " AND m IS NOT NULL AND LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%'))" +
+            " AND m IS NOT NULL AND LOWER(CAST(m.title AS string)) LIKE LOWER(CAST(CONCAT('%', :keyword, '%') AS string))" +
             " ORDER BY la.createdAt DESC")
     List<LiveAsset> searchByTitle(@Param("keyword") String keyword, Pageable pageable);
 }

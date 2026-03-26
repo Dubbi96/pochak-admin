@@ -23,10 +23,10 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
     Optional<Organization> findByIdAndActiveTrue(Long id);
 
     @Query("SELECT o FROM Organization o WHERE o.active = true" +
-            " AND (:orgType IS NULL OR o.orgType = :orgType)" +
-            " AND (:parentId IS NULL OR o.parent.id = :parentId)" +
-            " AND (:sportId IS NULL OR o.sportId = :sportId)" +
-            " AND (:keyword IS NULL OR LOWER(o.name) LIKE LOWER(CONCAT('%', :keyword, '%')))" +
+            " AND (CAST(:orgType AS string) IS NULL OR o.orgType = :orgType)" +
+            " AND (CAST(:parentId AS long) IS NULL OR o.parent.id = :parentId)" +
+            " AND (CAST(:sportId AS long) IS NULL OR o.sportId = :sportId)" +
+            " AND (CAST(:keyword AS string) IS NULL OR LOWER(CAST(o.name AS string)) LIKE LOWER(CAST(CONCAT('%', :keyword, '%') AS string)))" +
             " ORDER BY o.name ASC")
     Page<Organization> findWithFilters(
             @Param("orgType") Organization.OrgType orgType,
@@ -38,7 +38,7 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
     List<Organization> findByParentIdAndActiveTrue(Long parentId);
 
     @Query("SELECT o FROM Organization o WHERE o.active = true" +
-            " AND LOWER(o.name) LIKE LOWER(CONCAT('%', :keyword, '%'))" +
+            " AND LOWER(CAST(o.name AS string)) LIKE LOWER(CAST(CONCAT('%', :keyword, '%') AS string))" +
             " ORDER BY o.name ASC")
     List<Organization> searchByName(@Param("keyword") String keyword, Pageable pageable);
 }

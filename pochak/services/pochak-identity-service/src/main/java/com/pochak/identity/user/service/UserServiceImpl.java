@@ -51,7 +51,10 @@ public class UserServiceImpl implements UserService {
     public UserPreferencesResponse getPreferences(Long userId) {
         findUserById(userId);
         UserPreference preference = userPreferenceRepository.findByUserId(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "User preferences not found"));
+                .orElse(null);
+        if (preference == null) {
+            return UserPreferencesResponse.empty(userId);
+        }
         return UserPreferencesResponse.from(preference);
     }
 

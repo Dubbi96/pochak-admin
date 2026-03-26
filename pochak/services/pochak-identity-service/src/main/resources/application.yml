@@ -14,7 +14,7 @@ spring:
       minimum-idle: 5
       connection-timeout: 30000
   flyway:
-    enabled: true
+    enabled: false  # Disabled for dev; enable for production
     baseline-on-migrate: true
     baseline-version: "0"
     locations: classpath:db/migration
@@ -28,7 +28,7 @@ spring:
     password: ${RABBITMQ_PASS:pochak_dev_2026}
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update  # Revert from validate to update for dev
     properties:
       hibernate:
         default_schema: identity

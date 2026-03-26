@@ -4,15 +4,28 @@
 
 -- 12. identity.user_status_histories (Entity table name)
 -- Entity says @Table(name = "user_status_histories") but DB table is "user_status_history"
-ALTER TABLE IF EXISTS identity.user_status_history RENAME TO user_status_histories;
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'identity' AND table_name = 'user_status_history')
+       AND NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'identity' AND table_name = 'user_status_histories') THEN
+        ALTER TABLE identity.user_status_history RENAME TO user_status_histories;
+    END IF;
+END $$;
 
 -- Entity uses previous_status/new_status but DB has from_status/to_status
 ALTER TABLE identity.user_status_histories ADD COLUMN IF NOT EXISTS previous_status VARCHAR(20);
 ALTER TABLE identity.user_status_histories ADD COLUMN IF NOT EXISTS new_status VARCHAR(20);
 
--- Copy old data
-UPDATE identity.user_status_histories SET previous_status = from_status WHERE previous_status IS NULL;
-UPDATE identity.user_status_histories SET new_status = to_status WHERE new_status IS NULL;
+-- Copy old data (only if old columns exist)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='identity' AND table_name='user_status_histories' AND column_name='from_status') THEN
+        UPDATE identity.user_status_histories SET previous_status = from_status WHERE previous_status IS NULL;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='identity' AND table_name='user_status_histories' AND column_name='to_status') THEN
+        UPDATE identity.user_status_histories SET new_status = to_status WHERE new_status IS NULL;
+    END IF;
+END $$;
 
 -- 13. identity.user_consents - Add missing columns
 -- Entity has consent_type, agreed, agreed_at, updated_at
@@ -35,8 +48,13 @@ ALTER TABLE identity.user_push_tokens ADD COLUMN IF NOT EXISTS push_token VARCHA
 ALTER TABLE identity.user_push_tokens ADD COLUMN IF NOT EXISTS device_id VARCHAR(255);
 ALTER TABLE identity.user_push_tokens ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE;
 
--- Copy token -> push_token for existing rows
-UPDATE identity.user_push_tokens SET push_token = token WHERE push_token IS NULL AND token IS NOT NULL;
+-- Copy token -> push_token for existing rows (only if old column exists)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='identity' AND table_name='user_push_tokens' AND column_name='token') THEN
+        UPDATE identity.user_push_tokens SET push_token = token WHERE push_token IS NULL AND token IS NOT NULL;
+    END IF;
+END $$;
 
 -- 16. identity.user_preferences - Add missing column
 ALTER TABLE identity.user_preferences ADD COLUMN IF NOT EXISTS preferred_language VARCHAR(10) DEFAULT 'ko';

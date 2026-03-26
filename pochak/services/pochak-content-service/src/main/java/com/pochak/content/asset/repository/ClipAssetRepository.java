@@ -53,7 +53,7 @@ public interface ClipAssetRepository extends JpaRepository<ClipAsset, Long> {
             Pageable pageable);
 
     @Query("SELECT ca FROM ClipAsset ca WHERE ca.deletedAt IS NULL AND ca.isDisplayed = true" +
-            " AND LOWER(ca.title) LIKE LOWER(CONCAT('%', :keyword, '%'))" +
+            " AND LOWER(CAST(ca.title AS string)) LIKE LOWER(CAST(CONCAT('%', :keyword, '%') AS string))" +
             " ORDER BY ca.createdAt DESC")
     List<ClipAsset> searchByTitle(@Param("keyword") String keyword, Pageable pageable);
 }

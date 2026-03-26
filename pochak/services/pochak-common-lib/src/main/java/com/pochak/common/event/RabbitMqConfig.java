@@ -5,6 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,9 +31,7 @@ public class RabbitMqConfig {
 
     @Bean
     public TopicExchange pochakEventsExchange() {
-        return ExchangeBuilder.topicExchange(EXCHANGE_NAME)
-                .durable(true)
-                .build();
+        return ExchangeBuilder.topicExchange(EXCHANGE_NAME).durable(true).build();
     }
 
     // ── Queues ───────────────────────────────────────────────────
@@ -63,72 +62,53 @@ public class RabbitMqConfig {
     }
 
     // ── Bindings ─────────────────────────────────────────────────
-    // Each queue receives events routed by service-specific routing key pattern.
 
     @Bean
-    public Binding identityBinding(Queue identityEventsQueue, TopicExchange pochakEventsExchange) {
-        return BindingBuilder.bind(identityEventsQueue)
-                .to(pochakEventsExchange)
-                .with("identity.#");
+    public Binding identityBinding(@Qualifier("identityEventsQueue") Queue queue, TopicExchange pochakEventsExchange) {
+        return BindingBuilder.bind(queue).to(pochakEventsExchange).with("identity.#");
     }
 
     @Bean
-    public Binding contentBinding(Queue contentEventsQueue, TopicExchange pochakEventsExchange) {
-        return BindingBuilder.bind(contentEventsQueue)
-                .to(pochakEventsExchange)
-                .with("content.#");
+    public Binding contentBinding(@Qualifier("contentEventsQueue") Queue queue, TopicExchange pochakEventsExchange) {
+        return BindingBuilder.bind(queue).to(pochakEventsExchange).with("content.#");
     }
 
     @Bean
-    public Binding commerceBinding(Queue commerceEventsQueue, TopicExchange pochakEventsExchange) {
-        return BindingBuilder.bind(commerceEventsQueue)
-                .to(pochakEventsExchange)
-                .with("commerce.#");
+    public Binding commerceBinding(@Qualifier("commerceEventsQueue") Queue queue, TopicExchange pochakEventsExchange) {
+        return BindingBuilder.bind(queue).to(pochakEventsExchange).with("commerce.#");
     }
 
     @Bean
-    public Binding operationBinding(Queue operationEventsQueue, TopicExchange pochakEventsExchange) {
-        return BindingBuilder.bind(operationEventsQueue)
-                .to(pochakEventsExchange)
-                .with("operation.#");
+    public Binding operationBinding(@Qualifier("operationEventsQueue") Queue queue, TopicExchange pochakEventsExchange) {
+        return BindingBuilder.bind(queue).to(pochakEventsExchange).with("operation.#");
     }
 
     @Bean
-    public Binding adminBinding(Queue adminEventsQueue, TopicExchange pochakEventsExchange) {
-        return BindingBuilder.bind(adminEventsQueue)
-                .to(pochakEventsExchange)
-                .with("admin.#");
+    public Binding adminBinding(@Qualifier("adminEventsQueue") Queue queue, TopicExchange pochakEventsExchange) {
+        return BindingBuilder.bind(queue).to(pochakEventsExchange).with("admin.#");
     }
 
     // ── Cross-service bindings for user withdrawal ──────────────
     // identity.UserWithdrawnEvent must be delivered to all services for cross-schema cleanup.
 
     @Bean
-    public Binding contentIdentityWithdrawalBinding(Queue contentEventsQueue, TopicExchange pochakEventsExchange) {
-        return BindingBuilder.bind(contentEventsQueue)
-                .to(pochakEventsExchange)
-                .with("identity.UserWithdrawnEvent");
+    public Binding contentIdentityWithdrawalBinding(@Qualifier("contentEventsQueue") Queue queue, TopicExchange pochakEventsExchange) {
+        return BindingBuilder.bind(queue).to(pochakEventsExchange).with("identity.UserWithdrawnEvent");
     }
 
     @Bean
-    public Binding commerceIdentityWithdrawalBinding(Queue commerceEventsQueue, TopicExchange pochakEventsExchange) {
-        return BindingBuilder.bind(commerceEventsQueue)
-                .to(pochakEventsExchange)
-                .with("identity.UserWithdrawnEvent");
+    public Binding commerceIdentityWithdrawalBinding(@Qualifier("commerceEventsQueue") Queue queue, TopicExchange pochakEventsExchange) {
+        return BindingBuilder.bind(queue).to(pochakEventsExchange).with("identity.UserWithdrawnEvent");
     }
 
     @Bean
-    public Binding operationIdentityWithdrawalBinding(Queue operationEventsQueue, TopicExchange pochakEventsExchange) {
-        return BindingBuilder.bind(operationEventsQueue)
-                .to(pochakEventsExchange)
-                .with("identity.UserWithdrawnEvent");
+    public Binding operationIdentityWithdrawalBinding(@Qualifier("operationEventsQueue") Queue queue, TopicExchange pochakEventsExchange) {
+        return BindingBuilder.bind(queue).to(pochakEventsExchange).with("identity.UserWithdrawnEvent");
     }
 
     @Bean
-    public Binding adminIdentityWithdrawalBinding(Queue adminEventsQueue, TopicExchange pochakEventsExchange) {
-        return BindingBuilder.bind(adminEventsQueue)
-                .to(pochakEventsExchange)
-                .with("identity.UserWithdrawnEvent");
+    public Binding adminIdentityWithdrawalBinding(@Qualifier("adminEventsQueue") Queue queue, TopicExchange pochakEventsExchange) {
+        return BindingBuilder.bind(queue).to(pochakEventsExchange).with("identity.UserWithdrawnEvent");
     }
 
     // ── Message Converter ────────────────────────────────────────
