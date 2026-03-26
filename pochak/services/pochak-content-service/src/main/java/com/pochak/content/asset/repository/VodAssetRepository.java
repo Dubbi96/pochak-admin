@@ -38,12 +38,12 @@ public interface VodAssetRepository extends JpaRepository<VodAsset, Long> {
     List<VodAsset> findByMatchIdIn(@Param("matchIds") Collection<Long> matchIds);
 
     @Query("SELECT va FROM VodAsset va LEFT JOIN va.match m WHERE va.deletedAt IS NULL" +
-            " AND (:ownerType IS NULL OR va.ownerType = :ownerType)" +
-            " AND (:venueId IS NULL OR m.venue = :venueId)" +
-            " AND (:dateFrom IS NULL OR va.createdAt >= :dateFrom)" +
-            " AND (:dateTo IS NULL OR va.createdAt <= :dateTo)" +
-            " AND (:isDisplayed IS NULL OR va.isDisplayed = :isDisplayed)" +
-            " AND (:visibility IS NULL OR va.visibility = :visibility)" +
+            " AND (CAST(:ownerType AS string) IS NULL OR va.ownerType = :ownerType)" +
+            " AND (CAST(:venueId AS string) IS NULL OR m.venue = :venueId)" +
+            " AND (CAST(:dateFrom AS localdatetime) IS NULL OR va.createdAt >= :dateFrom)" +
+            " AND (CAST(:dateTo AS localdatetime) IS NULL OR va.createdAt <= :dateTo)" +
+            " AND (CAST(:isDisplayed AS boolean) IS NULL OR va.isDisplayed = :isDisplayed)" +
+            " AND (CAST(:visibility AS string) IS NULL OR va.visibility = :visibility)" +
             " ORDER BY va.createdAt DESC")
     Page<VodAsset> findWithFilters(
             @Param("ownerType") LiveAsset.OwnerType ownerType,
@@ -55,7 +55,7 @@ public interface VodAssetRepository extends JpaRepository<VodAsset, Long> {
             Pageable pageable);
 
     @Query("SELECT va FROM VodAsset va WHERE va.deletedAt IS NULL AND va.isDisplayed = true" +
-            " AND LOWER(va.title) LIKE LOWER(CONCAT('%', :keyword, '%'))" +
+            " AND LOWER(CAST(va.title AS string)) LIKE LOWER(CAST(CONCAT('%', :keyword, '%') AS string))" +
             " ORDER BY va.createdAt DESC")
     List<VodAsset> searchByTitle(@Param("keyword") String keyword, Pageable pageable);
 }

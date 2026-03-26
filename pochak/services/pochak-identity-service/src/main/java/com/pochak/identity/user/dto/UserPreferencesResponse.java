@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.Collections;
 import java.util.List;
 
 @Getter
@@ -23,6 +24,14 @@ public class UserPreferencesResponse {
                 .preferredSports(preference.getPreferredSports())
                 .preferredAreas(preference.getPreferredAreas())
                 .usagePurpose(preference.getUsagePurpose())
+                .build();
+    }
+
+    public static UserPreferencesResponse empty(Long userId) {
+        return UserPreferencesResponse.builder()
+                .preferredSports(Collections.emptyList())
+                .preferredAreas(Collections.emptyList())
+                .usagePurpose(null)
                 .build();
     }
 }

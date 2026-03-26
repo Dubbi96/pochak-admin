@@ -30,7 +30,12 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ApiResponse<TokenResponse> refresh(@RequestHeader("X-Refresh-Token") String refreshToken) {
+    public ApiResponse<TokenResponse> refresh(@RequestBody java.util.Map<String, String> body) {
+        String refreshToken = body.get("refreshToken");
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new com.pochak.common.exception.BusinessException(
+                    com.pochak.common.exception.ErrorCode.INVALID_INPUT, "refreshToken is required");
+        }
         return ApiResponse.success(authService.refresh(refreshToken));
     }
 

@@ -27,7 +27,7 @@ public interface CompetitionRepository extends JpaRepository<Competition, Long>,
 
     @Query("SELECT c FROM Competition c WHERE c.active = true AND c.isDisplayed = true " +
             "AND c.status IN ('SCHEDULED', 'IN_PROGRESS') " +
-            "AND (:sportId IS NULL OR c.sport.id = :sportId) " +
+            "AND (CAST(:sportId AS long) IS NULL OR c.sport.id = :sportId) " +
             "AND (c.startDate <= :endDate AND (c.endDate IS NULL OR c.endDate >= :startDate)) " +
             "ORDER BY c.startDate ASC")
     List<Competition> findActiveCompetitions(
@@ -40,10 +40,10 @@ public interface CompetitionRepository extends JpaRepository<Competition, Long>,
     List<Competition> findAllActiveDisplayed();
 
     @Query("SELECT c FROM Competition c WHERE c.active = true" +
-            " AND (:sportId IS NULL OR c.sport.id = :sportId)" +
-            " AND (:status IS NULL OR c.status = :status)" +
-            " AND (:isDisplayed IS NULL OR c.isDisplayed = :isDisplayed)" +
-            " AND (:keyword IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')))" +
+            " AND (CAST(:sportId AS long) IS NULL OR c.sport.id = :sportId)" +
+            " AND (CAST(:status AS string) IS NULL OR c.status = :status)" +
+            " AND (CAST(:isDisplayed AS boolean) IS NULL OR c.isDisplayed = :isDisplayed)" +
+            " AND (CAST(:keyword AS string) IS NULL OR LOWER(CAST(c.name AS string)) LIKE LOWER(CONCAT('%', :keyword, '%')))" +
             " ORDER BY c.startDate DESC")
     Page<Competition> findWithFilters(
             @Param("sportId") Long sportId,
@@ -53,7 +53,7 @@ public interface CompetitionRepository extends JpaRepository<Competition, Long>,
             Pageable pageable);
 
     @Query("SELECT c FROM Competition c WHERE c.active = true AND c.isDisplayed = true" +
-            " AND LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))" +
+            " AND LOWER(CAST(c.name AS string)) LIKE LOWER(CONCAT('%', :keyword, '%'))" +
             " ORDER BY c.startDate DESC")
     List<Competition> searchByName(@Param("keyword") String keyword, Pageable pageable);
 
@@ -61,10 +61,10 @@ public interface CompetitionRepository extends JpaRepository<Competition, Long>,
 
     @Query("SELECT c FROM Competition c WHERE c.active = true" +
             " AND c.visibility = :visibility" +
-            " AND (:sportId IS NULL OR c.sport.id = :sportId)" +
-            " AND (:status IS NULL OR c.status = :status)" +
-            " AND (:isDisplayed IS NULL OR c.isDisplayed = :isDisplayed)" +
-            " AND (:keyword IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')))" +
+            " AND (CAST(:sportId AS long) IS NULL OR c.sport.id = :sportId)" +
+            " AND (CAST(:status AS string) IS NULL OR c.status = :status)" +
+            " AND (CAST(:isDisplayed AS boolean) IS NULL OR c.isDisplayed = :isDisplayed)" +
+            " AND (CAST(:keyword AS string) IS NULL OR LOWER(CAST(c.name AS string)) LIKE LOWER(CONCAT('%', :keyword, '%')))" +
             " ORDER BY c.startDate DESC")
     Page<Competition> findWithFiltersAndVisibility(
             @Param("sportId") Long sportId,

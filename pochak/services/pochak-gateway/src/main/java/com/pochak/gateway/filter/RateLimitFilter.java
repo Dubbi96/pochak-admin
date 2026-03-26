@@ -68,7 +68,9 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         String path = exchange.getRequest().getURI().getPath();
         String clientIp = resolveClientIp(exchange);
 
-        boolean isAuthRoute = path.startsWith("/api/v1/auth");
+        boolean isOAuthCallback = path.startsWith("/api/v1/auth/oauth2/callback")
+                || path.startsWith("/api/v1/auth/oauth2/authorize");
+        boolean isAuthRoute = !isOAuthCallback && path.startsWith("/api/v1/auth");
         int maxRequests = isAuthRoute ? AUTH_MAX_REQUESTS : API_MAX_REQUESTS;
 
         String bucketKey = clientIp + ":" + (isAuthRoute ? "auth" : "api");

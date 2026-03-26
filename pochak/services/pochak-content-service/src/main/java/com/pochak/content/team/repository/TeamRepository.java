@@ -46,7 +46,7 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     Page<Team> findRecentTeams(Pageable pageable);
 
     @Query("SELECT t FROM Team t WHERE t.active = true" +
-            " AND LOWER(t.name) LIKE LOWER(CONCAT('%', :keyword, '%'))" +
+            " AND LOWER(CAST(t.name AS string)) LIKE LOWER(CAST(CONCAT('%', :keyword, '%') AS string))" +
             " ORDER BY t.name ASC")
     List<Team> searchByName(@Param("keyword") String keyword, Pageable pageable);
 }

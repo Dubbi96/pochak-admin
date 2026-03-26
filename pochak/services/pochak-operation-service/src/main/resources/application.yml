@@ -19,7 +19,7 @@ spring:
       maximum-pool-size: 10
       minimum-idle: 5
   flyway:
-    enabled: true
+    enabled: false  # Disabled for dev; enable for production
     baseline-on-migrate: true
     baseline-version: "0"
     locations: classpath:db/migration
@@ -28,7 +28,7 @@ spring:
     default-schema: operation
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update  # Revert from validate to update for dev
     properties:
       hibernate:
         default_schema: operation

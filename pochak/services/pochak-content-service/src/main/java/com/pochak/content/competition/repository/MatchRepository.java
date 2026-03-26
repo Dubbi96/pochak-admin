@@ -26,8 +26,8 @@ public interface MatchRepository extends JpaRepository<Match, Long>, JpaSpecific
 
     @Query("SELECT DISTINCT m FROM Match m LEFT JOIN FETCH m.competition LEFT JOIN FETCH m.participants p " +
             "LEFT JOIN FETCH p.team WHERE m.active = true AND m.isDisplayed = true " +
-            "AND (:sportId IS NULL OR m.sport.id = :sportId) " +
-            "AND (:competitionId IS NULL OR m.competition.id = :competitionId) " +
+            "AND (CAST(:sportId AS long) IS NULL OR m.sport.id = :sportId) " +
+            "AND (CAST(:competitionId AS long) IS NULL OR m.competition.id = :competitionId) " +
             "AND m.startTime >= :dateFrom AND m.startTime < :dateTo " +
             "ORDER BY m.startTime ASC")
     List<Match> findScheduleMatches(
@@ -37,13 +37,13 @@ public interface MatchRepository extends JpaRepository<Match, Long>, JpaSpecific
             @Param("dateTo") LocalDateTime dateTo);
 
     @Query("SELECT m FROM Match m WHERE m.active = true" +
-            " AND (:competitionId IS NULL OR m.competition.id = :competitionId)" +
-            " AND (:sportId IS NULL OR m.sport.id = :sportId)" +
-            " AND (:venueId IS NULL OR m.venueId = :venueId)" +
-            " AND (:status IS NULL OR m.status = :status)" +
-            " AND (:isDisplayed IS NULL OR m.isDisplayed = :isDisplayed)" +
-            " AND (:dateFrom IS NULL OR m.startTime >= :dateFrom)" +
-            " AND (:dateTo IS NULL OR m.startTime <= :dateTo)" +
+            " AND (CAST(:competitionId AS long) IS NULL OR m.competition.id = :competitionId)" +
+            " AND (CAST(:sportId AS long) IS NULL OR m.sport.id = :sportId)" +
+            " AND (CAST(:venueId AS long) IS NULL OR m.venueId = :venueId)" +
+            " AND (CAST(:status AS string) IS NULL OR m.status = :status)" +
+            " AND (CAST(:isDisplayed AS boolean) IS NULL OR m.isDisplayed = :isDisplayed)" +
+            " AND (CAST(:dateFrom AS timestamp) IS NULL OR m.startTime >= :dateFrom)" +
+            " AND (CAST(:dateTo AS timestamp) IS NULL OR m.startTime <= :dateTo)" +
             " ORDER BY m.startTime DESC")
     Page<Match> findWithFilters(
             @Param("competitionId") Long competitionId,
@@ -56,7 +56,7 @@ public interface MatchRepository extends JpaRepository<Match, Long>, JpaSpecific
             Pageable pageable);
 
     @Query("SELECT m FROM Match m WHERE m.active = true AND m.isDisplayed = true" +
-            " AND LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%'))" +
+            " AND LOWER(CAST(m.title AS string)) LIKE LOWER(CAST(CONCAT('%', :keyword, '%') AS string))" +
             " ORDER BY m.startTime DESC")
     List<Match> searchByTitle(@Param("keyword") String keyword, Pageable pageable);
 }

@@ -18,10 +18,10 @@ public interface VenueRepository extends JpaRepository<Venue, Long> {
     List<Venue> findBySportIdAndIsActiveTrue(Long sportId);
 
     @Query("SELECT v FROM Venue v WHERE v.isActive = true " +
-            "AND (:ownerType IS NULL OR v.ownerType = :ownerType) " +
-            "AND (:venueType IS NULL OR v.venueType = :venueType) " +
-            "AND (:sportId IS NULL OR v.sportId = :sportId) " +
-            "AND (:name IS NULL OR LOWER(v.name) LIKE LOWER(CONCAT('%', :name, '%')))")
+            "AND (CAST(:ownerType AS string) IS NULL OR v.ownerType = :ownerType) " +
+            "AND (CAST(:venueType AS string) IS NULL OR v.venueType = :venueType) " +
+            "AND (CAST(:sportId AS long) IS NULL OR v.sportId = :sportId) " +
+            "AND (CAST(:name AS string) IS NULL OR LOWER(CAST(v.name AS string)) LIKE LOWER(CAST(CONCAT('%', :name, '%') AS string)))")
     Page<Venue> findByFilters(
             @Param("ownerType") OwnerType ownerType,
             @Param("venueType") VenueType venueType,
@@ -30,11 +30,11 @@ public interface VenueRepository extends JpaRepository<Venue, Long> {
             Pageable pageable);
 
     @Query("SELECT v FROM Venue v WHERE v.isActive = true" +
-            " AND (:keyword IS NULL OR LOWER(v.name) LIKE LOWER(CONCAT('%', :keyword, '%')))" +
-            " AND (:sportId IS NULL OR v.sportId = :sportId)" +
-            " AND (:siGunGuCode IS NULL OR v.siGunGuCode = :siGunGuCode)" +
-            " AND (:venueType IS NULL OR v.venueType = :venueType)" +
-            " AND (:ownerType IS NULL OR v.ownerType = :ownerType)" +
+            " AND (CAST(:keyword AS string) IS NULL OR LOWER(CAST(v.name AS string)) LIKE LOWER(CAST(CONCAT('%', :keyword, '%') AS string)))" +
+            " AND (CAST(:sportId AS long) IS NULL OR v.sportId = :sportId)" +
+            " AND (CAST(:siGunGuCode AS string) IS NULL OR v.siGunGuCode = :siGunGuCode)" +
+            " AND (CAST(:venueType AS string) IS NULL OR v.venueType = :venueType)" +
+            " AND (CAST(:ownerType AS string) IS NULL OR v.ownerType = :ownerType)" +
             " ORDER BY v.name ASC")
     Page<Venue> searchVenues(
             @Param("keyword") String keyword,

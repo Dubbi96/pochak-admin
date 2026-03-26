@@ -101,11 +101,10 @@ public class GuardianService {
      * 미성년자의 보호자 정보 조회
      */
     public GuardianResponseDto getGuardian(Long minorId) {
-        GuardianRelationship relationship = guardianRepository
+        return guardianRepository
                 .findByMinorIdAndStatus(minorId, GuardianStatus.VERIFIED)
-                .orElseThrow(() -> new IllegalArgumentException("인증된 보호자를 찾을 수 없습니다"));
-
-        return GuardianResponseDto.from(relationship);
+                .map(GuardianResponseDto::from)
+                .orElse(null);
     }
 
     /**
