@@ -31,4 +31,5 @@ build/
 
 ### VS Code ###
 .vscode/
-src/main/resources/key/blinker-db-key.json
+src/main/resources/key/**
+src/main/resources/application-local.yml

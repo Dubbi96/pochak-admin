@@ -1,6 +1,6 @@
-package com.blinker.atom.config;
+package com.coffee.atom.config;
 
-import com.blinker.atom.config.error.CustomAsyncExceptionHandler;
+import com.coffee.atom.config.error.CustomAsyncExceptionHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.context.annotation.Bean;

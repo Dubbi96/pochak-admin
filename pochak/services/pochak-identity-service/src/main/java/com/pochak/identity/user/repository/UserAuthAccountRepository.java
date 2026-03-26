@@ -14,4 +14,6 @@ public interface UserAuthAccountRepository extends JpaRepository<UserAuthAccount
     boolean existsByProviderAndProviderUserId(String provider, String providerUserId);
 
     java.util.List<UserAuthAccount> findAllByUser(com.pochak.identity.user.entity.User user);
+
+    void deleteAllByUserId(Long userId);
 }

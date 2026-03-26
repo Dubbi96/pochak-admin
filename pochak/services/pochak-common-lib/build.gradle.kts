@@ -29,6 +29,8 @@ dependencies {
     api("com.fasterxml.jackson.core:jackson-databind")
     api("io.jsonwebtoken:jjwt-api:0.12.6")
 
+    compileOnly("org.springframework.boot:spring-boot-starter-amqp")
+    compileOnly("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 

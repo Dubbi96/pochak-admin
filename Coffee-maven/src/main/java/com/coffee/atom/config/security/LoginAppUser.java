@@ -1,4 +1,4 @@
-package com.blinker.atom.config.security;
+package com.coffee.atom.config.security;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 

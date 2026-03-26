@@ -1,19 +1,14 @@
-package com.blinker.atom.domain.appuser;
+package com.coffee.atom.domain.appuser;
 
-import com.blinker.atom.common.ApplicationContextProvider;
-import com.blinker.atom.service.scheduled.AppUserSensorGroupService;
-import io.hypersistence.utils.hibernate.type.array.ListArrayType;
+import com.coffee.atom.domain.area.Area;
+import com.coffee.atom.domain.area.Section;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "app_user")
@@ -40,15 +35,9 @@ public class AppUser {
     @Column(name = "salt", nullable = false, length = 50)
     private String salt;
 
-    @Column(name = "roles", columnDefinition = "text[]")
-    @Type(value = ListArrayType.class, parameters = {
-            @Parameter(
-                    name = ListArrayType.SQL_ARRAY_TYPE,
-                    value = "text"
-            )
-    })
-    @Builder.Default
-    private List<Role> roles = new ArrayList<>();
+    @Column(name = "role", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     @Column(name = "created_at", updatable = false, nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -57,6 +46,40 @@ public class AppUser {
     @Column(name = "updated_at")
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime updatedAt;
+
+    @Column(name = "is_approved")
+    private Boolean isApproved;
+
+    @Column(name = "is_deleted")
+    private Boolean isDeleted;
+
+    // 부관리자용 필드
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "area_id")
+    private Area area;
+
+    @Column(name = "id_card_url")
+    private String idCardUrl;
+
+    // 면장용 필드
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "section_id")
+    private Section section;
+
+    @Column(name = "identification_photo_url")
+    private String identificationPhotoUrl;
+
+    @Column(name = "bank_name")
+    private String bankName;
+
+    @Column(name = "account_info")
+    private String accountInfo;
+
+    @Column(name = "contract_url")
+    private String contractUrl;
+
+    @Column(name = "bankbook_url")
+    private String bankbookUrl;
 
     @PrePersist
     protected void onCreate() {
@@ -68,21 +91,63 @@ public class AppUser {
         this.updatedAt = LocalDateTime.now();
     }
 
-    @PostPersist
-    public void afterUserCreated() {
-        if (this.roles.contains(Role.ADMIN)) {
-            AppUserSensorGroupService service = ApplicationContextProvider.getBean(AppUserSensorGroupService.class);
-            service.assignUserToAllSensorGroupsAsync(this.id);
-        }
-    }
-
     public void updatePassword(String encodedPassword, String salt) {
         this.password = encodedPassword;
         this.salt = salt;
     }
 
-    public void updateStatus(String userId, String username){
-        this.userId = userId;
-        this.username = username;
+    public void updateUserName(String userName) {
+        this.username = userName;
     }
+
+    public void updateUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public void approveInstance() {
+        this.isApproved = true;
+    }
+
+    public void softDelete() {
+        this.isDeleted = true;
+        // unique constraint 회피: 삭제된 계정의 userId/username에 suffix 추가
+        String deletedSuffix = "_deleted_" + this.id;
+        this.userId = this.userId + deletedSuffix;
+        this.username = this.username + deletedSuffix;
+    }
+
+    // 부관리자 필드 업데이트 메서드
+    public void updateArea(Area area) {
+        this.area = area;
+    }
+
+    public void updateIdCardUrl(String idCardUrl) {
+        this.idCardUrl = idCardUrl;
+    }
+
+    // 면장 필드 업데이트 메서드
+    public void updateSection(Section section) {
+        this.section = section;
+    }
+
+    public void updateIdentificationPhotoUrl(String identificationPhotoUrl) {
+        this.identificationPhotoUrl = identificationPhotoUrl;
+    }
+
+    public void updateBankName(String bankName) {
+        this.bankName = bankName;
+    }
+
+    public void updateAccountInfo(String accountInfo) {
+        this.accountInfo = accountInfo;
+    }
+
+    public void updateContractUrl(String contractUrl) {
+        this.contractUrl = contractUrl;
+    }
+
+    public void updateBankbookUrl(String bankbookUrl) {
+        this.bankbookUrl = bankbookUrl;
+    }
+
 }

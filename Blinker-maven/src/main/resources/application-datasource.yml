@@ -1,10 +1,10 @@
 spring:
   datasource:
     hikari:
-      leak-detection-threshold: 10000
-      connection-timeout: 15000
-      max-lifetime: 58000
-      idle-timeout: 0
+      leakDetectionThreshold: 20000 # 20초 이상 커넥션 점유 시 경고
+      connection-timeout: 30000
+      max-lifetime: 500000
+      maximum-pool-size: 10 #잠깐 늘림
       transaction-isolation: TRANSACTION_READ_COMMITTED
       pool-name: hikari-rw-pool
       data-source-properties:
@@ -19,22 +19,24 @@ spring:
         elideSetAutoCommits: true
         maintainTimeStats: false
       auto-commit: false
+
+
 ---
 spring:
   config:
     activate:
-      on-profile: prod, dev, local
+      on-profile: prod, dev
   datasource:
     hikari:
       username: postgres
-      password: G^/?|Fy;5S->om+5
+      password: ${DB_PASSWORD}
       jdbc-url: jdbc:postgresql://google/blinker
+      driver-class-name: org.postgresql.Driver
       data-source-properties:
-        cloudSqlInstance: blinker-db:asia-northeast3:blinker-atom
+        cloudSqlInstance: blinker-backend1:asia-northeast3:blinker-atom-db
         socketFactory: com.google.cloud.sql.postgres.SocketFactory
-        user: postgres
-        password: G^/?|Fy;5S->om+5
-    url: jdbc:postgresql://google/blinker?cloudSqlInstance=blinker-db:asia-northeast3:blinker-db&socketFactory=com.google.cloud.sql.postgres.SocketFactory
+    url: jdbc:postgresql://google/blinker?cloudSqlInstance=blinker-backend1:asia-northeast3:blinker-atom-db&socketFactory=com.google.cloud.sql.postgres.SocketFactory
+
 ---
 spring:
   datasource:

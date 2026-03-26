@@ -1,6 +1,8 @@
-package com.blinker.atom.domain.appuser;
+package com.coffee.atom.domain.appuser;
 
 public enum Role {
     ADMIN,
-    USER
+    VICE_ADMIN_HEAD_OFFICER,
+    VICE_ADMIN_AGRICULTURE_MINISTRY_OFFICER,
+    VILLAGE_HEAD
 }

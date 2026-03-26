@@ -1,5 +1,7 @@
 package com.pochak.identity.auth.service;
 
+import com.pochak.common.event.EventPublisher;
+import com.pochak.common.event.UserWithdrawnEvent;
 import com.pochak.common.exception.BusinessException;
 import com.pochak.common.exception.ErrorCode;
 import com.pochak.identity.auth.dto.*;
@@ -16,7 +18,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.HexFormat;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -36,6 +43,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRefreshTokenRepository refreshTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final EventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -205,9 +213,40 @@ public class AuthServiceImpl implements AuthService {
     public void withdraw(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "User not found"));
+
+        // 1. Compute deterministic email hash for re-registration prevention
+        String emailHash = "withdrawn_" + sha256Hex(user.getEmail());
+
+        // 2. Clear PII immediately (Decision 8-3: no grace period)
+        user.clearPii(emailHash);
         user.withdraw();
+        userRepository.save(user);
+
+        // 3. Publish event for cross-schema cleanup (Decision 8-1: RabbitMQ)
+        eventPublisher.publish(new UserWithdrawnEvent(userId, emailHash, LocalDateTime.now()));
+
+        // 4. Delete refresh tokens
         refreshTokenRepository.findByUserId(userId)
                 .ifPresent(refreshTokenRepository::delete);
+
+        // 5. Delete OAuth accounts
+        authAccountRepository.deleteAllByUserId(userId);
+
+        log.info("User withdrawn: userId={}", userId);
+    }
+
+    /**
+     * Compute SHA-256 hex digest of the given input.
+     * Used to create a deterministic hash of the email for re-registration prevention.
+     */
+    private static String sha256Hex(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not available", e);
+        }
     }
 
     // SEC-011: Record a failed login attempt

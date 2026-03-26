@@ -4,6 +4,10 @@ x-service-env: &service-env
   SPRING_DATASOURCE_PASSWORD: pochak_dev_2026
   SPRING_REDIS_HOST: pochak-redis
   SPRING_REDIS_PORT: 6379
+  SPRING_RABBITMQ_HOST: pochak-rabbitmq
+  SPRING_RABBITMQ_PORT: 5672
+  SPRING_RABBITMQ_USERNAME: pochak
+  SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-pochak_dev_2026}
 
 services:
   # ── Dependencies ──────────────────────────────────────────────
@@ -41,6 +45,23 @@ services:
       retries: 5
       start_period: 10s
 
+  pochak-rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: pochak-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: pochak
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-pochak_dev_2026}
+    volumes:
+      - pochak-rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # ── Application Services ──────────────────────────────────────
   pochak-gateway:
     build:
@@ -61,6 +82,8 @@ services:
       pochak-postgres:
         condition: service_healthy
       pochak-redis:
+        condition: service_healthy
+      pochak-rabbitmq:
         condition: service_healthy
 
   pochak-identity:
@@ -83,6 +106,8 @@ services:
     depends_on:
       pochak-postgres:
         condition: service_healthy
+      pochak-rabbitmq:
+        condition: service_healthy
 
   pochak-content:
     build:
@@ -96,6 +121,8 @@ services:
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: content
     depends_on:
       pochak-postgres:
+        condition: service_healthy
+      pochak-rabbitmq:
         condition: service_healthy
 
   pochak-commerce:
@@ -111,6 +138,8 @@ services:
     depends_on:
       pochak-postgres:
         condition: service_healthy
+      pochak-rabbitmq:
+        condition: service_healthy
 
   pochak-operation:
     build:
@@ -125,6 +154,8 @@ services:
     depends_on:
       pochak-postgres:
         condition: service_healthy
+      pochak-rabbitmq:
+        condition: service_healthy
 
   pochak-admin:
     build:
@@ -138,6 +169,8 @@ services:
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: admin
     depends_on:
       pochak-postgres:
+        condition: service_healthy
+      pochak-rabbitmq:
         condition: service_healthy
 
   # ── Frontend Services ─────────────────────────────────────────
@@ -166,3 +199,4 @@ services:
 volumes:
   pochak-pg-data:
   pochak-redis-data:
+  pochak-rabbitmq-data:

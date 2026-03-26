@@ -1,7 +1,8 @@
-package com.blinker.atom.config.security;
+package com.coffee.atom.config.security;
 
-import com.blinker.atom.config.CodeValue;
-import com.blinker.atom.config.error.CustomException;
+import com.coffee.atom.config.CodeValue;
+import com.coffee.atom.config.error.CustomException;
+import com.coffee.atom.config.error.ErrorValue;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -26,6 +27,9 @@ public class JwtProvider {
     @Value("${spring.jwt.secret-key}")
     private String secretKey;
 
+    @Value("${spring.jwt.expiration-hours:4}")
+    private long expirationHours;
+
     public String createAccessToken(Long appUserId) {
         return createToken("appUserId", appUserId);
     }
@@ -35,7 +39,7 @@ public class JwtProvider {
         Map<String, Object> claims = getClaims(key, appUserId);
 
         Date now = new Date();
-        Date expiryDate = Date.from(now.toInstant().plus(Duration.ofDays(1)));
+        Date expiryDate = Date.from(now.toInstant().plus(Duration.ofHours(expirationHours)));
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -59,10 +63,10 @@ public class JwtProvider {
                     .parseClaimsJws(token)
                     .getBody();
         } catch (ExpiredJwtException e) {
-            throw new CustomException("토큰이 만료되었습니다.", CodeValue.NO_TOKEN);
+            throw new CustomException(ErrorValue.TOKEN_EXPIRED, CodeValue.NO_TOKEN);
         } catch (JwtException e) {
             log.error("e : ",e);
-            throw new CustomException("JWT 토큰 파싱 중 에러가 발생했습니다.");
+            throw new CustomException(ErrorValue.JWT_PARSING_ERROR);
         }
     }
 

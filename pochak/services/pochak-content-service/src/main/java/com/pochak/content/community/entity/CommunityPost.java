@@ -57,6 +57,18 @@ public class CommunityPost {
     @Builder.Default
     private Integer commentCount = 0;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "moderation_status", length = 20)
+    @Builder.Default
+    private ModerationStatus moderationStatus = ModerationStatus.APPROVED;
+
+    @Column(name = "warning_count")
+    @Builder.Default
+    private Integer warningCount = 0;
+
+    @Column(name = "auto_flag_reason")
+    private String autoFlagReason;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -96,5 +108,18 @@ public class CommunityPost {
 
     public boolean isDeleted() {
         return this.deletedAt != null;
+    }
+
+    public void setModerationStatus(ModerationStatus status) {
+        this.moderationStatus = status;
+    }
+
+    public void incrementWarningCount() {
+        this.warningCount = (this.warningCount == null ? 0 : this.warningCount) + 1;
+    }
+
+    public void flagByAi(String reason) {
+        this.moderationStatus = ModerationStatus.PENDING;
+        this.autoFlagReason = reason;
     }
 }

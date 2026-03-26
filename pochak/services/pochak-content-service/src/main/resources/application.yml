@@ -21,6 +21,11 @@ spring:
     schemas:
       - content
     default-schema: content
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:pochak}
+    password: ${RABBITMQ_PASS:pochak_dev_2026}
   data:
     redis:
       host: ${REDIS_HOST:localhost}

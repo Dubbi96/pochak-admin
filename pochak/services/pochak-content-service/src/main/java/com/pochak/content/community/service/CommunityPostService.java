@@ -4,19 +4,23 @@ import com.pochak.common.exception.BusinessException;
 import com.pochak.common.exception.ErrorCode;
 import com.pochak.content.community.dto.*;
 import com.pochak.content.community.entity.CommunityPost;
+import com.pochak.content.community.entity.ModerationStatus;
 import com.pochak.content.community.repository.CommunityPostRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CommunityPostService {
 
     private final CommunityPostRepository communityPostRepository;
+    private final ModerationService moderationService;
 
     /**
      * List posts with optional filters.
@@ -43,6 +47,11 @@ public class CommunityPostService {
      */
     @Transactional
     public CommunityPostResponse createPost(Long userId, CreateCommunityPostRequest request) {
+        // Determine moderation status: pre-moderation for warned users, post-moderation otherwise
+        ModerationStatus initialStatus = moderationService.requiresPreModeration(userId)
+                ? ModerationStatus.PENDING
+                : ModerationStatus.APPROVED;
+
         CommunityPost post = CommunityPost.builder()
                 .organizationId(request.getOrganizationId())
                 .authorUserId(userId)
@@ -51,7 +60,16 @@ public class CommunityPostService {
                 .body(request.getBody())
                 .imageUrls(request.getImageUrls())
                 .siGunGuCode(request.getSiGunGuCode())
+                .moderationStatus(initialStatus)
                 .build();
+
+        // Run AI moderation analysis asynchronously for flagging
+        AiModerationClient.ModerationResult aiResult =
+                moderationService.analyzeContent(request.getTitle(), request.getBody());
+        if (aiResult.toxicityScore() > 0.7) {
+            post.flagByAi(aiResult.summary());
+            log.info("Post by user {} auto-flagged by AI: {}", userId, aiResult.summary());
+        }
 
         CommunityPost saved = communityPostRepository.save(post);
         return CommunityPostResponse.from(saved);

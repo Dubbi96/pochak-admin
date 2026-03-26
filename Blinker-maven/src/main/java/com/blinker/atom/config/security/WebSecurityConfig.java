@@ -23,6 +23,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
+import retrofit2.http.GET;
 
 @EnableWebSecurity
 @Configuration
@@ -70,11 +71,6 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/health","/_ah/warmup");
-    }
-
-    @Bean
     public HttpFirewall allowUrlEncodedSlashHttpFirewall() {
         DefaultHttpFirewall firewall = new DefaultHttpFirewall();
         firewall.setAllowUrlEncodedSlash(true);
@@ -89,23 +85,17 @@ public class WebSecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(requests ->
-                        requests.requestMatchers(
-                                "/account/sign-in", "/account/sign-up", "/project/*/job-notice",
-                                        "/corporation/*/job-notices",
-                                        "/corporation/recruit-page/*",
-                                "/sms/send", "/sms/verify","/sms/verify-applicant/send",
-                                "/applicant/sign-up", "/applicant/sign-in", "/applicant/reset-password", "/applicant/project/*/identification").permitAll()
-                                .requestMatchers(HttpMethod.GET,"/announcement/**","/faq/**", "/corporation/recruit-page/*", "/corporation/*/job-notices", "/project/*/job-notice").permitAll()
+                        requests
                                 .requestMatchers(SWAGGER_URIS).permitAll()
-                                .requestMatchers(HttpMethod.GET, "/applicant/*/page/*/submit").authenticated()
-                                .requestMatchers("/applicant/**").hasAuthority("applicant")
-                                .requestMatchers("/project/*/step-date").permitAll()
-                                .requestMatchers(HttpMethod.DELETE, "/project/*/applicant/*").permitAll()
-                                .requestMatchers(HttpMethod.PATCH, "/project/*/applicant/*/step").permitAll()
-                                .requestMatchers(HttpMethod.PATCH, "/project/**", "/corporation/**", "/announcement/**", "/faq/**", "/qna/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/project/**", "/corporation/**", "/announcement/**", "/faq/**", "/qna/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.POST, "/project/page/*/section", "/project/element", "/file/applicant/step/**", "/announcement/**", "/faq/**", "/qna/**").hasAuthority("ADMIN")
-                                .requestMatchers("/project/**", "/corporation/**", "/qna/**", "/faq/**", "/file/**").hasAnyAuthority("VIEWER", "ADMIN")
+                                .requestMatchers("/auth/sign-in", "/auth/sign-up").permitAll()
+                                .requestMatchers(HttpMethod.GET, "sensor/groups").hasAnyAuthority("ADMIN", "USER")
+                                .requestMatchers(HttpMethod.GET, "sensor/groups/**", "auth/user/**", "auth/users").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "auth/user/**", "app-user/**").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.PATCH, "sensor/groups/order").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "auth/user/password").hasAnyAuthority("ADMIN", "USER")
+                                .requestMatchers(HttpMethod.PUT, "auth/user/**").hasAuthority("ADMIN")
+                                .requestMatchers("scheduler/**", "skt/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "app-user/**").hasAuthority("ADMIN")
                         .anyRequest().authenticated()
                 ).cors(it -> {})
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
