@@ -5,6 +5,11 @@ spring:
   application:
     name: pochak-admin-service
 
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:pochak}
+    password: ${RABBITMQ_PASS:pochak_dev_2026}
   datasource:
     url: jdbc:postgresql://localhost:5432/pochak?currentSchema=admin
     username: ${DB_USERNAME:pochak}

@@ -1,4 +1,4 @@
-package com.blinker.atom.config.error;
+package com.coffee.atom.config.error;
 
 import java.lang.reflect.Method;
 import lombok.extern.slf4j.Slf4j;

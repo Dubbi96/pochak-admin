@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><!DOCTYPE html>
+      <html>
+      <head>
+      <title>회원 가입</title>
+</head>
+<body>
+<h2>회원 가입</h2>
+<form action="/signup" method="post">
+  <input type="hidden" name="userName" value="{{userName}}">
+  <input type="hidden" name="email" value="{{email}}">
+  <input type="hidden" name="picture" value="{{picture}}">
+  <input type="hidden" name="provider" value="{{provider}}">
+
+  <label for="nickname">닉네임:</label>
+  <input type="text" id="nickname" name="nickname"><br><br>
+
+  <label for="role">역할:</label>
+  <select id="role" name="role">
+    <option value="USER">사용자</option>
+    <option value="ADMIN">관리자</option>
+  </select><br><br>
+
+  <input type="submit" value="가입하기">
+</form>
+</body>
+</html>
+</title>
+</head>
+<body>
+
+</body>
+</html>

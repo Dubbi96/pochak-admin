@@ -1,4 +1,4 @@
-package com.blinker.atom.common;
+package com.coffee.atom.common;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;

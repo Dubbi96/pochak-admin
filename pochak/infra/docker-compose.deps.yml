@@ -33,6 +33,24 @@ services:
       retries: 5
       start_period: 10s
 
+  pochak-rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: pochak-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: pochak
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-pochak_dev_2026}
+    volumes:
+      - pochak-rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   pochak-pg-data:
   pochak-redis-data:
+  pochak-rabbitmq-data:

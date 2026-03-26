@@ -3,6 +3,7 @@ package com.pochak.commerce.entitlement.repository;
 import com.pochak.commerce.entitlement.entity.Entitlement;
 import com.pochak.commerce.entitlement.entity.EntitlementType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -50,4 +51,11 @@ public interface EntitlementRepository extends JpaRepository<Entitlement, Long> 
             @Param("now") LocalDateTime now);
 
     List<Entitlement> findByPurchaseId(Long purchaseId);
+
+    /**
+     * DATA-001: Revoke all entitlements for a withdrawn user (set isActive = false).
+     */
+    @Modifying
+    @Query("UPDATE Entitlement e SET e.isActive = false WHERE e.userId = :userId AND e.isActive = true")
+    int revokeAllByUserId(@Param("userId") Long userId);
 }

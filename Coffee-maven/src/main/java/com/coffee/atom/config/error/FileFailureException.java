@@ -1,4 +1,4 @@
-package com.blinker.atom.config.error;
+package com.coffee.atom.config.error;
 
 import lombok.Getter;
 

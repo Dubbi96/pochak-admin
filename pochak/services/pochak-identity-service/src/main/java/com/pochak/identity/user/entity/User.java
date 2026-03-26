@@ -10,6 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 
 @Entity
 @Table(name = "users", schema = "identity")
@@ -127,6 +128,28 @@ public class User {
         this.lastLoginAt = LocalDateTime.now();
     }
 
+    /**
+     * Clear all PII fields immediately upon withdrawal.
+     * The email field is replaced with a deterministic hash so re-registration
+     * with the same email can still be detected.
+     */
+    public void clearPii(String emailHash) {
+        this.email = emailHash;
+        this.name = "탈퇴한 사용자";
+        this.phoneNumber = null;
+        this.birthDate = null;
+        this.guardianPhone = null;
+        this.profileImageUrl = null;
+        this.nationality = null;
+        this.nickname = "withdrawn_" + this.id;
+        this.passwordHash = null;
+        this.loginId = null;
+        this.guardianUserId = null;
+        this.guardianConsentAt = null;
+        this.guardianOverrideLimit = null;
+        this.phoneVerified = false;
+    }
+
     public void withdraw() {
         this.status = UserStatus.WITHDRAWN;
     }
@@ -145,5 +168,12 @@ public class User {
 
     public enum UserRole {
         USER, ADMIN, MANAGER
+    }
+
+    /**
+     * 14세 미만 미성년자 여부 확인
+     */
+    public boolean isMinorByAge() {
+        return birthDate != null && Period.between(birthDate, LocalDate.now()).getYears() < 14;
     }
 }

@@ -1,4 +1,4 @@
-package com.blinker.atom.common;
+package com.coffee.atom.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;

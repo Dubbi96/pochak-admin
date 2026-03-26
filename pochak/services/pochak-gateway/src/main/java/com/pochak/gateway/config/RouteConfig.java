@@ -37,6 +37,7 @@ public class RouteConfig {
                 .route("identity-service", r -> r
                         .path("/api/v1/auth/**",
                               "/api/v1/users/**",
+                              "/api/v1/guardians/**",
                               "/api/v1/admin/members/**")
                         .filters(f -> f.stripPrefix(2))
                         .uri(identityUrl))

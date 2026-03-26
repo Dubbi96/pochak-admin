@@ -1,7 +1,7 @@
-package com.blinker.atom.dto.appuser;
+package com.coffee.atom.dto.appuser;
 
-import com.blinker.atom.domain.appuser.AppUser;
-import com.blinker.atom.domain.appuser.Role;
+import com.coffee.atom.domain.appuser.AppUser;
+import com.coffee.atom.domain.appuser.Role;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -11,12 +11,14 @@ import java.util.List;
 @NoArgsConstructor
 public class SignInResponseDto {
     private Long appUserId;
+    private String userId;
     private String accessToken;
-    private List<Role> roles;
+    private Role role;
 
     public SignInResponseDto(AppUser appUser, String accessToken) {
         this.appUserId = appUser.getId();
-        this.roles = appUser.getRoles();
+        this.userId = appUser.getUserId();
+        this.role = appUser.getRole();
         this.accessToken = accessToken;
     }
 }

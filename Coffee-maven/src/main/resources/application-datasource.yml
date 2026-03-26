@@ -1,0 +1,52 @@
+spring:
+  datasource:
+    hikari:
+      leak-detection-threshold: 10000
+      connection-timeout: 30000
+      max-lifetime: 500000
+      maximum-pool-size: 5
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      pool-name: hikari-rw-pool
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+      auto-commit: false
+
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod, dev
+  datasource:
+    hikari:
+      username: postgres
+      password: ${DB_PASSWORD}
+      jdbc-url: jdbc:postgresql://google/coffee
+      driver-class-name: org.postgresql.Driver
+      data-source-properties:
+        cloudSqlInstance: tedserp:asia-northeast3:dubbi-coffee
+        socketFactory: com.google.cloud.sql.postgres.SocketFactory
+    url: jdbc:postgresql://google/coffee?cloudSqlInstance=tedserp:asia-northeast3:dubbi-coffee&socketFactory=com.google.cloud.sql.postgres.SocketFactory
+
+---
+spring:
+  datasource:
+    url: jdbc:h2:mem:test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DATABASE_TO_UPPER=FALSE;NON_KEYWORDS=year
+    hikari:
+      username: sa
+      password:
+      maximum-pool-size: 32
+      minimum-idle: 5
+      driver-class-name: org.h2.Driver
+  config:
+    activate:
+      on-profile: test

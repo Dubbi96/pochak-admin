@@ -1,0 +1,226 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # ========================================
+  # 1. 테스트 Job
+  # ========================================
+  test:
+    runs-on: ubuntu-latest
+    outputs:
+      test_log_tail: ${{ steps.prepare_log.outputs.test_log_tail }}
+    
+    steps:
+    - name: 시작 시간 기록
+      id: start_time
+      run: |
+        echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
+        echo "시작 시간: $(date)"
+
+    - name: 저장소 체크아웃
+      uses: actions/checkout@v3
+
+    - name: JDK 17 설정
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: "17"
+        cache: maven
+
+    - name: 단위 테스트 실행
+      id: unit_tests
+      run: |
+        set -o pipefail
+        echo "단위 테스트 시작..."
+        ./mvnw -B test 2>&1 | tee maven-test.log
+        echo "단위 테스트 완료"
+
+    - name: 테스트 로그 준비
+      id: prepare_log
+      if: always()
+      run: |
+        if [ -f maven-test.log ]; then
+          echo "test_log_tail<<EOF" >> $GITHUB_OUTPUT
+          echo '```' >> $GITHUB_OUTPUT
+          tail -n 60 maven-test.log >> $GITHUB_OUTPUT
+          echo '```' >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        else
+          echo "test_log_tail=(maven-test.log 파일을 찾을 수 없음)" >> $GITHUB_OUTPUT
+        fi
+
+  # ========================================
+  # 2. Docker 이미지 빌드 및 푸시 Job
+  # ========================================
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: test
+    outputs:
+      image_latest: ${{ steps.image_tags.outputs.IMAGE_LATEST }}
+      image_tagged: ${{ steps.image_tags.outputs.IMAGE_TAGGED }}
+    
+    steps:
+    - name: 저장소 체크아웃
+      uses: actions/checkout@v3
+
+    - name: Service Account Key 디코딩
+      run: |
+        echo "Service Account Key 디코딩 중..."
+        echo "${{ secrets.GCP_SA_KEY }}" | base64 --decode > coffee-backend-key.json
+        ls -lh coffee-backend-key.json
+
+    - name: GCP 인증
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: "${{ secrets.GCP_SA_KEY }}"
+
+    - name: Docker 인증 설정
+      run: |
+        echo "Docker 인증 설정 중..."
+        gcloud auth configure-docker asia-northeast3-docker.pkg.dev
+
+    - name: 이미지 태그 생성
+      id: image_tags
+      run: |
+        IMAGE_TAG=$(echo ${{ github.sha }} | cut -c1-7)
+        IMAGE_LATEST="asia-northeast3-docker.pkg.dev/tedserp/coffee-repo/dubbi-coffee:latest"
+        IMAGE_TAGGED="asia-northeast3-docker.pkg.dev/tedserp/coffee-repo/dubbi-coffee:${IMAGE_TAG}"
+        echo "IMAGE_LATEST=${IMAGE_LATEST}" >> $GITHUB_OUTPUT
+        echo "IMAGE_TAGGED=${IMAGE_TAGGED}" >> $GITHUB_OUTPUT
+        echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+        echo "생성된 태그:"
+        echo "  - ${IMAGE_LATEST}"
+        echo "  - ${IMAGE_TAGGED}"
+
+    - name: Docker 이미지 빌드
+      run: |
+        echo "Docker 이미지 빌드 시작..."
+        docker build \
+          -t ${{ steps.image_tags.outputs.IMAGE_LATEST }} \
+          -t ${{ steps.image_tags.outputs.IMAGE_TAGGED }} \
+          .
+        echo "이미지 빌드 완료"
+        docker images | grep dubbi-coffee
+
+    - name: latest 이미지 푸시
+      run: |
+        echo "latest 이미지 푸시 중..."
+        docker push ${{ steps.image_tags.outputs.IMAGE_LATEST }}
+
+    - name: 태그된 이미지 푸시
+      run: |
+        echo "태그된 이미지 푸시 중..."
+        docker push ${{ steps.image_tags.outputs.IMAGE_TAGGED }}
+
+  # ========================================
+  # 3. Cloud Run 배포 Job
+  # ========================================
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [test, build-and-push]
+    
+    steps:
+    - name: GCP 인증
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: "${{ secrets.GCP_SA_KEY }}"
+        create_credentials_file: true
+
+    - name: gcloud CLI 설정
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: tedserp
+
+    - name: 인증 및 프로젝트 확인
+      run: |
+        echo "현재 활성 계정 확인 중..."
+        gcloud auth list
+        echo "현재 프로젝트 확인 중..."
+        gcloud config get-value project
+        echo "인증 상태 확인 완료"
+
+    - name: Cloud Run 서비스 배포
+      env:
+        GCP_SA_KEY_B64: ${{ secrets.GCP_SA_KEY }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        # Swagger 관련 환경 변수 (선택사항)
+        # SWAGGER_ENABLED: true로 설정하면 Swagger UI 및 API Docs 활성화
+        # SWAGGER_ALLOWED_IPS: 접근 허용 IP 목록 (쉼표로 구분, 와일드카드 및 CIDR 지원)
+        #   예시: "203.0.113.0,192.168.1.0/24,10.0.0.*"
+        #   비어있으면 모든 IP에서 접근 가능 (SWAGGER_ENABLED=true일 때만)
+        # SWAGGER_ENABLED: ${{ secrets.SWAGGER_ENABLED }}
+        # SWAGGER_ALLOWED_IPS: ${{ secrets.SWAGGER_ALLOWED_IPS }}
+      run: |
+        echo "Cloud Run 배포 시작..."
+        echo "배포 이미지: ${{ needs.build-and-push.outputs.image_latest }}"
+        
+        # Swagger 환경 변수 설정 (선택사항)
+        # 필요 시 아래 주석을 해제하고 GitHub Secrets에 값을 설정하세요.
+        # SWAGGER_ENV_VARS=""
+        # if [ -n "${{ secrets.SWAGGER_ENABLED }}" ]; then
+        #   SWAGGER_ENV_VARS="${SWAGGER_ENV_VARS} --set-env-vars SWAGGER_ENABLED=${{ secrets.SWAGGER_ENABLED }}"
+        # fi
+        # if [ -n "${{ secrets.SWAGGER_ALLOWED_IPS }}" ]; then
+        #   SWAGGER_ENV_VARS="${SWAGGER_ENV_VARS} --set-env-vars SWAGGER_ALLOWED_IPS=${{ secrets.SWAGGER_ALLOWED_IPS }}"
+        # fi
+        
+        gcloud run deploy tedserp \
+          --image=${{ needs.build-and-push.outputs.image_latest }} \
+          --platform=managed \
+          --region=asia-northeast3 \
+          --allow-unauthenticated \
+          --ingress=all \
+          --service-account=my-cloud-service-account@tedserp.iam.gserviceaccount.com \
+          --add-cloudsql-instances=tedserp:asia-northeast3:dubbi-coffee \
+          --set-env-vars SPRING_PROFILES_ACTIVE=prod \
+          --set-env-vars GOOGLE_APPLICATION_CREDENTIALS=/app/coffee-backend-key.json \
+          --set-env-vars "GCP_SA_KEY_B64=${GCP_SA_KEY_B64}" \
+          --set-env-vars "JWT_SECRET=${JWT_SECRET}" \
+          --set-env-vars "DISCORD_WEBHOOK=${DISCORD_WEBHOOK}" \
+          --set-env-vars "DB_PASSWORD=${DB_PASSWORD}"
+          # Swagger 환경 변수 추가 (필요 시 주석 해제)
+          # ${SWAGGER_ENV_VARS}
+
+  # ========================================
+  # 4. 알림 Job
+  # ========================================
+  notify:
+    runs-on: ubuntu-latest
+    needs: [test, build-and-push, deploy]
+    if: always()
+    
+    steps:
+    - name: 배포 실패 Discord 알림
+      if: failure()
+      uses: tsickert/discord-webhook@v6.0.0
+      with:
+        webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL != '' && secrets.DISCORD_WEBHOOK_URL || secrets.DISCORD_WEBHOOK }}
+        embed-title: "배포 실패"
+        embed-url: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        embed-description: |
+          **배포 환경:** `prod`
+          **대상 브랜치:** `${{ github.ref_name }}`
+          **액션 링크:** https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          **테스트 로그(마지막 60줄):**
+          ${{ needs.test.outputs.test_log_tail }}
+        embed-color: "16711680"
+
+    - name: 배포 성공 Discord 알림
+      if: success()
+      uses: tsickert/discord-webhook@v6.0.0
+      with:
+        webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL != '' && secrets.DISCORD_WEBHOOK_URL || secrets.DISCORD_WEBHOOK }}
+        embed-title: "배포 성공"
+        embed-url: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        embed-description: |
+          **배포 환경:** `prod`
+          **대상 브랜치:** `${{ github.ref_name }}`
+          **액션 링크:** https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        embed-color: "3066993"

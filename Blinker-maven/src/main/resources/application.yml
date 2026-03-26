@@ -1,4 +1,10 @@
 spring:
+  task:
+    execution:
+      pool:
+        core-size: 5   # 동시에 최대 5개 그룹 병렬 처리
+        max-size: 10
+        queue-capacity: 100
   profiles:
     include:  jpa, datasource
   main:
@@ -13,11 +19,20 @@ spring:
   jackson:
     time-zone: Asia/Seoul
   jwt:
-    secret-key: 697zRu8XSLLiiG-lXyCki76NiMv2peAN3ceW6Y5ILT0rHzsO3716jnEvYAegxDlHOAvTRP4pXI9B_aEPnkvsbw
+    secret-key: ${JWT_SECRET}
   servlet:
     multipart:
       maxFileSize: 100GB
       maxRequestSize: 100GB
+
+kakao:
+  rest-api-key : ${KAKAO_REST_KEY}
+
+gcs:
+  project:
+    id: dubbi-blinker
+  bucket:
+    name: dubbi-blinker
 
 thingplug:
   base:
@@ -27,8 +42,7 @@ thingplug:
   headers:
     x-m2m-origin: ThingPlug
     x-m2m-ri: 123456789
-    uKey: YVlMR2V6cEpiVkV1VVMyWlFuN3F5YjAwSGVidGxSdzk2eWVWNU9GQnRReW50V3R2QWIxajgyakVYc3hlTTErcQ==
-
+    uKey: ${THINGPLUG_UKEY}
 
 server:
   tomcat:
@@ -48,3 +62,8 @@ springdoc:
     operations-sorter: alpha
   cache:
     disabled: true
+
+logging:
+  discord:
+    webhook-url: ${DISCORD_WEBHOOK}
+  config: classpath:logback.xml

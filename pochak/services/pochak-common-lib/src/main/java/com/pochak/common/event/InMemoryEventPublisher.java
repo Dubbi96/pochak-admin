@@ -2,16 +2,17 @@ package com.pochak.common.event;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 /**
  * In-memory event publisher using Spring's ApplicationEventPublisher.
- * This is the Phase 0-2 stub implementation.
- * Will be replaced by RabbitMQ-backed implementation in Phase 3.
+ * Acts as fallback when RabbitMQ is not configured.
  */
 @Slf4j
 @Component
+@ConditionalOnMissingBean(name = "rabbitMqEventPublisher")
 @RequiredArgsConstructor
 public class InMemoryEventPublisher implements EventPublisher {
 

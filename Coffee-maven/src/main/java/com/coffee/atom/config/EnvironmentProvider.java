@@ -1,4 +1,4 @@
-package com.blinker.atom.config;
+package com.coffee.atom.config;
 
 import static java.util.Objects.nonNull;
 
@@ -30,3 +30,4 @@ public class EnvironmentProvider {
                 environment.getProperty(Value.ACTIVE_PROFILE_KEY), Value.LOCAL);
     }
 }
+

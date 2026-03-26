@@ -1,4 +1,4 @@
-package com.blinker.atom.config;
+package com.coffee.atom.config;
 
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.annotation.PreDestroy;

@@ -1,4 +1,4 @@
-package com.blinker.atom.config;
+package com.coffee.atom.config;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;

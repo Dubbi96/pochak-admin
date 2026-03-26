@@ -21,6 +21,11 @@ spring:
     schemas:
       - identity
     default-schema: identity
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:pochak}
+    password: ${RABBITMQ_PASS:pochak_dev_2026}
   jpa:
     hibernate:
       ddl-auto: validate

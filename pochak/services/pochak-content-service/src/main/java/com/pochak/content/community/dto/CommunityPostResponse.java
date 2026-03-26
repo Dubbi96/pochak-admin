@@ -1,6 +1,7 @@
 package com.pochak.content.community.dto;
 
 import com.pochak.content.community.entity.CommunityPost;
+import com.pochak.content.community.entity.ModerationStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,8 @@ public class CommunityPostResponse {
     private Integer viewCount;
     private Integer likeCount;
     private Integer commentCount;
+    private ModerationStatus moderationStatus;
+    private Integer warningCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -40,6 +43,8 @@ public class CommunityPostResponse {
                 .viewCount(post.getViewCount())
                 .likeCount(post.getLikeCount())
                 .commentCount(post.getCommentCount())
+                .moderationStatus(post.getModerationStatus())
+                .warningCount(post.getWarningCount())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();

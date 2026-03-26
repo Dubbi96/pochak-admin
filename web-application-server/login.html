@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>로그인</title>
+  <!-- 여기에 필요한 CSS 파일 링크를 추가할 수 있습니다 -->
+</head>
+<body>
+<h2>로그인 화면</h2>
+<form class="form-signin" method="post" action="/login/login-proc">
+  <input type="text" id="username" name="username" class="form-control" placeholder="아이디" autofocus="" />
+  <input type="text" id="password" name="password" class="form-control" placeholder="비밀번호" />
+
+  <input id="loginBtn" type="submit" class="btn btn-secondary active" value="로그인" />
+</form>
+
+<h2>회원 가입</h2>
+<div>
+  <a href="/oauth2/authorization/kakao" class="btn btn-primary">카카오로 가입하기</a>
+  <a href="/oauth2/authorization/naver" class="btn btn-secondary">네이버로 가입하기</a>
+  <a href="/oauth2/authorization/google" class="btn btn-danger">구글로 가입하기</a>
+</div>
+<!-- 여기에 필요한 JavaScript 파일 링크를 추가할 수 있습니다 -->
+</body>
+</html>

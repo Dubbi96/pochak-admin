@@ -5,6 +5,7 @@ import com.pochak.operation.reservation.entity.ReservationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -49,4 +50,20 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("venueId") Long venueId,
             @Param("rangeStart") LocalDateTime rangeStart,
             @Param("rangeEnd") LocalDateTime rangeEnd);
+
+    /**
+     * DATA-001: Cancel all active (PENDING/CONFIRMED) reservations for a withdrawn user.
+     */
+    @Modifying
+    @Query("UPDATE Reservation r SET r.status = 'CANCELLED' " +
+            "WHERE r.reservedByUserId = :userId AND r.status IN ('PENDING', 'CONFIRMED')")
+    int cancelActiveByUserId(@Param("userId") Long userId);
+
+    /**
+     * DATA-001: Anonymize completed reservations for a withdrawn user (set reservedByUserId to -1).
+     */
+    @Modifying
+    @Query("UPDATE Reservation r SET r.reservedByUserId = -1 " +
+            "WHERE r.reservedByUserId = :userId AND r.status = 'COMPLETED'")
+    int anonymizeCompletedByUserId(@Param("userId") Long userId);
 }
