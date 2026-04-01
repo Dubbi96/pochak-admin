@@ -185,6 +185,36 @@ export interface GenerationResult {
   summary: string;
 }
 
+// ── Assertion Types ──
+
+export type AssertionType =
+  | "element-visible"
+  | "element-hidden"
+  | "text-contains"
+  | "text-equals"
+  | "url-contains"
+  | "url-equals"
+  | "title-contains"
+  | "title-equals"
+  | "element-count"
+  | "attribute-equals"
+  | "css-property"
+  | "value-equals";
+
+export interface AssertionDefinition {
+  type: AssertionType;
+  selector?: string;
+  expected: unknown;
+}
+
+// ── Recorder Types ──
+
+export interface RecorderOptions {
+  baseURL?: string;
+  browser?: "chromium" | "firefox" | "webkit";
+  viewport?: { width: number; height: number };
+}
+
 // ── Step Executor Interface ──
 
 export interface ExecutionContext {
