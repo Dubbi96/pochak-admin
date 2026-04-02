@@ -37,6 +37,7 @@ dependencies {
     api("org.slf4j:slf4j-api")
     implementation("jakarta.servlet:jakarta.servlet-api")
     compileOnly("jakarta.persistence:jakarta.persistence-api:3.1.0")
+    compileOnly("org.springframework.data:spring-data-jpa")
 }
 
 publishing {
