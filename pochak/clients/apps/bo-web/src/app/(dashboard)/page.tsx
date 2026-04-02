@@ -167,9 +167,10 @@ export default function DashboardPage() {
                 onClick={() => setPeriod(p)}
                 className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                   period === p
-                    ? "bg-blue-600 text-white"
+                    ? ""
                     : "text-gray-500 hover:text-gray-700"
                 }`}
+                style={period === p ? { backgroundColor: "var(--c-primary)", color: "var(--fg-on-primary)" } : undefined}
               >
                 {PERIOD_LABELS[p]}
               </button>
@@ -199,8 +200,8 @@ export default function DashboardPage() {
         <div className="rounded-lg border border-gray-200 bg-white p-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50">
-                <Users size={16} className="text-blue-600" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: "var(--c-primary-light)" }}>
+                <Users size={16} style={{ color: "var(--c-primary)" }} />
               </div>
               <span className="text-sm font-medium text-gray-500">오늘 방문자</span>
             </div>
@@ -212,7 +213,7 @@ export default function DashboardPage() {
             <span className="text-[32px] font-bold leading-none text-gray-900">
               {fmt(data?.todayVisitors)}
             </span>
-            <button className="flex items-center gap-0.5 text-xs font-medium text-blue-600 hover:text-blue-700">
+            <button className="flex items-center gap-0.5 text-xs font-medium" style={{ color: "var(--c-primary)" }}>
               회원 관리
               <ChevronRight size={14} />
             </button>
@@ -236,7 +237,7 @@ export default function DashboardPage() {
             <span className="text-[32px] font-bold leading-none text-gray-900">
               {fmt(data?.todayActiveUsers)}
             </span>
-            <button className="flex items-center gap-0.5 text-xs font-medium text-blue-600 hover:text-blue-700">
+            <button className="flex items-center gap-0.5 text-xs font-medium" style={{ color: "var(--c-primary)" }}>
               통계 보기
               <ChevronRight size={14} />
             </button>
@@ -257,10 +258,10 @@ export default function DashboardPage() {
             </span>
           </div>
           <div className="mt-4 flex items-end justify-between">
-            <span className="text-[32px] font-bold leading-none text-blue-600">
+            <span className="text-[32px] font-bold leading-none" style={{ color: "var(--c-primary)" }}>
               {fmtCurrency(data?.todayRevenue)}
             </span>
-            <button className="flex items-center gap-0.5 text-xs font-medium text-blue-600 hover:text-blue-700">
+            <button className="flex items-center gap-0.5 text-xs font-medium" style={{ color: "var(--c-primary)" }}>
               전체 매출 내역
               <ChevronRight size={14} />
             </button>
@@ -281,7 +282,7 @@ export default function DashboardPage() {
             <span className="text-[32px] font-bold leading-none text-gray-900">
               {fmt(data?.totalContents)}
             </span>
-            <button className="flex items-center gap-0.5 text-xs font-medium text-blue-600 hover:text-blue-700">
+            <button className="flex items-center gap-0.5 text-xs font-medium" style={{ color: "var(--c-primary)" }}>
               콘텐츠 관리
               <ChevronRight size={14} />
             </button>
@@ -293,7 +294,7 @@ export default function DashboardPage() {
       <div className="rounded-lg border border-gray-200 bg-white p-5">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-gray-900">콘텐츠 조회수</h2>
-          <button className="flex items-center gap-0.5 text-xs font-medium text-blue-600 hover:text-blue-700">
+          <button className="flex items-center gap-0.5 text-xs font-medium" style={{ color: "var(--c-primary)" }}>
             전체 통계
             <ChevronRight size={14} />
           </button>
@@ -332,8 +333,8 @@ export default function DashboardPage() {
               return (
                 <div
                   key={item.date}
-                  className="flex-1 rounded-t bg-blue-400 transition-all hover:bg-blue-500"
-                  style={{ height: `${heightPct}%`, minHeight: 2 }}
+                  className="flex-1 rounded-t transition-all"
+                  style={{ backgroundColor: "var(--c-primary)", height: `${heightPct}%`, minHeight: 2 }}
                   title={`${item.date}: ${item.activeUsers}명`}
                 />
               );
@@ -355,7 +356,7 @@ export default function DashboardPage() {
             <h2 className="text-sm font-semibold text-gray-900">
               인기 콘텐츠 (월간)
             </h2>
-            <button className="flex items-center gap-0.5 text-xs font-medium text-blue-600 hover:text-blue-700">
+            <button className="flex items-center gap-0.5 text-xs font-medium" style={{ color: "var(--c-primary)" }}>
               전체 콘텐츠
               <ChevronRight size={14} />
             </button>
@@ -367,7 +368,7 @@ export default function DashboardPage() {
                 className="flex items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-gray-50"
               >
                 <div className="flex items-center gap-3">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-600">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold" style={{ backgroundColor: "var(--c-primary-light)", color: "var(--c-primary)" }}>
                     {idx + 1}
                   </span>
                   <span className="text-gray-700">{item.contentId}</span>

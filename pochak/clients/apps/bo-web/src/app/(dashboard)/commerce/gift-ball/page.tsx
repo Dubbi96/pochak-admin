@@ -251,7 +251,7 @@ export default function GiftBallPage() {
                     {page * (data?.size ?? 20) + idx + 1}
                   </td>
                   <td className="px-4 py-3">
-                    <button className="text-blue-600 hover:underline font-medium text-left">
+                    <button className="hover:underline font-medium text-left" style={{ color: "var(--c-primary)" }}>
                       {item.name}
                     </button>
                   </td>

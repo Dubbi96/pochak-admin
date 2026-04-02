@@ -25,9 +25,7 @@ interface DateRangePickerProps {
   label?: string;
   className?: string;
   disabled?: boolean;
-  /** Called when search is clicked */
   onSearch?: () => void;
-  /** Called when reset is clicked */
   onReset?: () => void;
 }
 
@@ -73,31 +71,38 @@ export function DateRangePicker({
     onReset?.();
   };
 
+  const dateInputStyle: React.CSSProperties = {
+    border: "1px solid var(--c-border)",
+    backgroundColor: "var(--bg-surface)",
+    color: "var(--fg)",
+  };
+
   return (
     <div className={cn("flex items-center gap-3", className)}>
-      {/* Label */}
-      <span className="text-sm font-medium text-gray-700 whitespace-nowrap">{label}</span>
+      <span className="text-sm font-medium whitespace-nowrap" style={{ color: "var(--fg)" }}>
+        {label}
+      </span>
 
-      {/* Date inputs */}
       <div className="flex items-center gap-2">
         <input
           type="date"
           value={value.from ? format(value.from, "yyyy-MM-dd") : ""}
           onChange={handleFromChange}
           disabled={disabled}
-          className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-9 rounded-md px-3 text-sm shadow-sm focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          style={dateInputStyle}
         />
-        <span className="text-gray-400">~</span>
+        <span style={{ color: "var(--fg-tertiary)" }}>~</span>
         <input
           type="date"
           value={value.to ? format(value.to, "yyyy-MM-dd") : ""}
           onChange={handleToChange}
           disabled={disabled}
-          className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-9 rounded-md px-3 text-sm shadow-sm focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          style={dateInputStyle}
         />
       </div>
 
-      {/* Quick period toggle buttons */}
       <div className="flex items-center gap-1">
         {QUICK_PERIODS.map((period) => (
           <button
@@ -105,36 +110,47 @@ export function DateRangePicker({
             type="button"
             disabled={disabled}
             onClick={() => handleQuickPeriod(period.months)}
-            className={cn(
-              "h-9 rounded-md border px-3 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-              selectedPeriod === period.months
-                ? "border-blue-600 bg-white text-blue-600"
-                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-            )}
+            className="h-9 rounded-md px-3 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            style={{
+              border: selectedPeriod === period.months
+                ? "1px solid var(--c-primary)"
+                : "1px solid var(--c-border)",
+              backgroundColor: "var(--bg-surface)",
+              color: selectedPeriod === period.months
+                ? "var(--c-primary)"
+                : "var(--fg)",
+            }}
           >
             {period.label}
           </button>
         ))}
       </div>
 
-      {/* Reset button */}
       <button
         type="button"
         onClick={handleReset}
         disabled={disabled}
-        className="flex h-9 items-center gap-1 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-9 items-center gap-1 rounded-md px-3 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+        style={{
+          border: "1px solid var(--c-border)",
+          backgroundColor: "var(--bg-surface)",
+          color: "var(--fg)",
+        }}
       >
         <span className="text-base leading-none">&#x21bb;</span>
         초기화
       </button>
 
-      {/* Search button */}
       {onSearch && (
         <button
           type="button"
           onClick={onSearch}
           disabled={disabled}
-          className="h-9 rounded-md bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-9 rounded-md px-4 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+          style={{
+            backgroundColor: "var(--c-primary)",
+            color: "var(--fg-on-primary)",
+          }}
         >
           검색
         </button>

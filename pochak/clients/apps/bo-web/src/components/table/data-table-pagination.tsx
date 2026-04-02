@@ -7,7 +7,6 @@ interface DataTablePaginationProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  /** How many page numbers to show at once (default 5) */
   siblingCount?: number;
 }
 
@@ -31,6 +30,42 @@ function getPageNumbers(currentPage: number, totalPages: number, siblingCount: n
   return Array.from({ length: end - start + 1 }, (_, i) => start + i);
 }
 
+function PageButton({
+  children,
+  onClick,
+  disabled,
+  active,
+  label,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  active?: boolean;
+  label?: string;
+}) {
+  return (
+    <button
+      className={cn(
+        "flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors",
+        disabled && "cursor-not-allowed",
+      )}
+      style={{
+        color: disabled
+          ? "var(--c-border)"
+          : active
+            ? "var(--c-primary)"
+            : "var(--fg-secondary)",
+        border: active ? "2px solid var(--c-primary)" : undefined,
+      }}
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function DataTablePagination({
   currentPage,
   totalPages,
@@ -41,116 +76,60 @@ export function DataTablePagination({
 
   return (
     <div className="flex items-center justify-center gap-1 py-2">
-      {/* First page */}
-      <button
-        className={cn(
-          "flex h-8 w-8 items-center justify-center rounded-full text-sm transition-colors",
-          currentPage === 1
-            ? "cursor-not-allowed text-gray-300"
-            : "text-gray-500 hover:bg-gray-100"
-        )}
-        onClick={() => onPageChange(1)}
-        disabled={currentPage === 1}
-        aria-label="첫 페이지"
-      >
+      <PageButton onClick={() => onPageChange(1)} disabled={currentPage === 1} label="첫 페이지">
         &laquo;
-      </button>
+      </PageButton>
 
-      {/* Previous page */}
-      <button
-        className={cn(
-          "flex h-8 w-8 items-center justify-center rounded-full text-sm transition-colors",
-          currentPage === 1
-            ? "cursor-not-allowed text-gray-300"
-            : "text-gray-500 hover:bg-gray-100"
-        )}
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        aria-label="이전 페이지"
-      >
+      <PageButton onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} label="이전 페이지">
         &lsaquo;
-      </button>
+      </PageButton>
 
-      {/* Leading ellipsis */}
       {pages[0] > 1 && (
         <>
-          <button
-            className="flex h-8 w-8 items-center justify-center rounded-full text-sm text-gray-500 hover:bg-gray-100 transition-colors"
-            onClick={() => onPageChange(1)}
-          >
-            1
-          </button>
+          <PageButton onClick={() => onPageChange(1)}>1</PageButton>
           {pages[0] > 2 && (
-            <span className="flex h-8 w-8 items-center justify-center text-sm text-gray-400">
+            <span
+              className="flex h-8 w-8 items-center justify-center text-sm"
+              style={{ color: "var(--fg-tertiary)" }}
+            >
               ...
             </span>
           )}
         </>
       )}
 
-      {/* Page numbers */}
       {pages.map((page) => (
-        <button
+        <PageButton
           key={page}
-          className={cn(
-            "flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors",
-            page === currentPage
-              ? "border-2 border-blue-600 text-blue-600"
-              : "text-gray-500 hover:bg-gray-100"
-          )}
           onClick={() => onPageChange(page)}
           disabled={page === currentPage}
+          active={page === currentPage}
         >
           {page}
-        </button>
+        </PageButton>
       ))}
 
-      {/* Trailing ellipsis */}
       {pages[pages.length - 1] < totalPages && (
         <>
           {pages[pages.length - 1] < totalPages - 1 && (
-            <span className="flex h-8 w-8 items-center justify-center text-sm text-gray-400">
+            <span
+              className="flex h-8 w-8 items-center justify-center text-sm"
+              style={{ color: "var(--fg-tertiary)" }}
+            >
               ...
             </span>
           )}
-          <button
-            className="flex h-8 w-8 items-center justify-center rounded-full text-sm text-gray-500 hover:bg-gray-100 transition-colors"
-            onClick={() => onPageChange(totalPages)}
-          >
-            {totalPages}
-          </button>
+          <PageButton onClick={() => onPageChange(totalPages)}>{totalPages}</PageButton>
         </>
       )}
 
-      {/* Next page */}
-      <button
-        className={cn(
-          "flex h-8 w-8 items-center justify-center rounded-full text-sm transition-colors",
-          currentPage === totalPages
-            ? "cursor-not-allowed text-gray-300"
-            : "text-gray-500 hover:bg-gray-100"
-        )}
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        aria-label="다음 페이지"
-      >
+      <PageButton onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} label="다음 페이지">
         &rsaquo;
-      </button>
+      </PageButton>
 
-      {/* Last page */}
-      <button
-        className={cn(
-          "flex h-8 w-8 items-center justify-center rounded-full text-sm transition-colors",
-          currentPage === totalPages
-            ? "cursor-not-allowed text-gray-300"
-            : "text-gray-500 hover:bg-gray-100"
-        )}
-        onClick={() => onPageChange(totalPages)}
-        disabled={currentPage === totalPages}
-        aria-label="마지막 페이지"
-      >
+      <PageButton onClick={() => onPageChange(totalPages)} disabled={currentPage === totalPages} label="마지막 페이지">
         &raquo;
-      </button>
+      </PageButton>
     </div>
   );
 }

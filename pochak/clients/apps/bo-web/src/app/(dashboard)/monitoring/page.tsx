@@ -75,7 +75,7 @@ function broadcastStatusVariant(
 function alertSeverityIcon(severity: AlertSeverity) {
   switch (severity) {
     case "INFO":
-      return <Info size={14} className="text-blue-500" />;
+      return <Info size={14} style={{ color: "var(--c-primary)" }} />;
     case "WARNING":
       return <AlertTriangle size={14} className="text-yellow-500" />;
     case "CRITICAL":
@@ -83,14 +83,14 @@ function alertSeverityIcon(severity: AlertSeverity) {
   }
 }
 
-function alertSeverityBg(severity: AlertSeverity): string {
+function alertSeverityBg(severity: AlertSeverity): { className: string; style?: React.CSSProperties } {
   switch (severity) {
     case "INFO":
-      return "bg-blue-50 border-blue-200";
+      return { className: "", style: { backgroundColor: "var(--c-primary-light)", borderColor: "var(--c-primary)" } };
     case "WARNING":
-      return "bg-yellow-50 border-yellow-200";
+      return { className: "bg-yellow-50 border-yellow-200" };
     case "CRITICAL":
-      return "bg-red-50 border-red-200";
+      return { className: "bg-red-50 border-red-200" };
   }
 }
 
@@ -102,18 +102,21 @@ function OverviewCard({
   subValues,
   icon,
   color,
+  colorStyle,
 }: {
   label: string;
   mainValue: string;
   subValues?: { label: string; value: string; color?: string }[];
   icon: React.ReactNode;
-  color: string;
+  color?: string;
+  colorStyle?: React.CSSProperties;
 }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
       <div className="flex items-center gap-3 mb-3">
         <div
-          className={`flex h-10 w-10 items-center justify-center rounded-lg ${color}`}
+          className={`flex h-10 w-10 items-center justify-center rounded-lg ${color ?? ""}`}
+          style={colorStyle}
         >
           {icon}
         </div>
@@ -229,8 +232,8 @@ export default function MonitoringPage() {
             { label: "오프라인", value: `${overview.offlineEquipment}`, color: "text-red-600 font-medium" },
             { label: "오류", value: `${overview.errorEquipment}`, color: "text-yellow-600 font-medium" },
           ]}
-          icon={<Cpu size={20} className="text-blue-600" />}
-          color="bg-blue-50"
+          icon={<Cpu size={20} style={{ color: "var(--c-primary)" }} />}
+          colorStyle={{ backgroundColor: "var(--c-primary-light)" }}
         />
         <OverviewCard
           label="활성 방송"
@@ -472,8 +475,9 @@ export default function MonitoringPage() {
               className={`flex items-start gap-3 rounded-lg border p-3 transition-colors ${
                 alert.acknowledged
                   ? "border-gray-200 bg-white opacity-60"
-                  : alertSeverityBg(alert.severity)
+                  : alertSeverityBg(alert.severity).className
               }`}
+              style={alert.acknowledged ? undefined : alertSeverityBg(alert.severity).style}
             >
               <div className="mt-0.5">{alertSeverityIcon(alert.severity)}</div>
               <div className="flex-1 min-w-0">

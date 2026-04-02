@@ -277,7 +277,7 @@ export default function EliteTeamPage() {
                       {OPERATION_STATUS_LABELS[item.operationStatus]}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3 font-medium text-blue-600 cursor-pointer hover:underline">
+                  <td className="px-4 py-3 font-medium cursor-pointer hover:underline" style={{ color: "var(--c-primary)" }}>
                     {item.name}
                   </td>
                   <td className="px-4 py-3 text-gray-600">{item.district}</td>

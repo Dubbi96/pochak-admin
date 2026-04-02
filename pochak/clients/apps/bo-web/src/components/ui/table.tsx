@@ -18,7 +18,12 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("[&_tr]:border-b [&_tr]:border-gray-200", className)} {...props} />
+  <thead
+    ref={ref}
+    className={cn("[&_tr]:border-b", className)}
+    style={{ borderColor: "var(--c-border)" }}
+    {...props}
+  />
 ));
 TableHeader.displayName = "TableHeader";
 
@@ -36,7 +41,8 @@ const TableFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tfoot
     ref={ref}
-    className={cn("border-t bg-gray-100/50 font-medium [&>tr]:last:border-b-0", className)}
+    className={cn("border-t font-medium [&>tr]:last:border-b-0", className)}
+    style={{ backgroundColor: "var(--bg-surface-variant)", borderColor: "var(--c-border)" }}
     {...props}
   />
 ));
@@ -47,11 +53,26 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
     <tr
       ref={ref}
       className={cn(
-        "border-b border-[#e5e7eb] bg-white transition-colors hover:bg-gray-50 data-[state=selected]:bg-blue-50",
+        "border-b transition-colors",
         className
       )}
+      style={{
+        borderColor: "var(--c-border)",
+        backgroundColor: "var(--bg-surface)",
+      }}
+      data-slot="table-row"
       {...props}
-    />
+    >
+      {props.children}
+      <style>{`
+        [data-slot="table-row"]:hover {
+          background-color: var(--c-hover) !important;
+        }
+        [data-slot="table-row"][data-state="selected"] {
+          background-color: var(--c-selected) !important;
+        }
+      `}</style>
+    </tr>
   )
 );
 TableRow.displayName = "TableRow";
@@ -63,9 +84,10 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-11 px-4 text-left align-middle text-sm font-medium text-gray-600 [&:has([role=checkbox])]:pr-0",
+      "h-11 px-4 text-left align-middle text-sm font-medium [&:has([role=checkbox])]:pr-0",
       className
     )}
+    style={{ color: "var(--fg-secondary)" }}
     {...props}
   />
 ));
@@ -90,7 +112,12 @@ const TableCaption = React.forwardRef<
   HTMLTableCaptionElement,
   React.HTMLAttributes<HTMLTableCaptionElement>
 >(({ className, ...props }, ref) => (
-  <caption ref={ref} className={cn("mt-4 text-sm text-gray-500", className)} {...props} />
+  <caption
+    ref={ref}
+    className={cn("mt-4 text-sm", className)}
+    style={{ color: "var(--fg-secondary)" }}
+    {...props}
+  />
 ));
 TableCaption.displayName = "TableCaption";
 

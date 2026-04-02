@@ -552,7 +552,7 @@ export default function OrganizationsPage() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         {org.isVerified ? (
-                          <CheckCircle2 size={16} className="mx-auto text-blue-500" />
+                          <CheckCircle2 size={16} className="mx-auto" style={{ color: "var(--c-primary)" }} />
                         ) : (
                           <span className="text-gray-300">-</span>
                         )}
@@ -700,7 +700,7 @@ export default function OrganizationsPage() {
               {/* Stats Row */}
               <div className="grid grid-cols-4 gap-3">
                 <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                  <Building2 size={16} className="text-blue-500" />
+                  <Building2 size={16} style={{ color: "var(--c-primary)" }} />
                   <div>
                     <p className="text-xs text-gray-500">소속팀</p>
                     <p className="text-sm font-semibold text-gray-900">{detailOrg.teamCount}개</p>

@@ -223,7 +223,7 @@ export default function ClipsListPage() {
           <Button
             size="sm"
             variant="outline"
-            className="border-blue-300 text-blue-700 hover:bg-blue-100"
+            style={{ borderColor: "var(--c-primary)", color: "var(--c-primary)" }}
             onClick={() => handleBulkVisibility("MEMBERS_ONLY")}
           >
             멤버만

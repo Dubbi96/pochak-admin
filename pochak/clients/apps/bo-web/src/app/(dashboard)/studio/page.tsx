@@ -421,16 +421,19 @@ function KPICard({
   value,
   icon,
   color,
+  colorStyle,
 }: {
   label: string;
   value: number;
   icon: React.ReactNode;
-  color: string;
+  color?: string;
+  colorStyle?: React.CSSProperties;
 }) {
   return (
     <div className="flex items-center gap-4 rounded-lg border border-gray-200 bg-white p-4">
       <div
-        className={`flex h-10 w-10 items-center justify-center rounded-lg ${color}`}
+        className={`flex h-10 w-10 items-center justify-center rounded-lg ${color ?? ""}`}
+        style={colorStyle}
       >
         {icon}
       </div>
@@ -537,8 +540,8 @@ export default function StudioPage() {
         <KPICard
           label="활성 세션 수"
           value={kpis.activeSessions}
-          icon={<Video size={20} className="text-blue-600" />}
-          color="bg-blue-50"
+          icon={<Video size={20} style={{ color: "var(--c-primary)" }} />}
+          colorStyle={{ backgroundColor: "var(--c-primary-light)" }}
         />
         <KPICard
           label="오늘 촬영 예정"
