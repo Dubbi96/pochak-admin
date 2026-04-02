@@ -128,8 +128,8 @@ function PromotionDialog({ open, onClose, editing, onSaved }: PromotionDialogPro
     }
   }, [type, discountType]);
 
-  const handleGenerateCode = () => {
-    setCode(generatePromoCode());
+  const handleGenerateCode = async () => {
+    setCode(await generatePromoCode());
   };
 
   const handleSave = async () => {

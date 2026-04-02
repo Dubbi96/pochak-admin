@@ -262,9 +262,9 @@ export default function OrganizationsPage() {
     setModalOpen(true);
   };
 
-  const openDetail = (org: Organization) => {
+  const openDetail = async (org: Organization) => {
     setDetailOrg(org);
-    const subs = getSubOrganizations(org.id);
+    const subs = await getSubOrganizations(org.id);
     setSubOrgs(subs);
     setDetailOpen(true);
   };
@@ -289,7 +289,7 @@ export default function OrganizationsPage() {
     setMemberDialogOpen(true);
     setOrgMembersLoading(true);
     try {
-      const members = await getOrganizationMembers(org.name);
+      const members = await getOrganizationMembers(org.id);
       setOrgMembers(members);
     } finally {
       setOrgMembersLoading(false);
@@ -299,7 +299,7 @@ export default function OrganizationsPage() {
   const handleOrgMemberRoleChange = async (membershipId: number, newRole: MembershipRole) => {
     await changeMembershipRole(membershipId, newRole);
     if (memberMgmtOrg) {
-      const members = await getOrganizationMembers(memberMgmtOrg.name);
+      const members = await getOrganizationMembers(memberMgmtOrg.id);
       setOrgMembers(members);
     }
   };
@@ -325,8 +325,13 @@ export default function OrganizationsPage() {
     }
   };
 
-  const hqOptions = getHeadquarterOptions();
-  const treeData = getOrganizationTreeData();
+  const [hqOptions, setHqOptions] = useState<{ value: string; label: string }[]>([]);
+  const [treeData, setTreeData] = useState<{ id: string; label: string; children?: { id: string; label: string }[] }[]>([]);
+
+  useEffect(() => {
+    getHeadquarterOptions().then(setHqOptions);
+    getOrganizationTreeData().then(setTreeData);
+  }, []);
 
   const canHostCompetition = form.type === "ASSOCIATION" || form.type === "PUBLIC";
 
