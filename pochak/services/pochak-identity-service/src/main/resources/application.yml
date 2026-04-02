@@ -1,0 +1,89 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: pochak-identity-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:pochak}?currentSchema=identity
+    username: ${DB_USERNAME:pochak}
+    password: ${DB_PASSWORD:pochak}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+  flyway:
+    enabled: false  # Disabled for dev; enable for production
+    baseline-on-migrate: true
+    baseline-version: "0"
+    locations: classpath:db/migration
+    schemas:
+      - identity
+    default-schema: identity
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:pochak}
+    password: ${RABBITMQ_PASS:pochak_dev_2026}
+  jpa:
+    hibernate:
+      ddl-auto: update  # Revert from validate to update for dev
+    properties:
+      hibernate:
+        default_schema: identity
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+    open-in-view: false
+
+pochak:
+  encryption:
+    master-key: ${PII_MASTER_KEY:}
+    dek-file: ${PII_DEK_FILE:./pii-dek.enc}
+  sms:
+    provider: stub  # Replace with 'twilio', 'naver-cloud', 'kakao' for production
+  jwt:
+    secret: ${JWT_SECRET}
+    access-expiration: 1800000       # 30 min
+    refresh-expiration: 2592000000   # 30 days
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+oauth2:
+  base-redirect-url: ${OAUTH_BASE_URL:http://localhost:8080}
+  kakao:
+    rest-api-key: ${KAKAO_REST_API_KEY}
+    client-secret: ${KAKAO_CLIENT_SECRET}
+    redirect-uri: ${oauth2.base-redirect-url}/api/v1/auth/oauth2/callback/kakao
+  google:
+    client-id: ${GOOGLE_CLIENT_ID}
+    client-secret: ${GOOGLE_CLIENT_SECRET}
+    redirect-uri: ${oauth2.base-redirect-url}/api/v1/auth/oauth2/callback/google
+  naver:
+    client-id: ${NAVER_CLIENT_ID}
+    client-secret: ${NAVER_CLIENT_SECRET}
+    redirect-uri: ${oauth2.base-redirect-url}/api/v1/auth/oauth2/callback/naver
+
+app:
+  web-base-url: ${WEB_BASE_URL:http://localhost:3100}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+logging:
+  level:
+    com.pochak.identity: DEBUG
+    org.hibernate.SQL: DEBUG

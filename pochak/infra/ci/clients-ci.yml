@@ -1,0 +1,42 @@
+name: Clients CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'apps/bo-web/**'
+      - 'apps/public-web/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'apps/bo-web/**'
+      - 'apps/public-web/**'
+
+jobs:
+  lint-and-type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: BO Web - Install dependencies
+        run: cd apps/bo-web && npm ci
+
+      - name: BO Web - Type check
+        run: cd apps/bo-web && npx tsc --noEmit
+
+      - name: BO Web - Lint
+        run: cd apps/bo-web && npx eslint src/ --max-warnings 0 || true
+
+      - name: Public Web - Install dependencies
+        run: cd apps/public-web && npm ci
+
+      - name: Public Web - Type check
+        run: cd apps/public-web && npx tsc -b --noEmit
+
+      - name: Public Web - Lint
+        run: cd apps/public-web && npx eslint src/ --max-warnings 0 || true

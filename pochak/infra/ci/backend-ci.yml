@@ -1,0 +1,74 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'services/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'services/**'
+
+jobs:
+  build-common-lib:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-common-${{ hashFiles('services/pochak-common-lib/**') }}
+          restore-keys: ${{ runner.os }}-gradle-common-
+
+      - name: Build and publish pochak-common-lib to mavenLocal
+        run: cd services/pochak-common-lib && ./gradlew publishToMavenLocal --no-daemon
+
+  build-services:
+    needs: build-common-lib
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - pochak-gateway
+          - pochak-identity-service
+          - pochak-content-service
+          - pochak-commerce-service
+          - pochak-operation-service
+          - pochak-admin-service
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ matrix.service }}-${{ hashFiles(format('services/{0}/**', matrix.service)) }}
+          restore-keys: ${{ runner.os }}-gradle-${{ matrix.service }}-
+
+      - name: Publish pochak-common-lib to mavenLocal
+        run: cd services/pochak-common-lib && ./gradlew publishToMavenLocal --no-daemon
+
+      - name: Build ${{ matrix.service }}
+        run: cd services/${{ matrix.service }} && ./gradlew build --no-daemon
+
+      - name: Run tests for ${{ matrix.service }}
+        run: cd services/${{ matrix.service }} && ./gradlew test --no-daemon

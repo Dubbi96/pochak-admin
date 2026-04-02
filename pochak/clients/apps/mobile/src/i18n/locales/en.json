@@ -1,0 +1,65 @@
+{
+  "common": {
+    "confirm": "OK",
+    "cancel": "Cancel",
+    "next": "Next",
+    "save": "Save",
+    "delete": "Delete",
+    "search": "Search",
+    "more": "More",
+    "viewAll": "View All",
+    "login": "Log In",
+    "logout": "Log Out",
+    "signup": "Sign Up",
+    "loading": "Loading...",
+    "noData": "No data available",
+    "retry": "Retry",
+    "error": "An error occurred"
+  },
+  "auth": {
+    "loginTitle": "Log In",
+    "idPlaceholder": "Enter your ID",
+    "pwPlaceholder": "Enter your password",
+    "keepLogin": "Keep me logged in",
+    "findAccount": "Find ID / Password",
+    "loginRequired": "Please log in to continue",
+    "noPermission": "You don't have viewing permission",
+    "loginFailed": "Login failed",
+    "enterCredentials": "Please enter your ID and password"
+  },
+  "home": {
+    "officialLive": "Official LIVE",
+    "popularPochak": "Popular POCHAK",
+    "latestVideos": "Latest Videos",
+    "bestClub": "Best Clubs",
+    "clubLive": "Club LIVE",
+    "competitionInfo": "Competitions",
+    "watching": " watching",
+    "views": "Views"
+  },
+  "player": {
+    "createClip": "Create Clip",
+    "fullMatch": "Watch Full Match",
+    "comments": "Comments",
+    "share": "Share",
+    "report": "Report",
+    "highlights": "Highlights"
+  },
+  "tabs": {
+    "home": "Home",
+    "schedule": "Schedule",
+    "filming": "Filming",
+    "clip": "Pochak",
+    "my": "My"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageKo": "한국어",
+    "languageEn": "English",
+    "notification": "Notifications",
+    "favorites": "Favorite Alerts",
+    "serviceDefault": "Service Defaults",
+    "environment": "Preferences"
+  }
+}

@@ -1,0 +1,1987 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Pochak OTT Platform - Service Policy Document</title>
+<style>
+@page {
+    size: A4;
+    margin: 20mm 15mm 20mm 15mm;
+}
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+    font-size: 11px;
+    line-height: 1.6;
+    color: #1a1a1a;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+}
+h1 {
+    font-size: 24px;
+    color: #111;
+    border-bottom: 3px solid #2563eb;
+    padding-bottom: 10px;
+    margin-top: 30px;
+    page-break-after: avoid;
+}
+h2 {
+    font-size: 18px;
+    color: #1e40af;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 6px;
+    margin-top: 28px;
+    page-break-after: avoid;
+}
+h3 {
+    font-size: 14px;
+    color: #1e3a5f;
+    margin-top: 20px;
+    page-break-after: avoid;
+}
+h4 {
+    font-size: 12px;
+    color: #374151;
+    margin-top: 16px;
+    page-break-after: avoid;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+    font-size: 10px;
+    page-break-inside: avoid;
+}
+th {
+    background-color: #f0f4ff;
+    border: 1px solid #d1d5db;
+    padding: 6px 8px;
+    text-align: left;
+    font-weight: 600;
+    color: #1e40af;
+}
+td {
+    border: 1px solid #d1d5db;
+    padding: 5px 8px;
+    vertical-align: top;
+}
+tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+code {
+    background-color: #f3f4f6;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-family: 'SF Mono', 'Menlo', monospace;
+}
+pre {
+    background-color: #1e293b;
+    color: #e2e8f0;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 10px;
+    overflow-x: auto;
+    page-break-inside: avoid;
+    line-height: 1.5;
+}
+pre code {
+    background: none;
+    padding: 0;
+    color: #e2e8f0;
+    font-size: 10px;
+}
+blockquote {
+    border-left: 4px solid #2563eb;
+    margin: 16px 0;
+    padding: 10px 16px;
+    background-color: #eff6ff;
+    color: #1e3a5f;
+    font-size: 11px;
+}
+hr {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 24px 0;
+}
+ul, ol {
+    padding-left: 24px;
+}
+li {
+    margin-bottom: 3px;
+}
+a {
+    color: #2563eb;
+    text-decoration: none;
+}
+.cover {
+    text-align: center;
+    padding: 120px 40px 60px;
+    page-break-after: always;
+}
+.cover h1 {
+    font-size: 36px;
+    border: none;
+    color: #1e40af;
+    margin-bottom: 8px;
+}
+.cover .subtitle {
+    font-size: 20px;
+    color: #475569;
+    margin-bottom: 60px;
+}
+.cover .meta {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 2;
+}
+</style>
+</head>
+<body>
+
+<div class="cover">
+    <h1>POCHAK</h1>
+    <div class="subtitle">OTT Platform Service Policy Document</div>
+    <div class="meta">
+        Version: 1.0.0-DRAFT<br>
+        Date: 2026-03-24<br>
+        Status: DRAFT - Review Required<br><br>
+        <em>Pochak OTT Platform MSA Architecture</em><br>
+        <em>6 Microservices + 1 Gateway + 3 Frontend Apps</em>
+    </div>
+</div>
+
+<h1 id="pochak-ott-platform-service-policy-document">Pochak OTT Platform - Service Policy Document</h1>
+<blockquote>
+<p>Version: 2.0.0
+Last Updated: 2026-03-25
+Status: <strong>CONFIRMED</strong> (v1 피드백 반영 완료)</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><a href="#1-플랫폼-개요">플랫폼 개요 (포착 TV / 시티 / 클럽)</a></li>
+<li><a href="#2-회원-정책">회원 정책</a></li>
+<li><a href="#3-인증-정책">인증 정책</a></li>
+<li><a href="#4-단체-정책">단체 정책</a></li>
+<li><a href="#5-멤버십--권한-정책">멤버십 &amp; 권한 정책</a></li>
+<li><a href="#6-대회-정책">대회 정책</a></li>
+<li><a href="#7-콘텐츠-정책">콘텐츠 정책</a></li>
+<li><a href="#8-콘텐츠-접근-제어-정책">콘텐츠 접근 제어 정책 (RBAC + ABAC)</a></li>
+<li><a href="#9-결제--상품-정책">결제 &amp; 상품 정책</a></li>
+<li><a href="#10-포인트뽈--지갑-정책">포인트(뽈) &amp; 지갑 정책</a></li>
+<li><a href="#11-쿠폰-정책">쿠폰 정책</a></li>
+<li><a href="#12-환불-정책">환불 정책</a></li>
+<li><a href="#13-촬영예약-정책">촬영예약 정책</a></li>
+<li><a href="#14-스트리밍--장비-정책">스트리밍 &amp; 장비 정책</a></li>
+<li><a href="#15-커뮤니티-정책">커뮤니티 정책</a></li>
+<li><a href="#16-알림-정책">알림 정책</a></li>
+<li><a href="#17-관리자bo-정책">관리자(BO) 정책</a></li>
+<li><a href="#18-보안-정책">보안 정책</a></li>
+<li><a href="#19-데이터-보관--삭제-정책">데이터 보관 &amp; 삭제 정책</a></li>
+<li><a href="#20-비기능-요구사항">비기능 요구사항</a></li>
+</ol>
+<hr />
+<h2 id="1">1. 플랫폼 개요</h2>
+<p>Pochak은 3개의 사용자 영역으로 구성됩니다.</p>
+<h3 id="11-tv">1.1 포착 TV</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>목적</td>
+<td>개인화 페이지 및 관리자 전시 영역 (유저 타겟)</td>
+</tr>
+<tr>
+<td>대상</td>
+<td>모든 사용자 (비로그인 포함)</td>
+</tr>
+<tr>
+<td>콘텐츠</td>
+<td>홈 피드, 추천 콘텐츠, 인기 영상, 검색 결과</td>
+</tr>
+<tr>
+<td>구성</td>
+<td>관리자가 BO에서 배너/섹션/추천 알고리즘을 통해 전시 관리</td>
+</tr>
+<tr>
+<td>개인화</td>
+<td>로그인 사용자에게 시청 이력/선호 종목 기반 추천 제공</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 포착 시티</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>목적</td>
+<td>체육시설 정보 / 협회 및 지자체 정보 공개 (지역 기반)</td>
+</tr>
+<tr>
+<td>대상</td>
+<td>모든 사용자 (비로그인 포함 열람 가능)</td>
+</tr>
+<tr>
+<td>표시 단체</td>
+<td>공개된 체육시설, 지자체 시설, 대규모 협회</td>
+</tr>
+<tr>
+<td>핵심 기능</td>
+<td>시설 예약 현황 조회, 촬영 예약, 시설 정보 열람</td>
+</tr>
+<tr>
+<td>인증 요건</td>
+<td>지자체/대규모 협회의 경우 <strong>BO에서 관리자 인증 필수</strong> (신뢰성 확보)</td>
+</tr>
+<tr>
+<td>콘텐츠 공개</td>
+<td>기본 PUBLIC (누구나 열람 가능)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="13">1.3 포착 클럽</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>목적</td>
+<td>B2B / B2C 영업 대상 단체 표기 장소</td>
+</tr>
+<tr>
+<td>대상</td>
+<td>시티/TV를 제외한 <strong>모든 단체</strong></td>
+</tr>
+<tr>
+<td>콘텐츠</td>
+<td>CUG(Closed User Group) 단체: 콘텐츠 직접 노출 불가, 단체 자체는 접근 가능</td>
+</tr>
+<tr>
+<td>CUG 정책</td>
+<td>회원 전용 영상과 홍보용(비회원) 영상을 <strong>별도 관리</strong> 가능 (YouTube 멤버십 모델)</td>
+</tr>
+<tr>
+<td>커뮤니티</td>
+<td>소식 / 구인 / 모집 등 커뮤니티 성 공간 제공 (지역 기반, 당근마켓 스타일)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="14">1.4 영역 배치 규칙</h3>
+<div class="codehilite"><pre><span></span><code>포착 TV ─── 모든 사용자의 메인 진입점, 개인화 피드
+  │
+  ├── 포착 시티 ─── 공공 체육시설 / 협회 / 지자체 (지역 탐색)
+  │     └── 예약 현황, 시설 정보, 공개 콘텐츠
+  │
+  └── 포착 클럽 ─── B2B/B2C 단체 (가입 기반)
+        ├── 오픈 단체: 자유 가입, 콘텐츠 공개
+        └── CUG 단체: 단체는 보이되, 콘텐츠는 회원만
+              ├── 회원 전용 영상 (가입 후 접근)
+              └── 홍보용 영상 (비회원도 열람 가능)
+</code></pre></div>
+
+<hr />
+<h2 id="2">2. 회원 정책</h2>
+<h3 id="21">2.1 계정 식별자</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>국내 사용자 식별자</td>
+<td>전화번호 1개 = 1 계정 (UNIQUE)</td>
+</tr>
+<tr>
+<td>해외 사용자 식별자</td>
+<td>이메일 1개 = 1 계정 (UNIQUE)</td>
+</tr>
+<tr>
+<td>OAuth 연동</td>
+<td>1 계정 : N 로그인 방식 (카카오, 구글, 네이버 동시 연결 가능)</td>
+</tr>
+<tr>
+<td>loginId</td>
+<td>6~20자, 영문+숫자+밑줄(_)만 허용, 중복 불가</td>
+</tr>
+<tr>
+<td>비밀번호</td>
+<td>8~20자, 3종류 이상 조합 (영문/숫자/특수문자)</td>
+</tr>
+<tr>
+<td>이메일</td>
+<td>제공 시 UNIQUE, 대소문자 구분 없음</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-4">2.2 가입 경로 (4개)</h3>
+<h4 id="route-a-14">Route A: 국내 성인 (14세 이상)</h4>
+<div class="codehilite"><pre><span></span><code>이용약관 동의 → 휴대폰 인증 → [중복 확인] → 계정 정보 입력 → 추가 정보 → 가입 완료
+</code></pre></div>
+
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>연령 제한</td>
+<td>만 14세 이상만 가입 가능</td>
+</tr>
+<tr>
+<td>필수 인증</td>
+<td>휴대폰 SMS 인증</td>
+</tr>
+<tr>
+<td>필수 입력</td>
+<td>loginId, 비밀번호, 이름, 생년월일</td>
+</tr>
+<tr>
+<td>선택 입력</td>
+<td>이메일, 성별, 프로필 이미지</td>
+</tr>
+<tr>
+<td>동의 항목</td>
+<td>이용약관(필수), 개인정보(필수), 마케팅(선택)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="route-b-14">Route B: 국내 미성년자 (14세 미만)</h4>
+<div class="codehilite"><pre><span></span><code>이용약관 동의 → 보호자 인증 → 본인 휴대폰 인증 → 계정 정보 입력 → 추가 정보 → 가입 완료
+</code></pre></div>
+
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>연령 제한</td>
+<td>만 14세 미만</td>
+</tr>
+<tr>
+<td>보호자 조건</td>
+<td>만 14세 이상의 성인 계정 보유자</td>
+</tr>
+<tr>
+<td>보호자당 미성년 계정 수</td>
+<td>최대 5개 (개별 조정 가능)</td>
+</tr>
+<tr>
+<td>보호자 생성 제한</td>
+<td>24시간 내 최대 2개 계정 생성</td>
+</tr>
+<tr>
+<td>미성년자 보호자 불가</td>
+<td>미성년 계정은 보호자가 될 수 없음</td>
+</tr>
+</tbody>
+</table>
+<h4 id="route-c-sns">Route C: SNS 소셜 가입</h4>
+<div class="codehilite"><pre><span></span><code>OAuth 인증 → 이용약관 동의 → 휴대폰 인증 → [기존 계정 연결/신규 생성] → 추가 정보 → 가입 완료
+</code></pre></div>
+
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>지원 SNS</td>
+<td>카카오, 구글, 네이버</td>
+</tr>
+<tr>
+<td>전화번호 인증</td>
+<td>필수 (국내 사용자)</td>
+</tr>
+<tr>
+<td>기존 이메일 매칭</td>
+<td>OAuth 이메일과 동일한 계정 발견 시 "연결하시겠습니까?" 안내</td>
+</tr>
+<tr>
+<td>프로필 자동 반영</td>
+<td>OAuth에서 받은 이름, 프로필 이미지 자동 적용</td>
+</tr>
+</tbody>
+</table>
+<h4 id="route-d">Route D: 해외 사용자</h4>
+<div class="codehilite"><pre><span></span><code>이용약관 동의(EN) → 이메일 인증 → 계정 생성 (ID/PW/생년월일) → 추가 정보 → 가입 완료
+</code></pre></div>
+
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>인증 방식</td>
+<td>이메일 인증 (SMS 불가)</td>
+</tr>
+<tr>
+<td>국적 입력</td>
+<td>필수</td>
+</tr>
+<tr>
+<td>언어</td>
+<td>영문 기본</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23">2.3 전화번호 인증 규칙</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>인증번호 자릿수</td>
+<td>6자리</td>
+</tr>
+<tr>
+<td>인증번호 유효 시간</td>
+<td>180초 (3분)</td>
+</tr>
+<tr>
+<td>코드당 최대 시도 횟수</td>
+<td>5회</td>
+</tr>
+<tr>
+<td>시간당 최대 발송 횟수</td>
+<td>5회/전화번호/시간</td>
+</tr>
+<tr>
+<td>인증 성공 시</td>
+<td>verifiedToken (UUID) 발급, 30분 유효</td>
+</tr>
+</tbody>
+</table>
+<h3 id="24">2.4 사용자 상태 생명주기</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">UNVERIFIED</span> <span class="err">──→</span> <span class="n">ACTIVE</span> <span class="err">──→</span> <span class="n">DORMANT_PENDING</span> <span class="err">──→</span> <span class="n">DORMANT</span>
+                 <span class="err">│</span>              <span class="err">│</span>                  <span class="err">│</span>
+                 <span class="err">│</span>              <span class="err">└──</span> <span class="err">로그인</span> <span class="err">──→</span> <span class="n">ACTIVE</span>
+                 <span class="err">│</span>
+                 <span class="err">├──→</span> <span class="n">BLOCKED</span> <span class="p">(</span><span class="err">관리자</span> <span class="err">차단</span><span class="p">)</span>
+                 <span class="err">│</span>       <span class="err">└──→</span> <span class="n">ACTIVE</span> <span class="p">(</span><span class="err">관리자</span> <span class="err">해제</span><span class="p">)</span>
+                 <span class="err">│</span>
+                 <span class="err">└──→</span> <span class="n">WITHDRAWN</span> <span class="p">(</span><span class="err">본인</span> <span class="err">탈퇴</span> <span class="err">요청</span><span class="p">)</span>
+</code></pre></div>
+
+<table>
+<thead>
+<tr>
+<th>전환</th>
+<th>조건</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ACTIVE → DORMANT_PENDING</td>
+<td>90일 미접속</td>
+</tr>
+<tr>
+<td>DORMANT_PENDING → DORMANT</td>
+<td>PENDING 후 180일 경과</td>
+</tr>
+<tr>
+<td>ACTIVE → WITHDRAWN</td>
+<td>사용자 탈퇴 요청, 7일 쿨다운 기간</td>
+</tr>
+</tbody>
+</table>
+<h3 id="25">2.5 사용자 관계</h3>
+<table>
+<thead>
+<tr>
+<th>관계 유형</th>
+<th>설명</th>
+<th>검증 방식</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FAMILY</td>
+<td>부모, 배우자, 형제</td>
+<td>상호 확인</td>
+</tr>
+<tr>
+<td>COACH</td>
+<td>코치/강사 관계</td>
+<td>상호 확인</td>
+</tr>
+<tr>
+<td>GUARDIAN</td>
+<td>법적 보호자 (미성년)</td>
+<td>가입 시 인증</td>
+</tr>
+<tr>
+<td>FRIEND</td>
+<td>비공식 팔로우 관계</td>
+<td>검증 불필요</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3">3. 인증 정책</h2>
+<h3 id="31-jwt">3.1 JWT 토큰</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>App/Web (Identity)</th>
+<th>BO (Admin)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Access Token TTL</td>
+<td>30분</td>
+<td>1시간</td>
+</tr>
+<tr>
+<td>Refresh Token TTL</td>
+<td>30일</td>
+<td>24시간</td>
+</tr>
+<tr>
+<td>알고리즘</td>
+<td>HMAC-SHA</td>
+<td>HMAC-SHA</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-api-gateway">3.2 API Gateway 보안</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rate Limiting (인증)</td>
+<td>10 req/min</td>
+</tr>
+<tr>
+<td>Rate Limiting (API)</td>
+<td>100 req/min</td>
+</tr>
+<tr>
+<td>Rate Limit 방식</td>
+<td>Redis 기반</td>
+</tr>
+<tr>
+<td>Correlation ID</td>
+<td>X-Correlation-Id (UUID 자동 생성)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4">4. 단체 정책</h2>
+<blockquote>
+<p><strong>v2 변경</strong>: 기존의 ASSOCIATION/PUBLIC/PRIVATE 분류를 폐지하고, <strong>단일 Entity "단체"</strong> 로 통합. 자가참조 DAG 구조로 계층을 표현합니다.</p>
+</blockquote>
+<h3 id="41">4.1 단체 데이터 모델</h3>
+<div class="codehilite"><pre><span></span><code>organizations (단일 테이블)
+├── id: BIGSERIAL PK
+├── parent_id: BIGINT (자가참조, nullable) ──→ DAG 구조
+├── name: VARCHAR(200) NOT NULL
+├── sport_id: INT
+├── description: TEXT
+├── logo_url: VARCHAR(500)
+├── si_gun_gu_code: VARCHAR(10)    ──→ 지역 기반 (포착 시티/클럽 영역 결정)
+│
+│ ── 영역 설정 ──
+├── display_area: ENUM(&#39;CITY&#39;, &#39;CLUB&#39;)  ──→ 포착 시티 / 포착 클럽 배치
+├── is_verified: BOOLEAN DEFAULT false   ──→ 시티 인증 여부 (BO 관리자 인증)
+│
+│ ── 접근 설정 (관리자가 &quot;단체 설정&quot;에서 변경) ──
+├── reservation_policy: ENUM(&#39;ALL_MEMBERS&#39;, &#39;MANAGER_ONLY&#39;) DEFAULT &#39;MANAGER_ONLY&#39;
+├── can_host_competition: BOOLEAN DEFAULT true
+├── join_policy: ENUM(&#39;OPEN&#39;, &#39;APPROVAL&#39;, &#39;INVITE_ONLY&#39;) DEFAULT &#39;APPROVAL&#39;
+├── default_content_visibility: ENUM(&#39;PUBLIC&#39;, &#39;MEMBERS_ONLY&#39;) DEFAULT &#39;MEMBERS_ONLY&#39;
+│
+│ ── CUG 설정 (포착 클럽) ──
+├── is_cug: BOOLEAN DEFAULT false   ──→ CUG 단체 여부
+│     (CUG=true: 단체 자체는 검색/접근 가능, 콘텐츠는 회원만)
+│     (CUG=false: 설정에 따라 콘텐츠 공개)
+│
+├── active: BOOLEAN DEFAULT true
+├── created_at, updated_at, deleted_at
+</code></pre></div>
+
+<h3 id="42-dag">4.2 자가참조 DAG 구조</h3>
+<div class="codehilite"><pre><span></span><code>A 협회 (parent_id=null)
+├── B 시도체육회 (parent_id=A)
+│   ├── C 시군구체육회 (parent_id=B)
+│   └── D 구장운영팀 (parent_id=B)
+├── E 산하팀 (parent_id=A)
+└── F 지점 (parent_id=A)
+    └── G 하위지점 (parent_id=F)
+</code></pre></div>
+
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>구조</td>
+<td>단일 Entity, 자가참조 parent_id (DAG)</td>
+</tr>
+<tr>
+<td>순환참조</td>
+<td><strong>금지</strong> - 저장 시 순환 감지 로직 필수</td>
+</tr>
+<tr>
+<td>깊이 제한</td>
+<td>최대 5단계 (성능/UX)</td>
+</tr>
+<tr>
+<td>루트 단체</td>
+<td>parent_id = null</td>
+</tr>
+<tr>
+<td>독립 운영</td>
+<td>어떤 단체든 독립(parent_id=null) 가능</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43-vs">4.3 포착 시티 vs 포착 클럽 배치 규칙</h3>
+<table>
+<thead>
+<tr>
+<th>속성</th>
+<th>포착 시티 (display_area=CITY)</th>
+<th>포착 클럽 (display_area=CLUB)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>목적</td>
+<td>공공 체육시설, 협회, 지자체</td>
+<td>B2B/B2C 영업 단체</td>
+</tr>
+<tr>
+<td>인증</td>
+<td><strong>is_verified=true 필수</strong> (BO 관리자 인증)</td>
+<td>인증 불필요</td>
+</tr>
+<tr>
+<td>가입 정책</td>
+<td>기본 OPEN (누구나 가입)</td>
+<td>기본 APPROVAL (승인 필요)</td>
+</tr>
+<tr>
+<td>예약 권한</td>
+<td>기본 ALL_MEMBERS (모든 멤버 예약 가능)</td>
+<td>기본 MANAGER_ONLY (매니저만)</td>
+</tr>
+<tr>
+<td>콘텐츠 공개</td>
+<td>기본 PUBLIC</td>
+<td>기본 MEMBERS_ONLY</td>
+</tr>
+<tr>
+<td>커뮤니티</td>
+<td>시설 정보, 예약 현황 위주</td>
+<td>소식/구인/모집 커뮤니티</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>핵심</strong>: 시티/클럽은 데이터 분류가 아닌 <strong>표시 영역</strong>입니다. 동일한 단체 Entity를 <code>display_area</code> 필드로 구분합니다. 관리자(ADMIN 역할)가 "단체 설정" 화면에서 모든 설정을 변경할 수 있습니다.</p>
+</blockquote>
+<h3 id="44-cug-closed-user-group">4.4 CUG (Closed User Group) 단체 정책</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>단체 접근</td>
+<td>CUG 여부와 무관하게 <strong>단체 자체는 누구나 접근/검색 가능</strong></td>
+</tr>
+<tr>
+<td>콘텐츠 접근</td>
+<td>CUG=true인 단체의 콘텐츠는 <strong>회원만 접근 가능</strong></td>
+</tr>
+<tr>
+<td>홍보용 영상</td>
+<td>CUG 단체도 <strong>홍보용(PUBLIC) 영상은 별도 지정하여 비회원에게 공개</strong> 가능</td>
+</tr>
+<tr>
+<td>회원 전용 영상</td>
+<td>visibility=MEMBERS_ONLY로 지정된 콘텐츠는 가입 회원만 열람</td>
+</tr>
+<tr>
+<td>비유</td>
+<td>YouTube 채널 멤버십 모델 (무료 공개 영상 + 멤버 전용 영상 공존)</td>
+</tr>
+</tbody>
+</table>
+<div class="codehilite"><pre><span></span><code>CUG 단체의 콘텐츠 구분:
+├── 홍보용 영상 (visibility=PUBLIC)     → 누구나 시청 가능
+├── 회원 전용 영상 (visibility=MEMBERS_ONLY) → 가입 회원만 시청
+└── 비공개 영상 (visibility=PRIVATE)    → 지정 사용자만 시청
+</code></pre></div>
+
+<h3 id="45">4.5 단체 설정 (매니저 이상 접근)</h3>
+<blockquote>
+<p><strong>v2 변경</strong>: 가입 승인, 예약 권한, 대회 개설 권한 등을 <strong>"단체 설정" 화면</strong>에서 관리자(ADMIN 역할)가 직접 설정합니다.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>설정 항목</th>
+<th>설명</th>
+<th>변경 가능 역할</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>join_policy</td>
+<td>가입 정책: OPEN / APPROVAL / INVITE_ONLY</td>
+<td>ADMIN</td>
+</tr>
+<tr>
+<td>reservation_policy</td>
+<td>예약 권한: ALL_MEMBERS / MANAGER_ONLY</td>
+<td>ADMIN</td>
+</tr>
+<tr>
+<td>can_host_competition</td>
+<td>대회 개설 가능 여부</td>
+<td>ADMIN</td>
+</tr>
+<tr>
+<td>default_content_visibility</td>
+<td>신규 콘텐츠 기본 공개 범위</td>
+<td>ADMIN</td>
+</tr>
+<tr>
+<td>is_cug</td>
+<td>CUG 모드 활성화</td>
+<td>ADMIN</td>
+</tr>
+<tr>
+<td>display_area</td>
+<td>포착 시티/클럽 영역 배치 (BO 관리자만)</td>
+<td>BO 관리자</td>
+</tr>
+<tr>
+<td>is_verified</td>
+<td>시티 인증 여부 (BO 관리자만)</td>
+<td>BO 관리자</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5">5. 멤버십 &amp; 권한 정책</h2>
+<h3 id="51">5.1 멤버십 역할</h3>
+<table>
+<thead>
+<tr>
+<th>역할</th>
+<th>대상</th>
+<th>권한 범위</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADMIN</td>
+<td>단체</td>
+<td>모든 관리 권한, 단체 설정 변경, 멤버/매니저 관리</td>
+</tr>
+<tr>
+<td>MANAGER</td>
+<td>단체</td>
+<td>콘텐츠 관리, 멤버 승인/거절, 예약 관리</td>
+</tr>
+<tr>
+<td>COACH</td>
+<td>단체</td>
+<td>팀 콘텐츠 접근, 선수 관리</td>
+</tr>
+<tr>
+<td>PLAYER</td>
+<td>단체</td>
+<td>팀 콘텐츠 접근, 개인 클립 생성</td>
+</tr>
+<tr>
+<td>GUARDIAN</td>
+<td>단체</td>
+<td>보호 대상 미성년 선수의 콘텐츠 접근</td>
+</tr>
+<tr>
+<td>MEMBER</td>
+<td>단체</td>
+<td>기본 콘텐츠 접근</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52">5.2 가입 승인 플로우</h3>
+<table>
+<thead>
+<tr>
+<th>join_policy</th>
+<th>사용자 행동</th>
+<th>처리</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OPEN</td>
+<td>"가입" 클릭</td>
+<td>즉시 APPROVED (MEMBER 역할 부여)</td>
+</tr>
+<tr>
+<td>APPROVAL</td>
+<td>"가입 신청" 클릭</td>
+<td>PENDING → MANAGER 이상이 승인/거절</td>
+</tr>
+<tr>
+<td>INVITE_ONLY</td>
+<td>가입 버튼 없음</td>
+<td>MANAGER 이상이 초대링크/코드 발급 → 사용자 수락</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>가입 정책은 <strong>관리자(ADMIN 역할)가 "단체 설정" 화면에서 변경</strong> 가능합니다.</p>
+</blockquote>
+<h3 id="53">5.3 단체 설정 접근 권한</h3>
+<table>
+<thead>
+<tr>
+<th>메뉴</th>
+<th>접근 가능 역할</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>단체 정보 수정</td>
+<td>ADMIN</td>
+</tr>
+<tr>
+<td>단체 설정 (가입/예약/대회/CUG)</td>
+<td>ADMIN</td>
+</tr>
+<tr>
+<td>멤버 관리 (승인/거절/역할변경/추방)</td>
+<td>ADMIN, MANAGER</td>
+</tr>
+<tr>
+<td>콘텐츠 관리 (공개/비공개/삭제)</td>
+<td>ADMIN, MANAGER</td>
+</tr>
+<tr>
+<td>커뮤니티 관리 (게시물 삭제/고정)</td>
+<td>ADMIN, MANAGER</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6">6. 대회 정책</h2>
+<blockquote>
+<p><strong>v2 변경</strong>: 기존에는 "협회만 대회 개설 가능"이었으나, 이제 <strong>모든 단체의 관리자(ADMIN)가 대회를 개설할 수 있습니다.</strong></p>
+</blockquote>
+<h3 id="61">6.1 대회 개설</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>개설 권한</td>
+<td>단체의 <strong>ADMIN 역할</strong> 사용자 (단체 설정에서 can_host_competition=true인 경우)</td>
+</tr>
+<tr>
+<td>개설 가능 단체</td>
+<td>모든 단체 (기본 can_host_competition=true)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62">6.2 대회 공개 범위</h3>
+<table>
+<thead>
+<tr>
+<th>공개 유형</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>전체 공개</strong></td>
+<td>대회 카드 목록에 표출, 누구나 검색/접근 가능</td>
+</tr>
+<tr>
+<td><strong>비공개 (초대제)</strong></td>
+<td>대회 카드 목록에 표출되지 않음. <strong>링크(URL) 또는 QR코드로 초대된 사용자만 접근 가능</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="63">6.3 비공개 대회 접근 규칙</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>접근 방법</td>
+<td>URL 링크 또는 QR코드를 통해서만 진입</td>
+</tr>
+<tr>
+<td>최초 접근</td>
+<td>비공개 대회 링크를 클릭하면 해당 대회 페이지 진입</td>
+</tr>
+<tr>
+<td>재접근</td>
+<td><strong>한 번이라도 접근한 사용자는 "방문한 페이지"에서 해당 대회를 확인 가능하며, 재입장 가능</strong></td>
+</tr>
+<tr>
+<td>방문 기록</td>
+<td><code>competition_visits</code> 테이블에 (user_id, competition_id, first_visited_at) 기록</td>
+</tr>
+<tr>
+<td>검색</td>
+<td>비공개 대회는 일반 검색 결과에 노출되지 않음</td>
+</tr>
+<tr>
+<td>콘텐츠</td>
+<td>대회 내 경기 영상도 동일한 비공개 정책 적용</td>
+</tr>
+</tbody>
+</table>
+<h3 id="64">6.4 대회 상태</h3>
+<div class="codehilite"><pre><span></span><code>SCHEDULED → ONGOING → COMPLETED
+               ↓
+           CANCELLED
+</code></pre></div>
+
+<hr />
+<h2 id="7">7. 콘텐츠 정책</h2>
+<h3 id="71">7.1 콘텐츠 유형</h3>
+<table>
+<thead>
+<tr>
+<th>유형</th>
+<th>설명</th>
+<th>소스</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LIVE</td>
+<td>실시간 경기 스트리밍</td>
+<td>카메라 → 인제스트 서버</td>
+</tr>
+<tr>
+<td>VOD</td>
+<td>경기 다시보기 (full-match)</td>
+<td>LIVE 녹화 또는 직접 업로드</td>
+</tr>
+<tr>
+<td>CLIP</td>
+<td>하이라이트/짧은 발췌</td>
+<td>LIVE 또는 VOD에서 구간 추출</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72">7.2 콘텐츠 공개 범위</h3>
+<table>
+<thead>
+<tr>
+<th>visibility</th>
+<th>설명</th>
+<th>CUG 단체에서의 활용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PUBLIC</td>
+<td>전체 공개</td>
+<td><strong>홍보용 영상</strong> (비회원도 시청)</td>
+</tr>
+<tr>
+<td>MEMBERS_ONLY</td>
+<td>소속 단체 멤버만</td>
+<td><strong>회원 전용 영상</strong> (가입 후 시청)</td>
+</tr>
+<tr>
+<td>TEAM_ONLY</td>
+<td>소속 팀 멤버만</td>
+<td>팀 내부 전용</td>
+</tr>
+<tr>
+<td>PRIVATE</td>
+<td>소유자/지정 사용자만</td>
+<td>비공개</td>
+</tr>
+</tbody>
+</table>
+<h3 id="73">7.3 콘텐츠 소유 유형</h3>
+<table>
+<thead>
+<tr>
+<th>owner_type</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SYSTEM</td>
+<td>시스템 생성 (자동 녹화)</td>
+</tr>
+<tr>
+<td>ORGANIZATION</td>
+<td>단체 소유 콘텐츠</td>
+</tr>
+<tr>
+<td>USER</td>
+<td>개인 사용자 생성 콘텐츠</td>
+</tr>
+</tbody>
+</table>
+<h3 id="74">7.4 클립 규칙</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>최대 길이</td>
+<td>3분 (180초)</td>
+</tr>
+<tr>
+<td>소스</td>
+<td>LIVE 또는 VOD만 가능</td>
+</tr>
+<tr>
+<td>생성 권한</td>
+<td>접근 가능한 콘텐츠에서 모든 멤버</td>
+</tr>
+<tr>
+<td>기본 공개 범위</td>
+<td>PRIVATE (생성자 결정)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="75">7.5 경기 상태</h3>
+<div class="codehilite"><pre><span></span><code>SCHEDULED → LIVE → COMPLETED → CLOSED
+              ↓
+          CANCELLED
+</code></pre></div>
+
+<h3 id="76">7.6 태그 시스템</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>태그 대상</td>
+<td>LIVE, VOD, CLIP</td>
+</tr>
+<tr>
+<td>태그 위치</td>
+<td>tag_time_sec (영상 내 시간)</td>
+</tr>
+<tr>
+<td>태그 정보</td>
+<td>종목태그, 팀, 등번호, 태그명</td>
+</tr>
+</tbody>
+</table>
+<h3 id="77">7.7 댓글 규칙</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>최대 길이</td>
+<td>2,000자</td>
+</tr>
+<tr>
+<td>대댓글 지원</td>
+<td>parent_id로 1단계</td>
+</tr>
+<tr>
+<td>삭제 방식</td>
+<td>Soft delete</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8">8. 콘텐츠 접근 제어 정책</h2>
+<h3 id="81-2">8.1 2단계 권한 모델</h3>
+<div class="codehilite"><pre><span></span><code>사용자 → [1단계 RBAC: 구독/패스 보유?] → [2단계 ABAC: ACL 정책 충족?] → 재생 허용/거부
+</code></pre></div>
+
+<h3 id="82-1-rbac">8.2 1단계: RBAC (시청 권한)</h3>
+<table>
+<thead>
+<tr>
+<th>유형</th>
+<th>범위</th>
+<th>우선순위</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SUBSCRIPTION</td>
+<td>전체 콘텐츠 (기간 내)</td>
+<td>1 (최우선)</td>
+</tr>
+<tr>
+<td>SEASON_PASS</td>
+<td>특정 대회 시즌</td>
+<td>2</td>
+</tr>
+<tr>
+<td>MATCH_TICKET</td>
+<td>특정 경기 1건</td>
+<td>3</td>
+</tr>
+<tr>
+<td>POINT_VIEW</td>
+<td>포인트 차감 시청</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+<h3 id="83-2-abac">8.3 2단계: ABAC (영상별 접근 제어)</h3>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">blockedUsers에</span><span class="w"> </span><span class="n">포함</span><span class="err">?</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">즉시</span><span class="w"> </span><span class="n">DENY</span>
+<span class="mf">2.</span><span class="w"> </span><span class="n">allowedUsers에</span><span class="w"> </span><span class="n">포함</span><span class="err">?</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">즉시</span><span class="w"> </span><span class="n">GRANT</span>
+<span class="mf">3.</span><span class="w"> </span><span class="kd">def</span><span class="n">ault_policy</span><span class="w"> </span><span class="n">평가</span><span class="p">:</span>
+<span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">PUBLIC</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">ALLOW</span>
+<span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">AUTHENTICATED</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">로그인</span><span class="w"> </span><span class="n">확인</span>
+<span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">SUBSCRIBERS</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">Commerce</span><span class="w"> </span><span class="n">Entitlement</span><span class="w"> </span><span class="n">확인</span>
+<span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">MEMBERS_ONLY</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">멤버십</span><span class="w"> </span><span class="n">확인</span><span class="w"> </span><span class="p">(</span><span class="n">CUG</span><span class="w"> </span><span class="n">단체</span><span class="w"> </span><span class="n">포함</span><span class="p">)</span>
+<span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">PRIVATE</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">allowedRoles</span><span class="o">/</span><span class="n">Relations</span><span class="o">/</span><span class="ow">Or</span><span class="n">gs</span><span class="w"> </span><span class="n">확인</span>
+<span class="mf">4.</span><span class="w"> </span><span class="n">user_relations</span><span class="w"> </span><span class="n">확인</span><span class="w"> </span><span class="p">(</span><span class="n">가족</span><span class="p">,</span><span class="w"> </span><span class="n">코치</span><span class="p">,</span><span class="w"> </span><span class="n">보호자</span><span class="p">)</span>
+<span class="mf">5.</span><span class="w"> </span><span class="nb">val</span><span class="n">id_from</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">val</span><span class="n">id_until</span><span class="w"> </span><span class="n">시간</span><span class="w"> </span><span class="n">범위</span><span class="w"> </span><span class="n">확인</span>
+<span class="mf">6.</span><span class="w"> </span><span class="n">최종</span><span class="w"> </span><span class="n">결정</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">재생</span><span class="w"> </span><span class="n">토큰</span><span class="w"> </span><span class="n">발급</span><span class="w"> </span><span class="n">또는</span><span class="w"> </span><span class="n">DENY</span>
+</code></pre></div>
+
+<h3 id="84-cug">8.4 CUG 단체 콘텐츠 접근 흐름</h3>
+<div class="codehilite"><pre><span></span><code>비회원이 CUG 단체 페이지 접근:
+  → 단체 정보(이름, 설명, 종목, 멤버 수) 표시 ✓
+  → 홍보용 영상 (visibility=PUBLIC) 표시 ✓
+  → 회원 전용 영상 → &quot;회원 가입 후 시청 가능합니다&quot; 안내 + 가입 유도 ✗
+  → 비공개 영상 → 목록에 표시되지 않음 ✗
+</code></pre></div>
+
+<hr />
+<h2 id="9">9. 결제 &amp; 상품 정책</h2>
+<h3 id="91">9.1 상품 유형</h3>
+<table>
+<thead>
+<tr>
+<th>상품 유형</th>
+<th>생성되는 Entitlement</th>
+<th>scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SUBSCRIPTION</td>
+<td>SUBSCRIPTION</td>
+<td>null (전체)</td>
+</tr>
+<tr>
+<td>SEASON_PASS</td>
+<td>SEASON_PASS</td>
+<td>SEASON + ID</td>
+</tr>
+<tr>
+<td>MATCH_TICKET</td>
+<td>MATCH_TICKET</td>
+<td>MATCH + ID</td>
+</tr>
+<tr>
+<td>POINT_CHARGE</td>
+<td>(없음, 지갑 충전)</td>
+<td>-</td>
+</tr>
+<tr>
+<td>GIFT_BALL</td>
+<td>(없음, 선물)</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92">9.2 구매 플로우</h3>
+<div class="codehilite"><pre><span></span><code><span class="err">상품</span> <span class="err">선택</span> <span class="err">→</span> <span class="err">구매</span> <span class="err">요청</span> <span class="p">(</span><span class="n">PENDING</span><span class="p">)</span> <span class="err">→</span> <span class="n">PG</span> <span class="err">결제</span> <span class="err">검증</span> <span class="err">→</span> <span class="err">구매</span> <span class="err">완료</span> <span class="p">(</span><span class="n">COMPLETED</span><span class="p">)</span>
+                                                    <span class="err">↓</span>
+                                              <span class="err">자동</span> <span class="n">Entitlement</span> <span class="err">부여</span>
+</code></pre></div>
+
+<h3 id="93-pg">9.3 PG 결제</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>지원 PG</td>
+<td>KCP, INAPP_GOOGLE, INAPP_APPLE</td>
+</tr>
+<tr>
+<td>결제 금액</td>
+<td>최소 0.01 KRW</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10">10. 포인트(뽈) &amp; 지갑 정책</h2>
+<h3 id="101">10.1 지갑 규칙</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>사용자당 지갑</td>
+<td>1개 (UNIQUE user_id)</td>
+</tr>
+<tr>
+<td>초기 잔액</td>
+<td>0</td>
+</tr>
+<tr>
+<td>충전 범위</td>
+<td>1 ~ 10,000,000 포인트</td>
+</tr>
+<tr>
+<td>동시성 제어</td>
+<td>Pessimistic Write Lock + Optimistic Locking</td>
+</tr>
+</tbody>
+</table>
+<h3 id="102-ledger">10.2 Ledger 유형</h3>
+<table>
+<thead>
+<tr>
+<th>유형</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CHARGE</td>
+<td>포인트 충전 (KRW → 뽈)</td>
+</tr>
+<tr>
+<td>EARN</td>
+<td>활동 보상으로 획득</td>
+</tr>
+<tr>
+<td>USE</td>
+<td>콘텐츠/기능 결제에 사용</td>
+</tr>
+<tr>
+<td>CANCEL</td>
+<td>취소 환급</td>
+</tr>
+<tr>
+<td>EXPIRE</td>
+<td>유효기간 만료</td>
+</tr>
+<tr>
+<td>REFUND</td>
+<td>환불 처리</td>
+</tr>
+<tr>
+<td>GIFT</td>
+<td>선물 (Gift Ball)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="11">11. 쿠폰 정책</h2>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>코드 형식</td>
+<td>대소문자 무관, trim 처리</td>
+</tr>
+<tr>
+<td>사용자당 등록</td>
+<td>per_user_limit (기본 1회)</td>
+</tr>
+<tr>
+<td>할인 유형</td>
+<td>PERCENTAGE, FIXED_AMOUNT, BALL_GRANT</td>
+</tr>
+<tr>
+<td>상태</td>
+<td>AVAILABLE → USED / EXPIRED</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="12_1">12. 환불 정책</h2>
+<div class="codehilite"><pre><span></span><code>환불 요청 (REQUESTED) → 관리자 검토 → 승인 (APPROVED) → PG 환불 → 완료 (COMPLETED)
+                                     ↓
+                                거절 (REJECTED)
+</code></pre></div>
+
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>환불 가능 상태</td>
+<td>COMPLETED 구매만</td>
+</tr>
+<tr>
+<td>부분 환불</td>
+<td>포인트 크레딧으로 지갑 환급</td>
+</tr>
+<tr>
+<td>인앱 환불</td>
+<td>애플/구글 인앱 환불은 별도 플로우 관리</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="13_1">13. 촬영예약 정책</h2>
+<h3 id="131">13.1 예약 권한</h3>
+<table>
+<thead>
+<tr>
+<th>단체 설정</th>
+<th>예약 가능 대상</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>reservation_policy = ALL_MEMBERS</td>
+<td>해당 단체 모든 멤버</td>
+</tr>
+<tr>
+<td>reservation_policy = MANAGER_ONLY</td>
+<td>매니저(MANAGER) 이상만</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>예약 권한은 단체 <strong>관리자(ADMIN)가 "단체 설정"에서 변경</strong> 가능합니다.</p>
+</blockquote>
+<h3 id="132">13.2 예약 상태 머신</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">PENDING</span> <span class="err">→</span> <span class="n">CONFIRMED</span> <span class="err">→</span> <span class="n">COMPLETED</span>
+    <span class="err">↓</span>          <span class="err">↓</span>
+<span class="n">CANCELLED</span>  <span class="n">CANCELLED</span>
+</code></pre></div>
+
+<h3 id="133">13.3 충돌 감지</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>동일 경기장 + 겹치는 시간</td>
+<td>예약 불가 (취소된 예약 제외)</td>
+</tr>
+<tr>
+<td>캘린더 뷰</td>
+<td>day / week / month 모드</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="14_1">14. 스트리밍 &amp; 장비 정책</h2>
+<h3 id="141-venue">14.1 경기장(Venue)</h3>
+<table>
+<thead>
+<tr>
+<th>유형</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FIXED</td>
+<td>고정 경기장</td>
+</tr>
+<tr>
+<td>MOBILE</td>
+<td>이동식 장비</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>소유 유형</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B2B</td>
+<td>기업 간 계약</td>
+</tr>
+<tr>
+<td>B2G</td>
+<td>정부/공공기관 계약</td>
+</tr>
+<tr>
+<td>B2C</td>
+<td>개인 사용자 소유</td>
+</tr>
+</tbody>
+</table>
+<h3 id="142">14.2 스트리밍 인제스트</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>프로토콜</td>
+<td>RTMP → HLS/DASH 트랜스코딩</td>
+</tr>
+<tr>
+<td>화질 프로필</td>
+<td>1080p, 720p, 480p, 360p</td>
+</tr>
+<tr>
+<td>DVR 지원</td>
+<td>기본 활성, 1시간 윈도우</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="15">15. 커뮤니티 정책</h2>
+<blockquote>
+<p><strong>v2 신규</strong>: 포착 클럽 내 커뮤니티 기능 (당근마켓 지역 게시물 모델)</p>
+</blockquote>
+<h3 id="151">15.1 게시물 유형</h3>
+<table>
+<thead>
+<tr>
+<th>유형</th>
+<th>설명</th>
+<th>공개 범위</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>소식</td>
+<td>단체/지역 소식 공유</td>
+<td>단체 멤버 또는 지역 사용자</td>
+</tr>
+<tr>
+<td>구인</td>
+<td>선수/코치/매니저 모집</td>
+<td>지역 기반 노출</td>
+</tr>
+<tr>
+<td>모집</td>
+<td>팀원/대회 참가자 모집</td>
+<td>지역 기반 노출</td>
+</tr>
+<tr>
+<td>자유</td>
+<td>일반 게시물</td>
+<td>단체 멤버 또는 지역 사용자</td>
+</tr>
+</tbody>
+</table>
+<h3 id="152">15.2 지역 기반 노출</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>노출 범위</td>
+<td>작성자 단체의 <code>si_gun_gu_code</code> 기준 동일 시/군/구 사용자에게 노출</td>
+</tr>
+<tr>
+<td>확장 범위</td>
+<td>같은 시/도 내 사용자에게도 선택적 노출 가능</td>
+</tr>
+<tr>
+<td>비유</td>
+<td>당근마켓의 "내 근처" 게시글</td>
+</tr>
+</tbody>
+</table>
+<h3 id="153">15.3 커뮤니티 관리</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>글 작성 권한</td>
+<td>단체 멤버 (MEMBER 이상)</td>
+</tr>
+<tr>
+<td>글 삭제/고정</td>
+<td>단체 ADMIN, MANAGER</td>
+</tr>
+<tr>
+<td>신고</td>
+<td>모든 사용자 가능 → BO 관리자 검토</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="16">16. 알림 정책</h2>
+<h3 id="161">16.1 알림 유형</h3>
+<table>
+<thead>
+<tr>
+<th>유형</th>
+<th>설명</th>
+<th>기본 수신</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SYSTEM</td>
+<td>경기 시작, 결과, 클립 게시</td>
+<td>ON</td>
+</tr>
+<tr>
+<td>MARKETING</td>
+<td>신상품, 프로모션</td>
+<td>OFF</td>
+</tr>
+<tr>
+<td>RESERVATION</td>
+<td>예약 확인, 리마인더</td>
+<td>ON</td>
+</tr>
+<tr>
+<td>MATCH</td>
+<td>경기 관련 알림</td>
+<td>ON</td>
+</tr>
+<tr>
+<td>PURCHASE</td>
+<td>구매 완료, 시청 권한</td>
+<td>ON</td>
+</tr>
+<tr>
+<td>COMMUNITY</td>
+<td>새 게시물, 댓글 알림</td>
+<td>ON</td>
+</tr>
+</tbody>
+</table>
+<h3 id="162">16.2 전달 채널</h3>
+<table>
+<thead>
+<tr>
+<th>채널</th>
+<th>대상</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>APNs</td>
+<td>iOS 푸시</td>
+</tr>
+<tr>
+<td>FCM</td>
+<td>Android 푸시</td>
+</tr>
+<tr>
+<td>SMS</td>
+<td>중요 알림</td>
+</tr>
+<tr>
+<td>Email</td>
+<td>다이제스트, 마케팅</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="17-bo">17. 관리자(BO) 정책</h2>
+<h3 id="171">17.1 관리자 인증</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>로그인 방식</td>
+<td>ID + 비밀번호 (BCrypt)</td>
+</tr>
+<tr>
+<td>로그인 실패 임계값</td>
+<td>5회 → 자동 차단</td>
+</tr>
+<tr>
+<td>JWT claims</td>
+<td>loginId, name, roles[], permissions[]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="172-rbac">17.2 RBAC 권한 구조</h3>
+<div class="codehilite"><pre><span></span><code>AdminUser → AdminGroupUser → AdminGroup
+                                 ↓
+                          AdminGroupRole → AdminRole
+                                            ↓
+                                  ┌─────────┴─────────┐
+                                  ↓                   ↓
+                           AdminRoleMenu      AdminRoleFunction
+</code></pre></div>
+
+<h3 id="173">17.3 감사 로그</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>정책</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>기록 대상</td>
+<td>모든 CUD 작업</td>
+</tr>
+<tr>
+<td>기록 내용</td>
+<td>admin_user_id, action, target_type, target_id, before/after JSONB</td>
+</tr>
+<tr>
+<td>트랜잭션</td>
+<td>REQUIRES_NEW (메인 트랜잭션 실패해도 로그 보존)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="18">18. 보안 정책</h2>
+<table>
+<thead>
+<tr>
+<th>경로</th>
+<th>방식</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Client → Gateway</td>
+<td>JWT (Authorization: Bearer)</td>
+</tr>
+<tr>
+<td>Gateway → 서비스</td>
+<td>X-User-Id, X-User-Role 헤더</td>
+</tr>
+<tr>
+<td>CORS</td>
+<td>환경변수 <code>CORS_ALLOWED_ORIGINS</code> 설정</td>
+</tr>
+<tr>
+<td>JWT Secret</td>
+<td>필수 환경변수, 최소 32자</td>
+</tr>
+</tbody>
+</table>
+<h3 id="pii">PII 보호</h3>
+<table>
+<thead>
+<tr>
+<th>민감도</th>
+<th>데이터</th>
+<th>처리</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>최고</td>
+<td>CI, DI, 보호자 정보</td>
+<td>AES-256 암호화</td>
+</tr>
+<tr>
+<td>높음</td>
+<td>전화번호, 이메일, 생년월일</td>
+<td>양방향 암호화, BO 마스킹</td>
+</tr>
+<tr>
+<td>중간</td>
+<td>이름, 프로필</td>
+<td>BO에서만 마스킹</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="19">19. 데이터 보관 &amp; 삭제 정책</h2>
+<table>
+<thead>
+<tr>
+<th>데이터 유형</th>
+<th>보관 기간</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>활성 콘텐츠</td>
+<td>무기한</td>
+</tr>
+<tr>
+<td>삭제된 사용자 PII</td>
+<td>90일 → 영구 삭제</td>
+</tr>
+<tr>
+<td>구매/시청 권한 기록</td>
+<td>7년 (법적/세무)</td>
+</tr>
+<tr>
+<td>감사 로그</td>
+<td>3년</td>
+</tr>
+<tr>
+<td>임시 데이터 (OTP, 세션)</td>
+<td>24시간</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="20">20. 비기능 요구사항</h2>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>목표</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Home/List API</td>
+<td>P95 500ms 이내</td>
+</tr>
+<tr>
+<td>Player Detail API</td>
+<td>P95 700ms 이내</td>
+</tr>
+<tr>
+<td>배포</td>
+<td>서비스별 독립 배포, 무중단 롤링</td>
+</tr>
+<tr>
+<td>로깅</td>
+<td>Correlation ID 기반 분산 추적</td>
+</tr>
+<tr>
+<td>API 문서</td>
+<td>Swagger UI (서비스별)</td>
+</tr>
+<tr>
+<td>국제화</td>
+<td>한국어, 영어 우선</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="appendix-a">Appendix A: 시스템 설정값</h2>
+<table>
+<thead>
+<tr>
+<th>config_key</th>
+<th>config_value</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MAX_MINOR_ACCOUNTS_PER_GUARDIAN</td>
+<td>5</td>
+<td>보호자당 미성년 계정 최대 수</td>
+</tr>
+<tr>
+<td>PHONE_VERIFY_CODE_LENGTH</td>
+<td>6</td>
+<td>인증번호 자릿수</td>
+</tr>
+<tr>
+<td>PHONE_VERIFY_EXPIRY_SECONDS</td>
+<td>180</td>
+<td>인증번호 유효 시간 (초)</td>
+</tr>
+<tr>
+<td>MAX_PREFERRED_SPORTS</td>
+<td>5</td>
+<td>선호 스포츠 최대 수</td>
+</tr>
+<tr>
+<td>MAX_PREFERRED_AREAS</td>
+<td>3</td>
+<td>선호 지역 최대 수</td>
+</tr>
+<tr>
+<td>CLIP_MAX_DURATION_SECONDS</td>
+<td>180</td>
+<td>클립 최대 길이 (초)</td>
+</tr>
+<tr>
+<td>ORG_MAX_DEPTH</td>
+<td>5</td>
+<td>단체 계층 최대 깊이</td>
+</tr>
+<tr>
+<td>COMPETITION_VISIT_REENTRY</td>
+<td>true</td>
+<td>비공개 대회 재입장 허용</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="appendix-b-v1-v2">Appendix B: v1 → v2 주요 변경 사항</h2>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>v1 (기존)</th>
+<th>v2 (변경)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>단체 분류</td>
+<td>ASSOCIATION / PUBLIC / PRIVATE (3개 org_type)</td>
+<td><strong>단일 Entity + 자가참조 DAG</strong> (org_type 폐지)</td>
+</tr>
+<tr>
+<td>영역 구분</td>
+<td>포착 시티 = OPEN, 클럽 = CLOSED</td>
+<td>포착 TV / 시티 / 클럽 <strong>3개 영역</strong> (display_area 필드)</td>
+</tr>
+<tr>
+<td>대회 개설</td>
+<td>협회(ASSOCIATION)만 가능</td>
+<td><strong>모든 단체의 ADMIN</strong>이 개설 가능</td>
+</tr>
+<tr>
+<td>대회 공개</td>
+<td>전체 공개만</td>
+<td><strong>전체 공개 + 비공개(초대제)</strong> 지원</td>
+</tr>
+<tr>
+<td>비공개 대회</td>
+<td>미지원</td>
+<td>URL/QR로 초대, 방문 기록으로 재입장</td>
+</tr>
+<tr>
+<td>예약 권한</td>
+<td>OPEN=모두, CLOSED=매니저 (고정)</td>
+<td><strong>단체 설정에서 ADMIN이 변경</strong> 가능</td>
+</tr>
+<tr>
+<td>가입 정책</td>
+<td>OPEN/CLOSED (고정)</td>
+<td><strong>OPEN / APPROVAL / INVITE_ONLY</strong> (설정 변경 가능)</td>
+</tr>
+<tr>
+<td>CUG 콘텐츠</td>
+<td>미지원</td>
+<td><strong>회원 전용 + 홍보용 영상 분리</strong></td>
+</tr>
+<tr>
+<td>커뮤니티</td>
+<td>미지원</td>
+<td><strong>소식/구인/모집</strong> 지역 기반 게시판</td>
+</tr>
+<tr>
+<td>단체 설정</td>
+<td>생성 시 고정</td>
+<td><strong>매니저 권한의 "단체 설정" 화면</strong>에서 실시간 변경</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>End of Policy Document v2</em></p>
+</body>
+</html>
