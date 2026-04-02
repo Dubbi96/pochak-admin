@@ -406,7 +406,7 @@ export default function StreamingPage() {
       {/* ── VOD Processing Queue ────────────────────────────────────────── */}
       <div className="space-y-3">
         <h2 className="flex items-center gap-2 text-base font-semibold text-gray-800">
-          <Upload size={16} className="text-blue-500" />
+          <Upload size={16} style={{ color: "var(--c-primary)" }} />
           VOD 처리 큐
         </h2>
         <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
@@ -471,9 +471,12 @@ export default function StreamingPage() {
                                   ? "bg-emerald-500"
                                   : job.status === "FAILED"
                                     ? "bg-red-500"
-                                    : "bg-blue-500"
+                                    : ""
                               }`}
-                              style={{ width: `${job.progressPercent}%` }}
+                              style={{
+                                width: `${job.progressPercent}%`,
+                                ...(job.status !== "COMPLETED" && job.status !== "FAILED" ? { backgroundColor: "var(--c-primary)" } : {}),
+                              }}
                             />
                           </div>
                           <span className="text-xs text-gray-500 w-[36px] text-right">

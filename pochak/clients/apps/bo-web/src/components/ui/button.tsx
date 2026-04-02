@@ -4,17 +4,18 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-400 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-blue-600 text-white shadow hover:bg-blue-700",
-        destructive: "bg-red-500 text-white shadow-sm hover:bg-red-600",
+        default:
+          "text-white shadow",
+        destructive: "shadow-sm",
         outline:
-          "border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50",
-        secondary: "bg-gray-100 text-gray-700 shadow-sm hover:bg-gray-200",
-        ghost: "text-gray-600 hover:bg-gray-100",
-        link: "text-blue-600 underline-offset-4 hover:text-blue-700 hover:underline",
+          "shadow-sm",
+        secondary: "shadow-sm",
+        ghost: "",
+        link: "underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2",
@@ -31,6 +32,29 @@ const buttonVariants = cva(
   }
 );
 
+/* Map variant → inline styles for design-token colors (dark/light aware) */
+const variantStyles: Record<string, React.CSSProperties> = {
+  default: { backgroundColor: "var(--c-primary)", color: "var(--fg-on-primary)" },
+  destructive: { backgroundColor: "var(--c-error)", color: "#fff" },
+  outline: {
+    border: "1px solid var(--c-border)",
+    backgroundColor: "var(--bg-surface)",
+    color: "var(--fg)",
+  },
+  secondary: { backgroundColor: "var(--c-hover)", color: "var(--fg)" },
+  ghost: { color: "var(--fg-secondary)" },
+  link: { color: "var(--c-primary)" },
+};
+
+const variantHoverStyles: Record<string, React.CSSProperties> = {
+  default: { backgroundColor: "var(--c-primary-hover)" },
+  destructive: { backgroundColor: "#c41420" },
+  outline: { backgroundColor: "var(--c-hover)" },
+  secondary: { backgroundColor: "var(--c-border-light)" },
+  ghost: { backgroundColor: "var(--c-hover)" },
+  link: {},
+};
+
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
@@ -38,12 +62,28 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, style, ...props }, ref) => {
+    const v = variant ?? "default";
     const Comp = asChild ? Slot : "button";
+    const [hovered, setHovered] = React.useState(false);
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        style={{
+          ...variantStyles[v],
+          ...(hovered ? variantHoverStyles[v] : {}),
+          ...style,
+        }}
+        onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+          setHovered(true);
+          props.onMouseEnter?.(e);
+        }}
+        onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+          setHovered(false);
+          props.onMouseLeave?.(e);
+        }}
         {...props}
       />
     );

@@ -279,7 +279,7 @@ export default function CommunityPostsPage() {
                     </Badge>
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-900">
-                    {post.isPinned && <Pin size={12} className="inline mr-1 text-blue-500" />}
+                    {post.isPinned && <Pin size={12} className="inline mr-1" style={{ color: "var(--c-primary)" }} />}
                     {post.title}
                   </td>
                   <td className="px-4 py-3 text-gray-600">{post.organizationName}</td>

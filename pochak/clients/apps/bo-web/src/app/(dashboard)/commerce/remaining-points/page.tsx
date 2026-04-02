@@ -120,9 +120,9 @@ export default function RemainingPointsPage() {
 
       {/* KPI Cards - Row 1 */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-          <p className="text-xs text-blue-600">잔여 뽈 보유 회원</p>
-          <p className="text-xl font-bold text-blue-700">{stats.totalUsersWithBall.toLocaleString()}명</p>
+        <div className="rounded-lg p-4" style={{ borderWidth: 1, borderStyle: "solid", borderColor: "var(--c-primary)", backgroundColor: "var(--c-primary-light)" }}>
+          <p className="text-xs" style={{ color: "var(--c-primary)" }}>잔여 뽈 보유 회원</p>
+          <p className="text-xl font-bold" style={{ color: "var(--c-primary)" }}>{stats.totalUsersWithBall.toLocaleString()}명</p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <p className="text-xs text-gray-500">전체 잔여 뽈</p>
@@ -220,7 +220,7 @@ export default function RemainingPointsPage() {
                   <td className="px-4 py-3 text-center text-gray-500">{page * (data?.size ?? 20) + idx + 1}</td>
                   <td className="px-4 py-3 text-gray-900 font-medium">{item.name}</td>
                   <td className="px-4 py-3 text-gray-400 text-xs">{item.email}</td>
-                  <td className="px-4 py-3 text-right font-medium tabular-nums text-blue-600">{item.remainingBall.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-right font-medium tabular-nums" style={{ color: "var(--c-primary)" }}>{item.remainingBall.toLocaleString()}</td>
                   <td className="px-4 py-3 text-right tabular-nums text-gray-900">{item.remainingPaid.toLocaleString()}</td>
                   <td className="px-4 py-3 text-right tabular-nums text-gray-600">{item.remainingBonus.toLocaleString()}</td>
                   <td className="px-4 py-3 text-right tabular-nums text-gray-500">{item.totalCharged.toLocaleString()}</td>

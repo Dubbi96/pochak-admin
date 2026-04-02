@@ -22,40 +22,60 @@ export type StatusType =
 
 type ChipStyle = {
   type: "fill" | "outline";
-  color: "blue" | "amber" | "red" | "gray" | "green";
+  color: "primary" | "amber" | "red" | "gray" | "green";
 };
 
 const STATUS_STYLES: Record<StatusType, ChipStyle> = {
-  "활성화": { type: "fill", color: "blue" },
+  "활성화": { type: "fill", color: "primary" },
   "비활성화": { type: "outline", color: "gray" },
-  "운영중": { type: "fill", color: "blue" },
+  "운영중": { type: "fill", color: "primary" },
   "운영중단": { type: "outline", color: "amber" },
   "해체": { type: "fill", color: "red" },
   "차단": { type: "fill", color: "red" },
   "대기": { type: "outline", color: "amber" },
   "승인": { type: "fill", color: "green" },
   "거절": { type: "fill", color: "red" },
-  "활성": { type: "fill", color: "blue" },
+  "활성": { type: "fill", color: "primary" },
   "중단": { type: "fill", color: "amber" },
   "종료": { type: "outline", color: "gray" },
   "이용중": { type: "fill", color: "green" },
   "만료": { type: "outline", color: "gray" },
   "취소": { type: "fill", color: "red" },
   "환불": { type: "fill", color: "red" },
-  "구독활성": { type: "fill", color: "blue" },
+  "구독활성": { type: "fill", color: "primary" },
 };
 
-const CHIP_CLASSES: Record<string, string> = {
-  "fill-blue": "bg-blue-600 text-white",
-  "fill-red": "bg-red-500 text-white",
-  "fill-green": "bg-green-600 text-white",
-  "fill-gray": "bg-gray-500 text-white",
-  "fill-amber": "bg-amber-500 text-white",
-  "outline-blue": "border border-blue-300 text-blue-700 bg-blue-50",
-  "outline-red": "border border-red-300 text-red-700 bg-red-50",
-  "outline-green": "border border-green-300 text-green-700 bg-green-50",
-  "outline-gray": "border border-gray-300 text-gray-600 bg-gray-50",
-  "outline-amber": "border border-amber-300 text-amber-700 bg-amber-50",
+const CHIP_INLINE_STYLES: Record<string, React.CSSProperties> = {
+  "fill-primary": { backgroundColor: "var(--c-primary)", color: "var(--fg-on-primary)" },
+  "fill-red": { backgroundColor: "var(--c-error)", color: "#fff" },
+  "fill-green": { backgroundColor: "var(--c-success)", color: "var(--fg-on-primary)" },
+  "fill-gray": { backgroundColor: "var(--fg-secondary)", color: "#fff" },
+  "fill-amber": { backgroundColor: "#F59E0B", color: "#fff" },
+  "outline-primary": {
+    border: "1px solid var(--c-primary)",
+    color: "var(--c-primary)",
+    backgroundColor: "var(--c-primary-lighter)",
+  },
+  "outline-red": {
+    border: "1px solid var(--c-error)",
+    color: "var(--c-error)",
+    backgroundColor: "rgba(229,23,40,0.05)",
+  },
+  "outline-green": {
+    border: "1px solid var(--c-success)",
+    color: "var(--c-success)",
+    backgroundColor: "var(--c-primary-lighter)",
+  },
+  "outline-gray": {
+    border: "1px solid var(--c-border)",
+    color: "var(--fg-secondary)",
+    backgroundColor: "var(--bg-surface-variant)",
+  },
+  "outline-amber": {
+    border: "1px solid #F59E0B",
+    color: "#B8860B",
+    backgroundColor: "rgba(255,215,64,0.1)",
+  },
 };
 
 interface StatusBadgeProps {
@@ -71,9 +91,9 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
     <span
       className={cn(
         "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium",
-        CHIP_CLASSES[chipKey],
         className
       )}
+      style={CHIP_INLINE_STYLES[chipKey]}
     >
       {status}
     </span>

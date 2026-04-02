@@ -117,11 +117,11 @@ export function DataTable<TData, TValue>({
     <div className="space-y-4">
       {/* Count + page size */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-700">
+        <p className="text-sm" style={{ color: "var(--fg)" }}>
           전체 <span className="font-semibold">{pagination.totalCount.toLocaleString()}</span>건
         </p>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">페이지당</span>
+          <span className="text-sm" style={{ color: "var(--fg-secondary)" }}>페이지당</span>
           <Select
             value={String(pagination.size)}
             onValueChange={(value) => onPaginationChange(1, Number(value))}
@@ -141,11 +141,11 @@ export function DataTable<TData, TValue>({
       </div>
 
       {/* Table */}
-      <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+      <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--c-border)", backgroundColor: "var(--bg-surface)" }}>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="bg-gray-50 hover:bg-gray-50 border-b border-gray-200">
+              <TableRow key={headerGroup.id} style={{ backgroundColor: "var(--bg-surface-variant)", borderBottom: "1px solid var(--c-border)" }}>
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
@@ -177,8 +177,8 @@ export function DataTable<TData, TValue>({
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={allColumns.length} className="h-32 text-center">
-                  <div className="flex items-center justify-center gap-2 text-gray-400">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+                  <div className="flex items-center justify-center gap-2" style={{ color: "var(--fg-tertiary)" }}>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" style={{ borderColor: "var(--c-primary)", borderTopColor: "transparent" }} />
                     데이터를 불러오는 중...
                   </div>
                 </TableCell>
@@ -194,8 +194,8 @@ export function DataTable<TData, TValue>({
                 </TableRow>
               ))
             ) : (
-              <TableRow className="hover:bg-white">
-                <TableCell colSpan={allColumns.length} className="h-32 text-center text-gray-400">
+              <TableRow>
+                <TableCell colSpan={allColumns.length} className="h-32 text-center" style={{ color: "var(--fg-tertiary)" }}>
                   {emptyMessage}
                 </TableCell>
               </TableRow>
@@ -215,7 +215,7 @@ export function DataTable<TData, TValue>({
 
       {/* Selected count */}
       {enableRowSelection && Object.keys(rowSelection ?? {}).length > 0 && (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm" style={{ color: "var(--fg-secondary)" }}>
           {Object.keys(rowSelection ?? {}).length}개 항목 선택됨
         </p>
       )}

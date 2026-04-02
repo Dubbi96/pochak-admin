@@ -45,12 +45,12 @@ const MONTHS_KR = [
 ];
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
-function statusColor(status: ScheduleStatus): string {
+function statusColor(status: ScheduleStatus): { className: string; style?: React.CSSProperties } {
   switch (status) {
-    case "SCHEDULED": return "bg-blue-100 text-blue-700 border-blue-200";
-    case "IN_PROGRESS": return "bg-emerald-100 text-emerald-700 border-emerald-200";
-    case "CANCELLED": return "bg-red-100 text-red-700 border-red-200";
-    case "FINISHED": return "bg-gray-100 text-gray-600 border-gray-200";
+    case "SCHEDULED": return { className: "", style: { backgroundColor: "var(--c-primary-light)", color: "var(--c-primary)", borderColor: "var(--c-primary)" } };
+    case "IN_PROGRESS": return { className: "bg-emerald-100 text-emerald-700 border-emerald-200" };
+    case "CANCELLED": return { className: "bg-red-100 text-red-700 border-red-200" };
+    case "FINISHED": return { className: "bg-gray-100 text-gray-600 border-gray-200" };
   }
 }
 
@@ -487,8 +487,9 @@ export default function ReservationsPage() {
               <div
                 key={d}
                 className={`py-2 text-center text-xs font-semibold ${
-                  i === 0 ? "text-red-500" : i === 6 ? "text-blue-500" : "text-gray-500"
+                  i === 0 ? "text-red-500" : i === 6 ? "" : "text-gray-500"
                 }`}
+                style={i === 6 ? { color: "var(--c-info)" } : undefined}
               >
                 {d}
               </div>
@@ -531,9 +532,10 @@ export default function ReservationsPage() {
                           : colIdx === 0
                           ? "text-red-500"
                           : colIdx === 6
-                          ? "text-blue-500"
+                          ? ""
                           : "text-gray-700"
                       }`}
+                      style={!isToday && colIdx === 6 ? { color: "var(--c-info)" } : undefined}
                     >
                       {day.date}
                     </div>
@@ -541,7 +543,8 @@ export default function ReservationsPage() {
                       {dayEvents.slice(0, 3).map((ev) => (
                         <button
                           key={ev.id}
-                          className={`w-full rounded border px-1 py-0.5 text-left text-[10px] leading-tight truncate font-medium transition-opacity hover:opacity-80 ${statusColor(ev.status)}`}
+                          className={`w-full rounded border px-1 py-0.5 text-left text-[10px] leading-tight truncate font-medium transition-opacity hover:opacity-80 ${statusColor(ev.status).className}`}
+                          style={statusColor(ev.status).style}
                           onClick={(e) => {
                             e.stopPropagation();
                             setDetailEvent(ev);

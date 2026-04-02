@@ -1,24 +1,98 @@
 @import "tailwindcss";
 
+/* ── Light theme (default) ── */
+:root {
+  --bg: #F5F5F5;
+  --bg-surface: #FFFFFF;
+  --bg-surface-variant: #FAFAFA;
+  --bg-card: #FFFFFF;
+  --fg: #212121;
+  --fg-secondary: #757575;
+  --fg-tertiary: #9E9E9E;
+  --fg-on-primary: #FFFFFF;
+  --c-primary: #00CC33;
+  --c-primary-hover: #00A844;
+  --c-primary-light: #e6faf0;
+  --c-primary-lighter: #f0fdf4;
+  --c-border: #E0E0E0;
+  --c-border-light: #EEEEEE;
+  --c-muted: #757575;
+  --c-success: #00CC33;
+  --c-warning: #FFD740;
+  --c-error: #E51728;
+  --c-info: #6699FF;
+  --c-sidebar-bg: #1A1A2E;
+  --c-sidebar-text: #FFFFFF;
+  --c-header-bg: #FFFFFF;
+  --c-divider: rgba(0, 0, 0, 0.12);
+  --c-overlay: rgba(0, 0, 0, 0.3);
+  --c-hover: #F5F5F5;
+  --c-selected: var(--c-primary-light);
+}
+
+/* ── Dark theme ── */
+[data-theme="dark"] {
+  --bg: #1A1A2E;
+  --bg-surface: #252538;
+  --bg-surface-variant: #2A2A40;
+  --bg-card: #252538;
+  --fg: #F5F5F5;
+  --fg-secondary: #A0A0B8;
+  --fg-tertiary: #6A6A80;
+  --fg-on-primary: #000000;
+  --c-primary: #00CC33;
+  --c-primary-hover: #69F0AE;
+  --c-primary-light: rgba(0, 204, 51, 0.15);
+  --c-primary-lighter: rgba(0, 204, 51, 0.08);
+  --c-border: #3A3A50;
+  --c-border-light: #2F2F45;
+  --c-muted: #8888A0;
+  --c-success: #00CC33;
+  --c-warning: #FFD740;
+  --c-error: #FF4D5A;
+  --c-info: #6699FF;
+  --c-sidebar-bg: #141424;
+  --c-sidebar-text: #F5F5F5;
+  --c-header-bg: #252538;
+  --c-divider: rgba(255, 255, 255, 0.12);
+  --c-overlay: rgba(0, 0, 0, 0.6);
+  --c-hover: #2F2F45;
+  --c-selected: rgba(0, 204, 51, 0.15);
+}
+
 @theme inline {
-  --color-background: #f8f9fb;
-  --color-foreground: #111827;
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-primary-light: #dbeafe;
-  --color-primary-lighter: #eff6ff;
-  --color-card: #ffffff;
-  --color-border: #e5e7eb;
-  --color-muted: #6b7280;
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-surface: var(--bg-surface);
+  --color-surface-variant: var(--bg-surface-variant);
+  --color-card: var(--bg-card);
+  --color-primary: var(--c-primary);
+  --color-primary-hover: var(--c-primary-hover);
+  --color-primary-light: var(--c-primary-light);
+  --color-primary-lighter: var(--c-primary-lighter);
+  --color-border: var(--c-border);
+  --color-border-light: var(--c-border-light);
+  --color-muted: var(--c-muted);
+  --color-success: var(--c-success);
+  --color-warning: var(--c-warning);
+  --color-error: var(--c-error);
+  --color-info: var(--c-info);
+  --color-sidebar-bg: var(--c-sidebar-bg);
+  --color-sidebar-text: var(--c-sidebar-text);
+  --color-header-bg: var(--c-header-bg);
+  --color-divider: var(--c-divider);
+  --color-overlay: var(--c-overlay);
+  --color-hover: var(--c-hover);
+  --color-selected: var(--c-selected);
+  --color-fg-secondary: var(--fg-secondary);
+  --color-fg-tertiary: var(--fg-tertiary);
+  --color-fg-on-primary: var(--fg-on-primary);
   --font-sans: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
 }
 
 body {
-  background: var(--color-background);
-  color: var(--color-foreground);
+  background: var(--bg);
+  color: var(--fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
