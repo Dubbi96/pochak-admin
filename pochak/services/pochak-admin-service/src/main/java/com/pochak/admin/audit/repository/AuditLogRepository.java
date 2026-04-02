@@ -5,7 +5,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
+
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
+
+    /**
+     * Delete audit logs created before the given cutoff date.
+     * Used by AuditLogArchiveScheduler for retention policy enforcement.
+     */
+    int deleteByCreatedAtBefore(LocalDateTime cutoff);
 
     Page<AuditLog> findByAdminUserIdOrderByCreatedAtDesc(Long adminUserId, Pageable pageable);
 
