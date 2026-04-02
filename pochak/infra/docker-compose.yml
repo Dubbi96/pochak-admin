@@ -22,7 +22,9 @@ services:
       POSTGRES_PASSWORD: pochak_dev_2026
     volumes:
       - pochak-pg-data:/var/lib/postgresql/data
-      - ../db/migrations:/docker-entrypoint-initdb.d
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+      - ../db/migrations:/docker-entrypoint-initdb.d/migrations
+      - ../db/seeds:/docker-entrypoint-initdb.d/seeds
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U pochak -d pochak"]
       interval: 10s
@@ -242,6 +244,23 @@ services:
       watch:
         - action: rebuild
           path: ../clients/apps/public-web/src
+          target: /app
+
+  pochak-partner-web:
+    build:
+      context: ..
+      dockerfile: clients/apps/partner-web/Dockerfile
+    container_name: pochak-partner-web
+    ports:
+      - "3200:3200"
+    environment:
+      VITE_GATEWAY_URL: http://pochak-gateway:8080
+    depends_on:
+      - pochak-gateway
+    develop:
+      watch:
+        - action: rebuild
+          path: ../clients/apps/partner-web/src
           target: /app
 
 volumes:
