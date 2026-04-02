@@ -87,6 +87,11 @@ services:
         condition: service_healthy
       pochak-rabbitmq:
         condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ../services/pochak-gateway/src
+          target: /app
 
   pochak-identity:
     build:
@@ -110,6 +115,11 @@ services:
         condition: service_healthy
       pochak-rabbitmq:
         condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ../services/pochak-identity-service/src
+          target: /app
 
   pochak-content:
     build:
@@ -121,11 +131,18 @@ services:
     environment:
       <<: *service-env
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: content
+      REDIS_HOST: pochak-redis
+      REDIS_PORT: 6379
     depends_on:
       pochak-postgres:
         condition: service_healthy
       pochak-rabbitmq:
         condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ../services/pochak-content-service/src
+          target: /app
 
   pochak-commerce:
     build:
@@ -142,6 +159,11 @@ services:
         condition: service_healthy
       pochak-rabbitmq:
         condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ../services/pochak-commerce-service/src
+          target: /app
 
   pochak-operation:
     build:
@@ -158,6 +180,11 @@ services:
         condition: service_healthy
       pochak-rabbitmq:
         condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ../services/pochak-operation-service/src
+          target: /app
 
   pochak-admin:
     build:
@@ -174,6 +201,11 @@ services:
         condition: service_healthy
       pochak-rabbitmq:
         condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ../services/pochak-admin-service/src
+          target: /app
 
   # ── Frontend Services ─────────────────────────────────────────
   pochak-bo-web:
@@ -187,6 +219,11 @@ services:
       NEXT_PUBLIC_API_URL: http://pochak-gateway:8080/admin/api/v1
     depends_on:
       - pochak-gateway
+    develop:
+      watch:
+        - action: rebuild
+          path: ../clients/apps/bo-web/src
+          target: /app
 
   pochak-public-web:
     build:
@@ -197,6 +234,11 @@ services:
       - "3100:3100"
     depends_on:
       - pochak-gateway
+    develop:
+      watch:
+        - action: rebuild
+          path: ../clients/apps/public-web/src
+          target: /app
 
 volumes:
   pochak-pg-data:
