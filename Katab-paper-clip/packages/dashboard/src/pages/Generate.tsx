@@ -5,6 +5,7 @@ import type {
   GeneratedScenario,
   GenerationResult,
 } from "@katab/types";
+import { api } from "../api/client.js";
 
 type SourceType = "code" | "url";
 type ViewState = "input" | "generating" | "review";
@@ -144,16 +145,11 @@ export function GeneratePage() {
     setSaving(true);
     try {
       for (const scenario of accepted) {
-        await fetch("/api/scenarios", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: scenario.name,
-            platform: scenario.platform,
-            events: scenario.events,
-            tags: scenario.tags,
-            metadata: {},
-          }),
+        await api.createScenario({
+          name: scenario.name,
+          platform: scenario.platform,
+          events: scenario.events,
+          tags: scenario.tags,
         });
       }
       setView("input");
