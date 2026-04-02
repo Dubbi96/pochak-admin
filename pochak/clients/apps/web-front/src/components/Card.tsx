@@ -21,7 +21,7 @@ export function VideoCard({
   return (
     <Link
       to={linkPath}
-      className={cn('flex-shrink-0 group block w-[220px]', className)}
+      className={cn('flex-shrink-0 group block w-[220px] xl:w-[240px] 2xl:w-[260px]', className)}
     >
       {/* Thumbnail */}
       <div className="relative aspect-video rounded-xl overflow-hidden bg-[#272727]">
@@ -121,7 +121,7 @@ export function ClipCard({
   id: string; title: string; viewCount?: number; thumbnailUrl?: string; className?: string;
 }) {
   return (
-    <Link to={`/clip/${id}`} className={cn('flex-shrink-0 group block w-[155px]', className)}>
+    <Link to={`/clip/${id}`} className={cn('flex-shrink-0 group block w-[155px] xl:w-[165px] 2xl:w-[175px]', className)}>
       <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#272727]">
         {thumbnailUrl ? (
           <img src={thumbnailUrl} alt={title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
