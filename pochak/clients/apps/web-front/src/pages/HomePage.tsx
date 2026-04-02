@@ -232,7 +232,7 @@ function LiveSection({ items }: { items: import('@/types/content').ContentItem[]
       <div className="flex items-center justify-between pb-3.5 border-b border-border-subtle">
         <div className="flex items-center gap-3">
           <span className="inline-block w-[3px] h-5 rounded-full bg-pochak-live shadow-[0_0_8px_rgba(255,23,68,0.5)]" />
-          <h2 className="text-[19px] font-bold tracking-[-0.03em] text-white/95">공식 라이브</h2>
+          <h2 className="text-[19px] font-bold tracking-[-0.03em] text-white/95">LIVE 영상</h2>
           <span className="flex items-center gap-1.5 h-[22px] px-2.5 rounded-full bg-pochak-live/12 border border-pochak-live/20 text-pochak-live text-[13px] font-bold tracking-wide">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-pochak-live animate-[pulse-live_1.5s_ease-in-out_infinite]" />
             LIVE
@@ -242,7 +242,7 @@ function LiveSection({ items }: { items: import('@/types/content').ContentItem[]
           to="/contents?type=LIVE"
           className="flex items-center gap-0.5 text-[14px] font-medium text-pochak-text-tertiary hover:text-primary transition-colors duration-200 group"
         >
-          전체보기
+          더보기
           <LuChevronRight className="size-3.5 group-hover:translate-x-0.5 transition-transform duration-200" />
         </Link>
       </div>
@@ -304,6 +304,38 @@ function TeamsSection({ items }: { items: import('@/types/content').Channel[] })
   );
 }
 
+/* ── Content Filter Tabs (per spec screenshot) ─────────── */
+const FILTER_TABS = ['전체', '농구', '축구', '클립'];
+
+function ContentFilterTabs() {
+  const [active, setActive] = useState(0);
+
+  return (
+    <div className="flex items-center border-b border-white/[0.06]" style={{ gap: 4, marginBottom: 24 }}>
+      {FILTER_TABS.map((label, i) => (
+        <button
+          key={label}
+          onClick={() => setActive(i)}
+          className={`relative text-[14px] font-semibold transition-colors duration-200 ${
+            i === active
+              ? 'text-foreground'
+              : 'text-pochak-text-tertiary hover:text-pochak-text-secondary'
+          }`}
+          style={{ padding: '10px 16px' }}
+        >
+          {label}
+          {i === active && (
+            <span
+              className="absolute left-4 right-4 bottom-0 bg-primary rounded-full"
+              style={{ height: 2.5 }}
+            />
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /* ── Home Page ─────────────────────────────────────────── */
 export default function HomePage() {
   const { data: homeData } = useHome();
@@ -359,36 +391,42 @@ export default function HomePage() {
       <HeroBanner items={banners} current={bannerIndex} changeBanner={changeBanner} progress={bannerProgress} />
 
       {/* Banner Card Strip */}
-      <div className="mb-16">
+      <div style={{ marginBottom: 24 }}>
         <BannerCardStrip items={banners} current={bannerIndex} changeBanner={changeBanner} />
       </div>
 
-      <div className="flex flex-col gap-5">
-        {/* 진행중인 대회 */}
-        <div className="py-4">
+      {/* Filter tabs per spec: 전체/농구/축구/클립 */}
+      <ContentFilterTabs />
+
+      <div className="flex flex-col" style={{ gap: 20 }}>
+        {/* 진행중인 대회 — Competition Info Banner Area */}
+        <div style={{ paddingTop: 16, paddingBottom: 16 }}>
           <SectionHeader title="진행중인 대회" linkTo="/competition" />
-          <div className="mt-4">
+          <div style={{ marginTop: 16 }}>
             <HScrollRow>
               {competitions.map((c) => (
-                <CompetitionBannerCard key={c.id} {...c} imageUrl={c.imageUrl} className="w-[200px] xl:w-[220px]" />
+                <CompetitionBannerCard key={c.id} {...c} imageUrl={c.imageUrl} className="w-[200px] xl:w-[220px] 2xl:w-[240px]" />
               ))}
             </HScrollRow>
           </div>
         </div>
 
-        <div className="py-4">
+        {/* LIVE 영상 — Section Title_시스템 (LIVE) */}
+        <div style={{ paddingTop: 16, paddingBottom: 16 }}>
           <LiveSection items={liveContents} />
         </div>
 
-        <div className="py-4">
-          <ContentSection title="인기 클립" linkTo="/contents?type=CLIP" accent="clip">
+        {/* FO POCHAK — Section Title_시스템 (clips/POCHAK) */}
+        <div style={{ paddingTop: 16, paddingBottom: 16 }}>
+          <ContentSection title="FO POCHAK" linkTo="/contents?type=CLIP" accent="clip">
             {clipContents.map((clip) => (
               <ClipCard key={clip.id} id={clip.id} title={clip.title} viewCount={clip.viewCount} thumbnailUrl={clip.thumbnailUrl} />
             ))}
           </ContentSection>
         </div>
 
-        <div className="py-4">
+        {/* 최근 영상 — Section Title_커스텀 */}
+        <div style={{ paddingTop: 16, paddingBottom: 16 }}>
           <ContentSection title="최근 영상" linkTo="/contents?type=VOD" accent="vod">
             {vodContents.map((v) => (
               <VideoCard key={v.id} id={v.id} title={v.title} competition={`${v.competition} | ${v.sport}`} type={v.type} duration={v.duration} date={v.date} viewCount={v.viewCount} thumbnailUrl={v.thumbnailUrl} />
@@ -396,28 +434,39 @@ export default function HomePage() {
           </ContentSection>
         </div>
 
-        <div className="py-4">
+        {/* 인기 팀/클럽 */}
+        <div style={{ paddingTop: 16, paddingBottom: 16 }}>
           <TeamsSection items={channels} />
         </div>
 
-        <div className="py-4">
-          <ContentSection title="팀/클럽 라이브" linkTo="/contents?type=LIVE">
-            {liveContents.slice(0, 5).map((c) => (
-              <VideoCard key={`tl-${c.id}`} id={c.id} title={c.title} competition={c.competition} type={c.type} duration={c.duration} isLive={c.isLive} viewCount={c.viewCount} />
+        {/* 이슈 — News section per screenshot */}
+        <div style={{ paddingTop: 16, paddingBottom: 16 }}>
+          <SectionHeader title="이슈" linkTo="/notices" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4" style={{ gap: 16, marginTop: 16 }}>
+            {vodContents.slice(0, 4).map((v) => (
+              <Link key={`news-${v.id}`} to={`/contents/vod/${v.id}`} className="group block">
+                <div className="rounded-xl overflow-hidden bg-[#1a1a1a] border border-white/[0.06] hover:border-white/[0.12] transition-colors">
+                  <div className="relative aspect-video">
+                    {v.thumbnailUrl ? (
+                      <img src={v.thumbnailUrl} alt={v.title} className="w-full h-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="w-full h-full bg-[#272727] flex items-center justify-center">
+                        <img src="/pochak-icon.svg" alt="" className="w-8 h-8 opacity-15" />
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ padding: 12 }}>
+                    <p className="text-[14px] text-foreground font-medium line-clamp-2 leading-snug">{v.title}</p>
+                    <p className="text-[12px] text-pochak-text-tertiary" style={{ marginTop: 6 }}>{v.competition} · {v.date?.slice(0, 10)}</p>
+                  </div>
+                </div>
+              </Link>
             ))}
-          </ContentSection>
-        </div>
-
-        <div className="py-4">
-          <ContentSection title="팀/클럽 클립" linkTo="/contents?type=CLIP" accent="clip">
-            {clipContents.slice(0, 7).map((clip) => (
-              <ClipCard key={`tc-${clip.id}`} id={clip.id} title={clip.title} viewCount={clip.viewCount} />
-            ))}
-          </ContentSection>
+          </div>
         </div>
       </div>
 
-      <div className="h-10" />
+      <div style={{ height: 40 }} />
     </div>
   );
 }

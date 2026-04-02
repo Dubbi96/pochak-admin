@@ -71,9 +71,9 @@ const profileMenuSections = [
 ];
 
 const serviceTabs = [
-  { label: 'TV', path: '/home' },
-  { label: 'City', path: '/city' },
-  { label: 'Club', path: '/club' },
+  { label: '포착TV', path: '/home' },
+  { label: '포착시티', path: '/city' },
+  { label: '포착클럽', path: '/club' },
 ];
 
 export default function Header() {
@@ -126,8 +126,8 @@ export default function Header() {
               <button
                 key={tab.label}
                 onClick={() => navigate(tab.path)}
-                style={{ paddingLeft: 16, paddingRight: 16, marginLeft: 8, marginRight: 8 }}
-                className={`pt-2 pb-3 text-[15px] font-bold tracking-[-0.02em] transition-colors duration-200 ${
+                style={{ paddingLeft: 12, paddingRight: 12, marginLeft: 4, marginRight: 4 }}
+                className={`pt-2 pb-3 text-[14px] font-bold tracking-[-0.02em] transition-colors duration-200 whitespace-nowrap ${
                   activeTabValue === tab.path
                     ? 'text-foreground'
                     : 'text-pochak-text-tertiary/60 hover:text-pochak-text-secondary'
