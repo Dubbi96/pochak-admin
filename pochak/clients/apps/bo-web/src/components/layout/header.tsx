@@ -29,6 +29,7 @@ const pageTitleMap: Record<string, string> = {
   "/venues": "구장 관리",
   "/venues/list": "구장 관리",
   "/reservations": "촬영예약 관리",
+  "/recordings": "촬영 관리",
   "/contents": "콘텐츠 관리",
   "/contents/live": "라이브",
   "/contents/vod": "VOD",
