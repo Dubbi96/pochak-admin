@@ -33,6 +33,7 @@ import ClubManagerPage from '@/pages/ClubManagerPage'
 import CheckoutPage from '@/pages/CheckoutPage'
 import RecordingPage from '@/pages/RecordingPage'
 import MyReservationsPage from '@/pages/MyReservationsPage'
+import MyRecordingsPage from '@/pages/MyRecordingsPage'
 
 export default function App() {
   return (
@@ -74,6 +75,7 @@ export default function App() {
         <Route path="/subscription" element={<SubscriptionPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/my/reservations" element={<MyReservationsPage />} />
+        <Route path="/my/recordings" element={<MyRecordingsPage />} />
         <Route path="/recording/:sessionId" element={<RecordingPage />} />
       </Route>
     </Routes>

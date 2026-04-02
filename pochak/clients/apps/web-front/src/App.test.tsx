@@ -27,6 +27,10 @@ vi.mock('@/hooks/useApi', () => ({
   useTimeSlots: () => ({ data: [], loading: false, error: null }),
   useMyReservations: () => ({ data: [], loading: false, error: null }),
   createReservation: vi.fn().mockResolvedValue(null),
+  useMyRecordings: () => ({ data: [], loading: false, error: null }),
+  createRecordingSchedule: vi.fn().mockResolvedValue(null),
+  updateRecordingSchedule: vi.fn().mockResolvedValue(null),
+  deleteRecordingSchedule: vi.fn().mockResolvedValue(null),
 }))
 
 beforeEach(() => {

@@ -57,6 +57,7 @@ const profileMenuSections = [
   {
     items: [
       { label: '대회소식', path: '/schedule', icon: LuTrophy },
+      { label: '내 촬영', path: '/my/recordings', icon: LuVideo },
       { label: '내 예약', path: '/my/reservations', icon: LuCalendarCheck },
       { label: '시설예약', path: '/city', icon: LuBuilding2 },
       { label: '자주가는 시설', path: '/city', icon: LuMapPin },
