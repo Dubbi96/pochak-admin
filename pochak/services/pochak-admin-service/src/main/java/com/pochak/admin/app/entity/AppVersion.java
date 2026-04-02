@@ -19,8 +19,9 @@ public class AppVersion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String platform;
+    private Platform platform;
 
     @Column(name = "version_code", nullable = false)
     private String versionCode;

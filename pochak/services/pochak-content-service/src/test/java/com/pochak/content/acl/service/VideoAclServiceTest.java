@@ -84,10 +84,11 @@ class VideoAclServiceTest {
         given(videoAclRepository.findByContentTypeAndContentId(VideoAcl.ContentType.LIVE, 10L))
                 .willReturn(Optional.of(acl));
 
-        // User has no matching memberships
-        given(membershipRepository.findByUserIdAndTargetTypeAndActiveTrue(100L, Membership.TargetType.ORGANIZATION))
-                .willReturn(List.of());
-        given(membershipRepository.findByUserIdAndTargetTypeAndActiveTrue(100L, Membership.TargetType.TEAM))
+        // User has no matching memberships (unified query)
+        given(membershipRepository.findByUserIdAndTargetTypeInAndActiveTrueAndApprovalStatus(
+                100L,
+                List.of(Membership.TargetType.ORGANIZATION, Membership.TargetType.TEAM),
+                Membership.ApprovalStatus.APPROVED))
                 .willReturn(List.of());
 
         // when
@@ -125,7 +126,10 @@ class VideoAclServiceTest {
                 .active(true)
                 .build();
 
-        given(membershipRepository.findByUserIdAndTargetTypeAndActiveTrue(100L, Membership.TargetType.ORGANIZATION))
+        given(membershipRepository.findByUserIdAndTargetTypeInAndActiveTrueAndApprovalStatus(
+                100L,
+                List.of(Membership.TargetType.ORGANIZATION, Membership.TargetType.TEAM),
+                Membership.ApprovalStatus.APPROVED))
                 .willReturn(List.of(orgMembership));
 
         // when
@@ -133,7 +137,7 @@ class VideoAclServiceTest {
 
         // then
         assertThat(result.isHasAccess()).isTrue();
-        assertThat(result.getReason()).isEqualTo("ORGANIZATION_MEMBER");
+        assertThat(result.getReason()).isEqualTo("GROUP_MEMBER");
     }
 
     @Test

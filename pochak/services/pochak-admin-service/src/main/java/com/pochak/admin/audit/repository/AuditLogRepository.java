@@ -15,4 +15,10 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
      * SEC-007: Retrieve the most recent audit log to get its hash for chain linking.
      */
     java.util.Optional<AuditLog> findTopByOrderByIdDesc();
+
+    /**
+     * L8: Delete audit logs older than the given cutoff date.
+     * Returns the number of deleted records.
+     */
+    int deleteByCreatedAtBefore(java.time.LocalDateTime cutoff);
 }

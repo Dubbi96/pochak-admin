@@ -87,20 +87,25 @@ class OrganizationServiceCityInvariantTest {
     class CityVerificationTests {
 
         @Test
-        @DisplayName("CITY + is_verified=false -> BusinessException")
-        void city_unverified_throwsException() {
-            // given: unverified org tries to set displayArea=CITY
+        @DisplayName("CITY + is_verified=false -> CITY 정책 자동 적용 (OPEN, PUBLIC, non-CUG)")
+        void city_unverified_appliesCityInvariants() {
+            // given: unverified org sets displayArea=CITY
             given(organizationRepository.findByIdAndActiveTrue(2L))
                     .willReturn(Optional.of(unverifiedOrg));
+            given(organizationRepository.findByParentIdAndActiveTrue(2L))
+                    .willReturn(List.of());
 
             UpdateOrganizationRequest request = UpdateOrganizationRequest.builder()
                     .displayArea("CITY")
                     .build();
 
-            // when & then
-            assertThatThrownBy(() -> organizationService.updateOrganization(2L, request))
-                    .isInstanceOf(BusinessException.class)
-                    .hasMessageContaining("인증된 단체만 가능");
+            // when
+            OrganizationDetailResponse result = organizationService.updateOrganization(2L, request);
+
+            // then: CITY invariants applied even for unverified org
+            assertThat(result).isNotNull();
+            assertThat(unverifiedOrg.getDisplayArea()).isEqualTo(DisplayArea.CITY);
+            assertThat(unverifiedOrg.getJoinPolicy()).isEqualTo(JoinPolicy.OPEN);
         }
 
         @Test
@@ -130,8 +135,8 @@ class OrganizationServiceCityInvariantTest {
     class CityReservationPolicyTests {
 
         @Test
-        @DisplayName("CITY + reservation_policy=MANAGER_ONLY -> ALL_MEMBERS로 자동 교정")
-        void city_managerOnly_correctedToAllMembers() {
+        @DisplayName("CITY + reservation_policy=MANAGER_ONLY -> reservation_policy 그대로 유지, CITY 정책만 적용")
+        void city_managerOnly_reservationPolicyUnchanged() {
             // given: verified org with MANAGER_ONLY reservation policy
             given(organizationRepository.findByIdAndActiveTrue(1L))
                     .willReturn(Optional.of(verifiedCityOrg));
@@ -146,8 +151,10 @@ class OrganizationServiceCityInvariantTest {
             // when
             organizationService.updateOrganization(1L, request);
 
-            // then: reservation policy auto-corrected to ALL_MEMBERS
-            assertThat(verifiedCityOrg.getReservationPolicy()).isEqualTo(ReservationPolicy.ALL_MEMBERS);
+            // then: reservation_policy is NOT auto-corrected; CITY invariants only affect CUG, joinPolicy, contentVisibility
+            assertThat(verifiedCityOrg.getReservationPolicy()).isEqualTo(ReservationPolicy.MANAGER_ONLY);
+            assertThat(verifiedCityOrg.getJoinPolicy()).isEqualTo(JoinPolicy.OPEN);
+            assertThat(verifiedCityOrg.getIsCug()).isFalse();
         }
 
         @Test
