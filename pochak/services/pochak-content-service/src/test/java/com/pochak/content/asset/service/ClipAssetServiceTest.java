@@ -1,6 +1,7 @@
 package com.pochak.content.asset.service;
 
 import com.pochak.content.asset.dto.clip.ClipAssetDetailResponse;
+import com.pochak.content.asset.dto.clip.ClipAssetListResponse;
 import com.pochak.content.asset.dto.clip.CreateClipAssetRequest;
 import com.pochak.content.asset.entity.ClipAsset;
 import com.pochak.content.asset.entity.LiveAsset;
@@ -17,7 +18,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -102,5 +107,38 @@ class ClipAssetServiceTest {
         assertThat(result.getVisibility()).isEqualTo(LiveAsset.Visibility.PUBLIC);
         assertThat(result.getEncodingStatus()).isEqualTo(VodAsset.EncodingStatus.PENDING);
         verify(clipAssetRepository).save(any(ClipAsset.class));
+    }
+
+    @Test
+    @DisplayName("Should search clip assets by keyword")
+    void testSearchByKeyword() {
+        // given
+        Pageable pageable = PageRequest.of(0, 20);
+
+        ClipAsset clip1 = ClipAsset.builder()
+                .id(1L)
+                .sourceType(ClipAsset.SourceType.LIVE)
+                .sourceId(10L)
+                .match(testMatch)
+                .creatorUserId(100L)
+                .title("Amazing Goal")
+                .startTimeSec(1200)
+                .endTimeSec(1230)
+                .duration(30)
+                .encodingStatus(VodAsset.EncodingStatus.COMPLETED)
+                .visibility(LiveAsset.Visibility.PUBLIC)
+                .isDisplayed(true)
+                .viewCount(50)
+                .build();
+
+        given(clipAssetRepository.searchByTitle("Amazing", pageable)).willReturn(List.of(clip1));
+
+        // when
+        List<ClipAssetListResponse> result = clipAssetService.search("Amazing", pageable);
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getTitle()).isEqualTo("Amazing Goal");
+        verify(clipAssetRepository).searchByTitle("Amazing", pageable);
     }
 }
