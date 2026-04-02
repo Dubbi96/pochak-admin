@@ -23,7 +23,6 @@ import {
 import { FileUpload } from "@/components/common/file-upload";
 import { Pencil, Plus, Ban, RefreshCw, Copy } from "lucide-react";
 import {
-  getPromotions,
   createPromotion,
   updatePromotion,
   updatePromotionStatus,
@@ -32,7 +31,6 @@ import {
   type PromotionType,
   type DiscountType,
   type PromotionStatus,
-  type PromotionFilter,
   type PromotionCreateRequest,
   type PromotionTargetType,
   PROMOTION_TYPE_LABELS,
@@ -353,16 +351,6 @@ export default function PromotionsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const filters: PromotionFilter = {
-        status: statusFilter,
-        type: typeFilter,
-        dateFrom: dateFrom || undefined,
-        dateTo: dateTo || undefined,
-        searchKeyword: searchKeyword || undefined,
-      };
-
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = {};
       if (statusFilter !== "ALL") apiParams.status = statusFilter;
       if (typeFilter !== "ALL") apiParams.type = typeFilter;
@@ -374,16 +362,8 @@ export default function PromotionsPage() {
         "/admin/api/v1/commerce/promotions",
         apiParams
       );
-      if (apiResult) {
-        setPromotions(apiResult.content);
-        setTotalElements(apiResult.totalElements);
-        return;
-      }
-
-      // Mock fallback
-      const result = await getPromotions(filters);
-      setPromotions(result.content);
-      setTotalElements(result.totalElements);
+      setPromotions(apiResult.content);
+      setTotalElements(apiResult.totalElements);
     } finally {
       setLoading(false);
     }

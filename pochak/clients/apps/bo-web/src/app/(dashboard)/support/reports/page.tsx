@@ -24,7 +24,6 @@ import {
 import { Search, Flag } from "lucide-react";
 import type { PageResponse } from "@/types/common";
 import {
-  getReports,
   actionReport,
   type Report,
   type ReportFilter,
@@ -227,8 +226,6 @@ export default function ReportsPage() {
         searchKeyword: searchKeyword || undefined,
       };
 
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
       if (filters.status) apiParams.status = filters.status;
       if (filters.category) apiParams.category = filters.category;
@@ -239,14 +236,7 @@ export default function ReportsPage() {
         "/admin/api/v1/support/reports",
         apiParams
       );
-      if (apiResult) {
-        setData(apiResult);
-        return;
-      }
-
-      // Mock fallback
-      const result = await getReports(filters, page);
-      setData(result);
+      setData(apiResult);
     } finally {
       setLoading(false);
     }

@@ -27,14 +27,12 @@ import { FileUpload } from "@/components/common/file-upload";
 import { Search, Plus, Pencil, Eye, Users, Trophy, Swords, UserCog, Shield } from "lucide-react";
 import type { PageResponse } from "@/types/common";
 import {
-  getTeams,
   createTeam,
   updateTeam,
   getOrganizationOptions,
   getTeamMembers,
   changeMembershipRole,
   type Team,
-  type TeamFilter,
   type TeamFormData,
   type TeamMember,
   type MembershipRole,
@@ -121,15 +119,6 @@ export default function TeamListPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const filters: TeamFilter = {
-        organizationId: orgFilter,
-        sportName: sportFilter,
-        status: statusFilter,
-        searchKeyword,
-      };
-
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
       if (orgFilter !== "ALL") apiParams.organizationId = orgFilter;
       if (sportFilter !== "ALL") apiParams.sportName = sportFilter;
@@ -142,12 +131,9 @@ export default function TeamListPage() {
       );
       if (apiResult) {
         setData(apiResult);
-        return;
       }
-
-      // Mock fallback
-      const result = await getTeams(filters, page);
-      setData(result);
+    } catch {
+      /* API error - data remains in initial empty state */
     } finally {
       setLoading(false);
     }

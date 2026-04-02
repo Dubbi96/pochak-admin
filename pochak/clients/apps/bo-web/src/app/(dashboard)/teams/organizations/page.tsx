@@ -29,7 +29,6 @@ import { TreeView } from "@/components/common/tree-view";
 import { Search, Plus, Pencil, LayoutList, GitBranch, Eye, Building2, Users, Calendar, ChevronRight, Clock, Shield, UserCog, HelpCircle, CheckCircle2 } from "lucide-react";
 import type { PageResponse } from "@/types/common";
 import {
-  getOrganizations,
   createOrganization,
   updateOrganization,
   getOrganizationTreeData,
@@ -38,7 +37,6 @@ import {
   getOrganizationMembers,
   changeMembershipRole,
   type Organization,
-  type OrganizationFilter,
   type OrganizationTypeFilter,
   type OperationStatusFilter,
   type OrganizationType,
@@ -170,17 +168,6 @@ export default function OrganizationsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const filters: OrganizationFilter = {
-        type: typeFilter,
-        operationStatus: statusFilter,
-        accessType: accessTypeFilter,
-        sportName: sportFilter,
-        district: districtFilter,
-        searchKeyword,
-      };
-
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
       if (typeFilter !== "ALL") apiParams.type = typeFilter;
       if (accessTypeFilter !== "ALL") apiParams.accessType = accessTypeFilter;
@@ -195,12 +182,9 @@ export default function OrganizationsPage() {
       );
       if (apiResult) {
         setData(apiResult);
-        return;
       }
-
-      // Mock fallback
-      const result = await getOrganizations(filters, page);
-      setData(result);
+    } catch {
+      /* API error - data remains in initial empty state */
     } finally {
       setLoading(false);
     }

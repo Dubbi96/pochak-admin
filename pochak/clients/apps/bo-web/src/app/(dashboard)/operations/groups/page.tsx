@@ -82,15 +82,14 @@ export default function GroupsPage() {
   const [form, setForm] = useState({ name: "", code: "", description: "" });
 
   const loadTree = useCallback(async () => {
-    // Try real API first, fall back to mock
-    // TODO(Phase 4B): remove mock fallback once backend is stable
-    const apiResult = await adminApi.get<GroupNode[]>("/admin/api/v1/operations/groups/tree");
-    if (apiResult) {
-      setTree(apiResult);
-      return;
+    try {
+      const apiResult = await adminApi.get<GroupNode[]>("/admin/api/v1/operations/groups/tree");
+      if (apiResult) {
+        setTree(apiResult);
+      }
+    } catch {
+      /* API error */
     }
-    const data = await adminRbacApi.groups.tree();
-    setTree(data);
   }, []);
 
   useEffect(() => {

@@ -27,7 +27,6 @@ import {
 import { Plus, Search } from "lucide-react";
 import type { PageResponse } from "@/types/common";
 import {
-  getTermsList,
   createTerms,
   updateTerms,
   type Terms,
@@ -219,8 +218,6 @@ export default function TermsPage() {
         searchKeyword: searchKeyword || undefined,
       };
 
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
       if (categoryFilter !== "ALL") apiParams.category = categoryFilter;
       if (filters.dateFrom) apiParams.dateFrom = filters.dateFrom;
@@ -231,14 +228,7 @@ export default function TermsPage() {
         "/admin/api/v1/support/terms",
         apiParams
       );
-      if (apiResult) {
-        setData(apiResult);
-        return;
-      }
-
-      // Mock fallback
-      const result = await getTermsList(filters, page);
-      setData(result);
+      setData(apiResult);
     } finally {
       setLoading(false);
     }

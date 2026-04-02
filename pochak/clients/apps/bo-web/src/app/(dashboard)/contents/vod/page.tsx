@@ -34,7 +34,6 @@ import type {
 import type { OwnerType } from "@/types/venue";
 import type { PageResponse } from "@/types/common";
 import {
-  getVodAssets,
   updateVodVisibility,
   getVenueOptions,
 } from "@/services/content-asset-api";
@@ -112,8 +111,6 @@ export default function VodListPage() {
         dateTo: dateRange.to ? dateRange.to.toISOString() : undefined,
       };
 
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
       if (filters.ownerType) apiParams.ownerType = filters.ownerType;
       if (filters.venueId) apiParams.venueId = String(filters.venueId);
@@ -125,15 +122,7 @@ export default function VodListPage() {
         "/admin/api/v1/contents/vod",
         apiParams
       );
-      if (apiResult) {
-        setData(apiResult);
-        setSelectedIds([]);
-        return;
-      }
-
-      // Mock fallback
-      const result = await getVodAssets(filters, page);
-      setData(result);
+      setData(apiResult);
       setSelectedIds([]);
     } finally {
       setLoading(false);

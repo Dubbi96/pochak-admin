@@ -91,15 +91,14 @@ export default function PermissionsPage() {
   const [checkedFunctions, setCheckedFunctions] = useState<Set<number>>(new Set());
 
   const loadRoles = useCallback(async () => {
-    // Try real API first, fall back to mock
-    // TODO(Phase 4B): remove mock fallback once backend is stable
-    const apiResult = await adminApi.get<RoleItem[]>("/admin/api/v1/operations/roles");
-    if (apiResult) {
-      setRoles(apiResult);
-      return;
+    try {
+      const apiResult = await adminApi.get<RoleItem[]>("/admin/api/v1/operations/roles");
+      if (apiResult) {
+        setRoles(apiResult);
+      }
+    } catch {
+      /* API error */
     }
-    const data = await adminRbacApi.roles.list();
-    setRoles(data);
   }, []);
 
   useEffect(() => {

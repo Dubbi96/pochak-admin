@@ -15,9 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2, Save, Gift, Search, Package } from "lucide-react";
 import {
-  getBallExchangeRate,
   updateBallExchangeRate,
-  getBallChargeOptions,
   createBallChargeOption,
   updateBallChargeOption,
   deleteBallChargeOption,
@@ -310,25 +308,12 @@ export default function BallSettingsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const [apiRate, apiOptions] = await Promise.all([
         adminApi.get<BallExchangeRate>("/admin/api/v1/commerce/ball-settings/exchange-rate"),
         adminApi.get<BallChargeOption[]>("/admin/api/v1/commerce/ball-settings/charge-options"),
       ]);
-      if (apiRate && apiOptions) {
-        setExchangeRate(apiRate);
-        setChargeOptions(apiOptions);
-        return;
-      }
-
-      // Mock fallback
-      const [rate, options] = await Promise.all([
-        getBallExchangeRate(),
-        getBallChargeOptions(),
-      ]);
-      setExchangeRate(rate);
-      setChargeOptions(options);
+      setExchangeRate(apiRate);
+      setChargeOptions(apiOptions);
     } finally {
       setLoading(false);
     }

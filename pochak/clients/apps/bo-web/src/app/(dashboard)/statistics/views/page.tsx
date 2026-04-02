@@ -20,7 +20,6 @@ import {
   TrendingDown,
 } from "lucide-react";
 import {
-  getViewStatistics,
   exportToCsv,
   type ViewStatistics,
   type ViewContentItem,
@@ -261,8 +260,6 @@ export default function ViewStatisticsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = {};
       if (dateRange.from) apiParams.dateFrom = dateRange.from.toISOString();
       if (dateRange.to) apiParams.dateTo = dateRange.to.toISOString();
@@ -273,15 +270,9 @@ export default function ViewStatisticsPage() {
       );
       if (apiResult) {
         setData(apiResult);
-        return;
       }
-
-      // Mock fallback
-      const result = await getViewStatistics(
-        dateRange.from?.toISOString(),
-        dateRange.to?.toISOString()
-      );
-      setData(result);
+    } catch {
+      /* API error - data remains in initial empty state */
     } finally {
       setLoading(false);
     }

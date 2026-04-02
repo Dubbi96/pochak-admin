@@ -28,7 +28,6 @@ import { Plus, Search, GripVertical, Trash2 } from "lucide-react";
 import { FileUpload } from "@/components/common/file-upload";
 import type { PageResponse } from "@/types/common";
 import {
-  getBanners,
   createBanner,
   updateBanner,
   updateBannerOrders,
@@ -268,8 +267,6 @@ export default function BannersPage() {
         searchKeyword: searchKeyword || undefined,
       };
 
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
       if (statusFilter !== "ALL") apiParams.status = statusFilter;
       if (filters.dateFrom) apiParams.dateFrom = filters.dateFrom;
@@ -280,15 +277,7 @@ export default function BannersPage() {
         "/admin/api/v1/site/banners",
         apiParams
       );
-      if (apiResult) {
-        setData(apiResult);
-        setOrderEdits({});
-        return;
-      }
-
-      // Mock fallback
-      const result = await getBanners(filters, page);
-      setData(result);
+      setData(apiResult);
       setOrderEdits({});
     } finally {
       setLoading(false);

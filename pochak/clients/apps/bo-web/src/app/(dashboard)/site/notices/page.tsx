@@ -27,7 +27,6 @@ import {
 import { Plus, Search, Trash2 } from "lucide-react";
 import type { PageResponse } from "@/types/common";
 import {
-  getNotices,
   createNotice,
   updateNotice,
   deleteNotice,
@@ -258,8 +257,6 @@ export default function NoticesPage() {
         searchKeyword: searchKeyword || undefined,
       };
 
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
       if (statusFilter !== "ALL") apiParams.status = statusFilter;
       if (categoryFilter !== "ALL") apiParams.category = categoryFilter;
@@ -271,14 +268,7 @@ export default function NoticesPage() {
         "/admin/api/v1/site/notices",
         apiParams
       );
-      if (apiResult) {
-        setData(apiResult);
-        return;
-      }
-
-      // Mock fallback
-      const result = await getNotices(filters, page);
-      setData(result);
+      setData(apiResult);
     } finally {
       setLoading(false);
     }

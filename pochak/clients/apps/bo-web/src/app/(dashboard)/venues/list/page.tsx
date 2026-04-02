@@ -21,9 +21,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Plus, Search } from "lucide-react";
-import type { Venue, VenueFilter, OwnerType, VenueType } from "@/types/venue";
+import type { Venue, OwnerType, VenueType } from "@/types/venue";
 import type { PageResponse } from "@/types/common";
-import { getVenues, createVenue, updateVenue } from "@/services/operation-api";
+import { createVenue, updateVenue } from "@/services/operation-api";
 import { adminApi } from "@/lib/api-client";
 
 // ── Label Helpers ──────────────────────────────────────────────────────────────
@@ -304,23 +304,16 @@ export default function VenuesListPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingVenue, setEditingVenue] = useState<Venue | null>(null);
 
+  const [error, setError] = useState<string | null>(null);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const filters: VenueFilter = {
-        ownerType: ownerTypeFilter === "ALL" ? null : (ownerTypeFilter as OwnerType),
-        venueType: venueTypeFilter === "ALL" ? null : (venueTypeFilter as VenueType),
-        venueName: venueName || undefined,
-        cameraName: cameraName || undefined,
-      };
-
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
-      if (filters.ownerType) apiParams.ownerType = filters.ownerType;
-      if (filters.venueType) apiParams.venueType = filters.venueType;
-      if (filters.venueName) apiParams.venueName = filters.venueName;
-      if (filters.cameraName) apiParams.cameraName = filters.cameraName;
+      if (ownerTypeFilter !== "ALL") apiParams.ownerType = ownerTypeFilter;
+      if (venueTypeFilter !== "ALL") apiParams.venueType = venueTypeFilter;
+      if (venueName) apiParams.venueName = venueName;
+      if (cameraName) apiParams.cameraName = cameraName;
 
       const apiResult = await adminApi.get<PageResponse<Venue>>(
         "/admin/api/v1/venues",
@@ -328,12 +321,9 @@ export default function VenuesListPage() {
       );
       if (apiResult) {
         setData(apiResult);
-        return;
       }
-
-      // Mock fallback
-      const result = await getVenues(filters, page);
-      setData(result);
+    } catch {
+      setError("데이터를 불러오는데 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -368,6 +358,13 @@ export default function VenuesListPage() {
           등록
         </Button>
       </div>
+
+      {/* Error */}
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {/* Filter Bar */}
       <div className="flex flex-wrap items-end gap-4 rounded-lg border border-gray-200 bg-white p-4">
