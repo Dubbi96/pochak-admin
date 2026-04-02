@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { pochakApi } from '@/services/api-client'
-import type { Banner, ContentItem, Channel, Competition } from '@/types/content'
+import type { Banner, ContentItem, Channel, Competition, VenueProduct, TimeSlot, Reservation } from '@/types/content'
 
 // ── Generic fetch hook ────────────────────────────────────
 
@@ -242,4 +242,45 @@ export function useTrendingSearches() {
     () => pochakApi.get<string[]>('/api/v1/search/trending'),
     [],
   )
+}
+
+// ── Venue Products ───────────────────────────────────────
+
+export function useVenueProducts(venueId: string) {
+  return useFetch<VenueProduct[]>(
+    () => pochakApi.get<VenueProduct[]>(`/api/v1/venues/${venueId}/products`),
+    [],
+    [venueId],
+  )
+}
+
+export function useTimeSlots(venueId: string, date: string) {
+  const isEmpty = !date
+  return useFetch<TimeSlot[]>(
+    async () => {
+      if (isEmpty) return []
+      return pochakApi.get<TimeSlot[]>(`/api/v1/venues/${venueId}/time-slots`, { date })
+    },
+    [],
+    [venueId, date],
+  )
+}
+
+// ── Reservations ─────────────────────────────────────────
+
+export function useMyReservations() {
+  return useFetch<Reservation[]>(
+    () => pochakApi.get<Reservation[]>('/api/v1/reservations/my'),
+    [],
+  )
+}
+
+export async function createReservation(body: {
+  venueId: string;
+  productId: string;
+  date: string;
+  timeSlot: string;
+  hours: number;
+}) {
+  return pochakApi.post<Reservation>('/api/v1/reservations', body)
 }

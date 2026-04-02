@@ -32,6 +32,7 @@ import StoreDetailPage from '@/pages/StoreDetailPage'
 import ClubManagerPage from '@/pages/ClubManagerPage'
 import CheckoutPage from '@/pages/CheckoutPage'
 import RecordingPage from '@/pages/RecordingPage'
+import MyReservationsPage from '@/pages/MyReservationsPage'
 
 export default function App() {
   return (
@@ -72,6 +73,7 @@ export default function App() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/subscription" element={<SubscriptionPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/my/reservations" element={<MyReservationsPage />} />
         <Route path="/recording/:sessionId" element={<RecordingPage />} />
       </Route>
     </Routes>

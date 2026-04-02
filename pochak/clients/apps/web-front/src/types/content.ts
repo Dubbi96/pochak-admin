@@ -44,3 +44,37 @@ export interface Competition {
   isAd: boolean;
   imageUrl?: string;
 }
+
+export type VenueProductType = 'SPACE_ONLY' | 'SPACE_CAMERA' | 'CAMERA_ONLY';
+
+export interface VenueProduct {
+  id: string;
+  venueId: string;
+  name: string;
+  type: VenueProductType;
+  description: string;
+  pricePerHour: number;
+  imageUrl?: string;
+}
+
+export interface TimeSlot {
+  time: string;
+  available: boolean;
+}
+
+export type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
+
+export interface Reservation {
+  id: string;
+  venueId: string;
+  venueName: string;
+  productId: string;
+  productName: string;
+  productType: VenueProductType;
+  date: string;
+  timeSlot: string;
+  hours: number;
+  totalPrice: number;
+  status: ReservationStatus;
+  createdAt: string;
+}
