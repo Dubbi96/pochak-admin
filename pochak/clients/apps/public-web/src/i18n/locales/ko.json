@@ -1,0 +1,55 @@
+{
+  "common": {
+    "confirm": "확인",
+    "cancel": "취소",
+    "next": "다음",
+    "save": "저장",
+    "delete": "삭제",
+    "search": "검색",
+    "more": "더보기",
+    "viewAll": "전체보기",
+    "login": "로그인",
+    "logout": "로그아웃",
+    "signup": "회원가입",
+    "loading": "로딩 중...",
+    "noData": "데이터가 없습니다",
+    "retry": "다시 시도",
+    "error": "오류가 발생했습니다"
+  },
+  "auth": {
+    "loginTitle": "로그인",
+    "idPlaceholder": "아이디를 입력해 주세요",
+    "pwPlaceholder": "비밀번호를 입력해 주세요",
+    "keepLogin": "로그인유지",
+    "findAccount": "아이디/비밀번호 찾기",
+    "loginRequired": "로그인 후 이용 가능합니다",
+    "noPermission": "시청 권한이 없습니다"
+  },
+  "home": {
+    "officialLive": "공식 LIVE",
+    "popularPochak": "인기 POCHAK",
+    "latestVideos": "최신 영상",
+    "bestClub": "Best 클럽",
+    "clubLive": "클럽 LIVE"
+  },
+  "player": {
+    "createClip": "클립 만들기",
+    "fullMatch": "풀 경기 보러가기",
+    "comments": "댓글",
+    "share": "공유하기",
+    "report": "신고하기",
+    "highlights": "하이라이트"
+  },
+  "nav": {
+    "home": "홈",
+    "schedule": "일정",
+    "contents": "콘텐츠",
+    "my": "마이페이지",
+    "search": "검색"
+  },
+  "settings": {
+    "language": "언어 설정",
+    "languageKo": "한국어",
+    "languageEn": "English"
+  }
+}

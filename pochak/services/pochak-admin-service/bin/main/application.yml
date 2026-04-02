@@ -1,0 +1,44 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: pochak-admin-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pochak?currentSchema=admin
+    username: ${DB_USERNAME:pochak}
+    password: ${DB_PASSWORD:pochak}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        default_schema: admin
+        format_sql: true
+    show-sql: false
+    open-in-view: false
+
+jwt:
+  secret: ${JWT_SECRET:pochak-admin-secret-key-minimum-256-bits-long-for-hmac-sha256}
+  access-token-expiry: 3600000
+  refresh-token-expiry: 86400000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.pochak.admin: DEBUG
+    org.hibernate.SQL: DEBUG

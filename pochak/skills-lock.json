@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "skills": {
+    "firecrawl": {
+      "source": "firecrawl/cli",
+      "sourceType": "github",
+      "computedHash": "f79f957689cc705613a2731f2f35360192fc9a6a28bc3de73484c973621df5ed"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "c858d2d9023e73edb4e5504868cb0e36313e58fd56af12ef888b43c5634a3c17"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "a6a44d5498f7e8f68289902f3dedfc6f38ae0cee1e96527c80724cf27f727c2a"
+    },
+    "x-talk-to-figma-mcp": {
+      "source": "arda-industries/agent-skills",
+      "sourceType": "github",
+      "computedHash": "3c846b700063f7d7cb203d3431b8c95f1bdde853d9088118e6edaa0f54371505"
+    }
+  }
+}
