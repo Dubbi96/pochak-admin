@@ -73,12 +73,12 @@ function mapApiMember(apiMember: any): Member {
     nationality: '대한민국',
     email: apiMember.email || '',
     phone: apiMember.phoneNumber || '',
-    signUpProvider: 'KAKAO', // TODO: get from auth accounts
+    signUpProvider: apiMember.signUpProvider || apiMember.authProvider || '-',
     signUpDate: apiMember.createdAt ? apiMember.createdAt.split('T')[0] : '',
     status: apiMember.status || 'ACTIVE',
-    memberType: 'MEMBER',
-    gender: 'MALE', // TODO: get from profile
-    ageGroup: '20S', // TODO: calculate from birthDate
+    memberType: apiMember.memberType || 'MEMBER',
+    gender: apiMember.gender || '-',
+    ageGroup: apiMember.ageGroup || '-',
     seasonPass: null,
   };
 }

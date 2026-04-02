@@ -29,40 +29,40 @@ export async function getPartners(
   if (filter.page !== undefined) params.page = String(filter.page);
   if (filter.size !== undefined) params.size = String(filter.size);
 
-  return gatewayApi.get<PageResponse<Partner>>("/api/bo/partners", params);
+  return gatewayApi.get<PageResponse<Partner>>("/api/v1/admin/partners", params);
 }
 
 export async function getPartnerById(id: number): Promise<Partner> {
-  return gatewayApi.get<Partner>(`/api/bo/partners/${id}`);
+  return gatewayApi.get<Partner>(`/api/v1/admin/partners/${id}`);
 }
 
 export async function approvePartner(id: number): Promise<void> {
-  await gatewayApi.post(`/api/bo/partners/${id}/approve`);
+  await gatewayApi.post(`/api/v1/admin/partners/${id}/approve`);
 }
 
 export async function suspendPartner(
   id: number,
   reason: string
 ): Promise<void> {
-  await gatewayApi.post(`/api/bo/partners/${id}/suspend`, { reason });
+  await gatewayApi.post(`/api/v1/admin/partners/${id}/suspend`, { reason });
 }
 
 export async function reactivatePartner(id: number): Promise<void> {
-  await gatewayApi.post(`/api/bo/partners/${id}/reactivate`);
+  await gatewayApi.post(`/api/v1/admin/partners/${id}/reactivate`);
 }
 
 export async function rejectPartner(
   id: number,
   reason: string
 ): Promise<void> {
-  await gatewayApi.post(`/api/bo/partners/${id}/reject`, { reason });
+  await gatewayApi.post(`/api/v1/admin/partners/${id}/reject`, { reason });
 }
 
 export async function updateCommissionRate(
   id: number,
   rate: number
 ): Promise<void> {
-  await gatewayApi.patch(`/api/bo/partners/${id}/commission`, {
+  await gatewayApi.patch(`/api/v1/admin/partners/${id}/commission`, {
     commissionRate: rate,
   });
 }
@@ -71,7 +71,7 @@ export async function getPartnerVenues(
   partnerId: number
 ): Promise<PartnerVenue[]> {
   return gatewayApi.get<PartnerVenue[]>(
-    `/api/bo/partners/${partnerId}/venues`
+    `/api/v1/admin/partners/${partnerId}/venues`
   );
 }
 
@@ -84,7 +84,7 @@ export async function getPartnerSettlements(
   if (params?.size !== undefined) q.size = String(params.size);
 
   return gatewayApi.get<PageResponse<PartnerSettlement>>(
-    `/api/bo/partners/${partnerId}/settlements`,
+    `/api/v1/admin/partners/${partnerId}/settlements`,
     q
   );
 }
