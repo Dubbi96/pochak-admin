@@ -101,6 +101,12 @@ public class VodAssetService {
         entity.softDelete();
     }
 
+    public List<VodAssetListResponse> search(String keyword, Pageable pageable) {
+        return vodAssetRepository.searchByTitle(keyword, pageable).stream()
+                .map(VodAssetListResponse::from)
+                .toList();
+    }
+
     private VodAsset findActiveOrThrow(Long id) {
         return vodAssetRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "VodAsset not found: " + id));
