@@ -454,7 +454,7 @@ export default function TeamListPage() {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                  <Users size={16} className="text-blue-500" />
+                  <Users size={16} style={{ color: "var(--c-primary)" }} />
                   <div>
                     <p className="text-xs text-gray-500">회원수</p>
                     <p className="text-sm font-semibold text-gray-900">{detailTeam.memberCount}명</p>

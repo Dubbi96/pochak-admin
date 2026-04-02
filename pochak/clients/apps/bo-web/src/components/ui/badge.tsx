@@ -3,17 +3,17 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2",
+  "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium transition-colors",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-blue-100 text-blue-700",
-        secondary: "border-transparent bg-gray-100 text-gray-700",
-        destructive: "border-transparent bg-red-100 text-red-700",
-        outline: "border border-gray-300 text-gray-600",
-        success: "border-transparent bg-green-100 text-green-700",
-        warning: "border-transparent bg-amber-100 text-amber-700",
-        info: "border-transparent bg-blue-100 text-blue-700",
+        default: "",
+        secondary: "",
+        destructive: "",
+        outline: "",
+        success: "",
+        warning: "",
+        info: "",
       },
     },
     defaultVariants: {
@@ -22,12 +22,56 @@ const badgeVariants = cva(
   }
 );
 
+const variantStyleMap: Record<string, React.CSSProperties> = {
+  default: {
+    border: "transparent",
+    backgroundColor: "var(--c-primary-light)",
+    color: "var(--c-primary)",
+  },
+  secondary: {
+    border: "transparent",
+    backgroundColor: "var(--c-hover)",
+    color: "var(--fg-secondary)",
+  },
+  destructive: {
+    border: "transparent",
+    backgroundColor: "rgba(229, 23, 40, 0.1)",
+    color: "var(--c-error)",
+  },
+  outline: {
+    borderColor: "var(--c-border)",
+    color: "var(--fg-secondary)",
+  },
+  success: {
+    border: "transparent",
+    backgroundColor: "var(--c-primary-light)",
+    color: "var(--c-success)",
+  },
+  warning: {
+    border: "transparent",
+    backgroundColor: "rgba(255, 215, 64, 0.15)",
+    color: "#B8860B",
+  },
+  info: {
+    border: "transparent",
+    backgroundColor: "rgba(102, 153, 255, 0.1)",
+    color: "var(--c-info)",
+  },
+};
+
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof badgeVariants> {}
 
-function Badge({ className, variant, ...props }: BadgeProps) {
-  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
+function Badge({ className, variant, style, ...props }: BadgeProps) {
+  const v = variant ?? "default";
+  return (
+    <div
+      className={cn(badgeVariants({ variant }), className)}
+      style={{ ...variantStyleMap[v], ...style }}
+      {...props}
+    />
+  );
 }
 
 export { Badge, badgeVariants };

@@ -37,8 +37,11 @@ function VariantIcon({ variant }: { variant: ConfirmDialogProps["variant"] }) {
 
   if (variant === "success") {
     return (
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100">
-        <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <div
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+        style={{ backgroundColor: "var(--c-primary-light)" }}
+      >
+        <svg className="h-5 w-5" style={{ color: "var(--c-primary)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
         </svg>
       </div>
@@ -57,8 +60,11 @@ function VariantIcon({ variant }: { variant: ConfirmDialogProps["variant"] }) {
 
   // default
   return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100">
-      <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <div
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+      style={{ backgroundColor: "var(--c-primary-light)" }}
+    >
+      <svg className="h-5 w-5" style={{ color: "var(--c-primary)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
       </svg>
     </div>

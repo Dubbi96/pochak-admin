@@ -62,15 +62,16 @@ export function FilterBar({
   return (
     <div
       className={cn(
-        "rounded-lg border border-gray-200 bg-white px-5 py-4",
+        "rounded-lg px-5 py-4",
         className
       )}
+      style={{ border: "1px solid var(--c-border)", backgroundColor: "var(--bg-surface)" }}
     >
       <div className="flex flex-wrap items-end gap-4">
         {/* Search input */}
         {onSearchChange && searchValue !== undefined && (
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-700">검색</label>
+            <label className="text-sm font-medium text-foreground">검색</label>
             <SearchInput
               value={searchValue}
               onChange={onSearchChange}
@@ -86,7 +87,7 @@ export function FilterBar({
         {/* Dropdown filters */}
         {dropdowns?.map((dropdown) => (
           <div key={dropdown.key} className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-700">{dropdown.label}</label>
+            <label className="text-sm font-medium text-foreground">{dropdown.label}</label>
             <Select value={dropdown.value} onValueChange={dropdown.onChange}>
               <SelectTrigger className="h-9 w-[160px]">
                 <SelectValue placeholder={dropdown.placeholder ?? dropdown.label} />
@@ -105,7 +106,7 @@ export function FilterBar({
         {/* Date range */}
         {onDateRangeChange && dateRange && (
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-700">
+            <label className="text-sm font-medium text-foreground">
               {dateRangeLabel ?? "기간"}
             </label>
             <DateRangePicker value={dateRange} onChange={onDateRangeChange} />
@@ -118,7 +119,7 @@ export function FilterBar({
             variant="outline"
             onClick={onReset}
             size="default"
-            className="h-9 border-gray-300 text-gray-700 hover:bg-gray-50"
+            className="h-9"
           >
             <RotateCcw className="mr-1.5 h-4 w-4" />
             초기화
@@ -126,7 +127,7 @@ export function FilterBar({
           <Button
             onClick={onSearch}
             size="default"
-            className="h-9 bg-blue-600 text-white hover:bg-blue-700"
+            className="h-9"
           >
             <Search className="mr-1.5 h-4 w-4" />
             검색

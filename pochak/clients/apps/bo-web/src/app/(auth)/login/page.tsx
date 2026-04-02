@@ -58,16 +58,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-blue-950 to-gray-900 px-4">
+    <div className="flex min-h-screen items-center justify-center px-4" style={{ background: "linear-gradient(to bottom right, var(--c-sidebar-bg), var(--c-sidebar-bg), var(--c-sidebar-bg))" }}>
       <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-2xl">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-lg font-bold text-white">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg text-lg font-bold" style={{ backgroundColor: "var(--c-primary)", color: "var(--fg-on-primary)" }}>
               P
             </div>
             <span className="text-2xl font-bold tracking-tight text-gray-900">
-              POCHAK <span className="text-blue-600">BO</span>
+              POCHAK <span style={{ color: "var(--c-primary)" }}>BO</span>
             </span>
           </div>
           <p className="text-sm text-gray-500">관리자 로그인</p>
@@ -93,7 +93,7 @@ export default function LoginPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
-              className="block h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="block h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2"
             />
           </div>
 
@@ -111,14 +111,15 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
-              className="block h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="block h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2"
             />
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="mt-2 flex h-11 w-full items-center justify-center rounded-md bg-blue-600 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-2 flex h-11 w-full items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+            style={{ backgroundColor: "var(--c-primary)", color: "var(--fg-on-primary)" }}
           >
             {isLoading ? "로그인 중..." : "로그인"}
           </button>

@@ -33,7 +33,7 @@ function MenuTreeItem({
         <Folder size={14} className="text-gray-400" />
       )
     ) : (
-      <FileText size={14} className="text-blue-400" />
+      <FileText size={14} style={{ color: "var(--c-primary)" }} />
     );
 
   return (

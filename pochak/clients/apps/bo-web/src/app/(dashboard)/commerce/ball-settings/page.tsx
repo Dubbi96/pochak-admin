@@ -98,7 +98,7 @@ function ChargeOptionModal({ open, onClose, option, onSaved }: ChargeOptionModal
           </div>
 
           {ballAmount && wonAmount && Number(wonAmount) > 0 && (
-            <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+            <div className="rounded-md px-3 py-2 text-sm" style={{ borderWidth: 1, borderStyle: "solid", borderColor: "var(--c-primary)", backgroundColor: "var(--c-primary-light)", color: "var(--c-primary)" }}>
               1뽈당 {(Number(wonAmount) / Number(ballAmount)).toFixed(1)}원 (할인율: {ballAmount && wonAmount ? `${Math.round((1 - (Number(wonAmount) / Number(ballAmount)) / 10) * 100)}%` : "-"})
             </div>
           )}
@@ -255,7 +255,7 @@ function BulkGrantModal({ open, onClose }: BulkGrantModalProps) {
           </div>
 
           {selectedUserIds.length > 0 && (
-            <p className="text-sm text-blue-600">{selectedUserIds.length}명 선택됨</p>
+            <p className="text-sm" style={{ color: "var(--c-primary)" }}>{selectedUserIds.length}명 선택됨</p>
           )}
 
           {/* Amount & Reason */}
@@ -453,7 +453,7 @@ export default function BallSettingsPage() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
           {chargeOptions.map((opt) => (
             <div key={opt.id} className="flex flex-col items-center rounded-lg border border-gray-200 bg-gray-50 p-3">
-              <Package size={20} className="text-blue-500 mb-1" />
+              <Package size={20} className="mb-1" style={{ color: "var(--c-primary)" }} />
               <p className="text-lg font-bold text-gray-900">{opt.ballAmount.toLocaleString()}</p>
               <p className="text-xs text-gray-500">뽈</p>
               <p className="mt-1 text-sm font-medium text-emerald-600">{opt.wonAmount.toLocaleString()}원</p>

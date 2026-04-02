@@ -2,16 +2,16 @@
 
 import React from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, ChevronDown, LogOut, User } from "lucide-react";
+import { Menu, ChevronDown, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/stores/auth-store";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const pageTitleMap: Record<string, string> = {
   "/": "대시보드",
@@ -63,7 +63,6 @@ const pageTitleMap: Record<string, string> = {
 
 function usePageTitle(): string {
   const pathname = usePathname();
-  // Try exact match first, then progressively shorter paths
   if (pageTitleMap[pathname]) return pageTitleMap[pathname];
   const segments = pathname.split("/").filter(Boolean);
   while (segments.length > 0) {
@@ -92,48 +91,83 @@ export function Header({ onMenuClick }: HeaderProps) {
   const userName = user?.name || "관리자";
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-4 lg:px-6">
+    <header
+      className="flex h-14 shrink-0 items-center justify-between px-4 lg:px-6"
+      style={{
+        borderBottom: "1px solid var(--c-border)",
+        backgroundColor: "var(--c-header-bg)",
+      }}
+    >
       {/* Left: mobile menu + page title */}
       <div className="flex items-center gap-3">
         <button
-          className="rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 lg:hidden"
+          className="rounded-md p-1.5 lg:hidden"
+          style={{ color: "var(--fg-secondary)" }}
           onClick={onMenuClick}
         >
           <Menu size={20} />
         </button>
-        <h1 className="text-lg font-bold text-gray-900">{pageTitle}</h1>
+        <h1 className="text-lg font-bold" style={{ color: "var(--fg)" }}>
+          {pageTitle}
+        </h1>
       </div>
 
-      {/* Right: user avatar + dropdown */}
-      <div className="flex items-center">
+      {/* Right: theme toggle + user avatar */}
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-gray-50">
+            <button className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm transition-colors">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-blue-100 text-sm font-semibold text-blue-700">
+                <AvatarFallback
+                  style={{
+                    backgroundColor: "var(--c-primary-light)",
+                    color: "var(--c-primary)",
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                  }}
+                >
                   {userInitial}
                 </AvatarFallback>
               </Avatar>
-              <span className="hidden font-medium text-gray-700 md:inline">
+              <span
+                className="hidden font-medium md:inline"
+                style={{ color: "var(--fg)" }}
+              >
                 {userName} 님
               </span>
-              <ChevronDown size={14} className="hidden text-gray-400 md:block" />
+              <ChevronDown
+                size={14}
+                className="hidden md:block"
+                style={{ color: "var(--fg-tertiary)" }}
+              />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 p-2">
-            {/* User info section */}
-            <div className="mb-2 rounded-md bg-gray-50 px-3 py-2.5">
+            <div
+              className="mb-2 rounded-md px-3 py-2.5"
+              style={{ backgroundColor: "var(--bg-surface-variant)" }}
+            >
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-900">{userName}</span>
+                <span className="text-sm font-semibold" style={{ color: "var(--fg)" }}>
+                  {userName}
+                </span>
                 <button
                   onClick={handleLogout}
-                  className="rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                  className="rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors"
+                  style={{
+                    border: "1px solid var(--c-border)",
+                    backgroundColor: "var(--bg-surface)",
+                    color: "var(--fg-secondary)",
+                  }}
                 >
                   로그아웃
                 </button>
               </div>
               {user?.email && (
-                <p className="mt-0.5 text-xs text-gray-400">{user.email}</p>
+                <p className="mt-0.5 text-xs" style={{ color: "var(--fg-tertiary)" }}>
+                  {user.email}
+                </p>
               )}
             </div>
             <DropdownMenuItem className="gap-2 rounded-md px-3 py-2 text-sm">
