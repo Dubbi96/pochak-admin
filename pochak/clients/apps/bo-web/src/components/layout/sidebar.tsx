@@ -42,6 +42,7 @@ import {
   Clapperboard,
   Activity,
   Cpu,
+  Handshake,
 } from "lucide-react";
 
 interface MenuItem {
@@ -112,6 +113,7 @@ const menuItems: MenuItem[] = [
       { label: "블랙리스트", href: "/members/blacklist", icon: <UserX size={16} /> },
     ],
   },
+  { label: "파트너 관리", href: "/partners", icon: <Handshake size={18} /> },
   {
     label: "커뮤니티 관리",
     icon: <MessageSquare size={18} />,
