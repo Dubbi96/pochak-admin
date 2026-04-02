@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import SectionHeader from '@/components/SectionHeader';
 import HScrollRow from '@/components/HScrollRow';
 import { VideoCard, ClipCard, TeamLogoCard, CompetitionBannerCard } from '@/components/Card';
+import { BannerSkeleton, HScrollRowSkeleton } from '@/components/Loading';
 import { cn } from '@/lib/utils';
 import { useHome, useContents, useTeams, useCompetitions } from '@/hooks/useApi';
 import type { Banner } from '@/types/content';
@@ -338,7 +339,7 @@ function ContentFilterTabs() {
 
 /* ── Home Page ─────────────────────────────────────────── */
 export default function HomePage() {
-  const { data: homeData } = useHome();
+  const { data: homeData, loading: homeLoading, error: homeError } = useHome();
   const { data: clipData } = useContents('CLIP');
   const { data: teams } = useTeams();
   const { data: competitionList } = useCompetitions();
@@ -385,6 +386,34 @@ export default function HomePage() {
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
   }, []);
+
+  if (homeLoading) {
+    return (
+      <div className="px-6 lg:px-8">
+        <BannerSkeleton />
+        <div style={{ marginTop: 32 }}>
+          <HScrollRowSkeleton count={5} />
+        </div>
+        <div style={{ marginTop: 32 }}>
+          <HScrollRowSkeleton count={5} />
+        </div>
+      </div>
+    );
+  }
+
+  if (homeError) {
+    return (
+      <div className="px-6 lg:px-8 flex flex-col items-center justify-center" style={{ minHeight: '50vh' }}>
+        <p className="text-pochak-text-secondary text-[16px]">콘텐츠를 불러오는 중 오류가 발생했습니다.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-3 text-primary text-[14px] hover:underline"
+        >
+          다시 시도
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="px-6 lg:px-8">
