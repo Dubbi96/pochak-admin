@@ -78,3 +78,19 @@ export interface Reservation {
   status: ReservationStatus;
   createdAt: string;
 }
+
+export type RecordingStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+
+export interface RecordingSchedule {
+  id: string;
+  title: string;
+  venueId: string;
+  venueName: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  memo?: string;
+  status: RecordingStatus;
+  reservationId?: string;
+  createdAt: string;
+}

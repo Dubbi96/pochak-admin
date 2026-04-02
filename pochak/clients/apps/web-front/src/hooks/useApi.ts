@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { pochakApi } from '@/services/api-client'
-import type { Banner, ContentItem, Channel, Competition, VenueProduct, TimeSlot, Reservation } from '@/types/content'
+import type { Banner, ContentItem, Channel, Competition, VenueProduct, TimeSlot, Reservation, RecordingSchedule } from '@/types/content'
 
 // ── Generic fetch hook ────────────────────────────────────
 
@@ -283,4 +283,45 @@ export async function createReservation(body: {
   hours: number;
 }) {
   return pochakApi.post<Reservation>('/api/v1/reservations', body)
+}
+
+// ── Recording Schedules ──────────────────────────────────
+
+export function useMyRecordings(year?: number, month?: number) {
+  const params: Record<string, string> = {}
+  if (year) params.year = String(year)
+  if (month !== undefined) params.month = String(month + 1)
+
+  return useFetch<RecordingSchedule[]>(
+    () => pochakApi.get<RecordingSchedule[]>('/api/v1/recording-schedules/my', Object.keys(params).length ? params : undefined),
+    [],
+    [year, month],
+  )
+}
+
+export async function createRecordingSchedule(body: {
+  title: string;
+  venueId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  memo?: string;
+  reservationId?: string;
+}) {
+  return pochakApi.post<RecordingSchedule>('/api/v1/recording-schedules', body)
+}
+
+export async function updateRecordingSchedule(id: string, body: Partial<{
+  title: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  memo: string;
+  status: string;
+}>) {
+  return pochakApi.put<RecordingSchedule>(`/api/v1/recording-schedules/${id}`, body)
+}
+
+export async function deleteRecordingSchedule(id: string) {
+  return pochakApi.delete(`/api/v1/recording-schedules/${id}`)
 }
