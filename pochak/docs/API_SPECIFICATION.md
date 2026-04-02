@@ -1,7 +1,7 @@
 # Pochak OTT Platform - API Specification
 
-> Version: 1.0.0
-> Last Updated: 2026-03-26
+> Version: 1.1.0
+> Last Updated: 2026-04-02
 > Base URL: `http://localhost:8080/api/v1` (Gateway)
 
 ---
@@ -17,24 +17,30 @@
 7. [Operation Service](#7-operation-service)
 8. [Admin Service](#8-admin-service)
 9. [Gateway](#9-gateway)
-10. [Policy Compliance Matrix](#10-policy-compliance-matrix)
+10. [App BFF Service](#10-app-bff-service)
+11. [Web BFF Service](#11-web-bff-service)
+12. [BO BFF Service](#12-bo-bff-service)
+13. [Policy Compliance Matrix](#13-policy-compliance-matrix)
 
 ---
 
 ## 1. Overview
 
-Pochak is a microservice-based OTT platform for sports content. The system is composed of 6 backend services, all exposed through a single API Gateway.
+Pochak is a microservice-based OTT platform for sports content. The system is composed of 6 core backend services and 3 BFF (Backend-for-Frontend) aggregation services, all exposed through a single API Gateway.
 
 | Service | Port | Path Prefix | Description |
 |---------|------|-------------|-------------|
 | Gateway | 8080 | `/api/v1/*`, `/admin/*` | JWT validation, routing, rate limiting, CORS |
 | Identity | 8081 | `/api/v1/auth`, `/api/v1/users`, `/api/v1/guardians` | Authentication, user management, guardian |
 | Content | 8082 | `/api/v1/contents`, `/api/v1/sports`, `/api/v1/teams`, etc. | Media assets, social, search, streaming |
-| Commerce | 8083 | `/api/v1/products`, `/api/v1/purchases`, `/api/v1/wallet`, etc. | Products, purchases, entitlements, wallet |
+| Commerce | 8083 | `/api/v1/products`, `/api/v1/purchases`, `/api/v1/wallet`, etc. | Products, purchases, entitlements, wallet, subscriptions |
 | Operation | 8084 | `/api/v1/venues`, `/api/v1/cameras`, `/api/v1/reservations`, etc. | Venues, cameras, reservations, ingest |
 | Admin | 8085 | `/admin/api/v1/*` | BO admin RBAC, site management, CS, analytics |
+| App BFF | 8090 | `/app/*` | Mobile app aggregation layer |
+| Web BFF | 8091 | `/web/*` | Web client aggregation layer |
+| BO BFF | 8092 | `/bo/*` | Back-office admin aggregation layer |
 
-All client requests enter through the Gateway at port 8080. The Gateway strips the `/api/v1` prefix before forwarding to downstream services (except Admin Service, which receives paths as-is).
+All client requests enter through the Gateway at port 8080. The Gateway strips the `/api/v1` prefix before forwarding to downstream services (except Admin Service, which receives paths as-is). BFF services aggregate data from multiple core services into client-optimized responses.
 
 ---
 
@@ -471,7 +477,27 @@ Internal port: 8081
 | Response | `PaymentLimitCheckDto { allowed, remainingLimit, monthlyLimit }` |
 | Status | 200 OK |
 
-### 4.9 Admin Member Management
+### 4.9 Push Token Management
+
+#### POST `/users/me/push-tokens`
+> 푸시 토큰 등록 / Register push token
+
+| | |
+|---|---|
+| Auth | USER |
+| Request Body | `RegisterPushTokenRequest` |
+| Response | `PushTokenResponse` |
+
+#### DELETE `/users/me/push-tokens`
+> 푸시 토큰 삭제 / Delete push token
+
+| | |
+|---|---|
+| Auth | USER |
+| Request Body | `DeletePushTokenRequest` |
+| Response | `null` |
+
+### 4.10 Admin Member Management
 
 #### GET `/admin/members`
 > 회원 목록 조회 / List members (admin)
@@ -932,6 +958,15 @@ Internal port: 8082
 | Query | `ownerType?`, `venueId?`, `dateFrom?`, `dateTo?`, `isDisplayed?`, `visibility?`, pagination |
 | Response | `List<VodAssetListResponse>` with `PageMeta` |
 
+#### GET `/contents/vod/search`
+> VOD 검색 / Search VOD assets
+
+| | |
+|---|---|
+| Auth | PUBLIC |
+| Query | `keyword` (required), pagination |
+| Response | `List<VodAssetListResponse>` |
+
 #### GET `/contents/vod/{id}`
 > VOD 상세 / VOD asset detail
 
@@ -984,6 +1019,15 @@ Internal port: 8082
 | Auth | PUBLIC |
 | Query | `sourceType?`, `visibility?`, `matchId?`, `creatorUserId?`, `isDisplayed?`, pagination |
 | Response | `List<ClipAssetListResponse>` with `PageMeta` |
+
+#### GET `/contents/clips/search`
+> 클립 검색 / Search clip assets
+
+| | |
+|---|---|
+| Auth | PUBLIC |
+| Query | `keyword` (required), pagination |
+| Response | `List<ClipAssetListResponse>` |
 
 #### GET `/contents/clips/{id}`
 > 클립 상세 / Clip asset detail
@@ -1715,6 +1759,85 @@ Internal port: 8082
 | Auth | USER |
 | Response | `VodPlaybackInfo { hlsUrl, dashUrl?, duration, qualities[] }` |
 
+### 5.29 Live Streams
+
+#### POST `/live-streams`
+> 라이브 스트림 생성 / Create live stream
+
+| | |
+|---|---|
+| Auth | USER |
+| Request Body | `CreateLiveStreamRequest` |
+| Response | `LiveStreamResponse` |
+| Status | 201 Created |
+
+#### POST `/live-streams/{id}/start`
+> 라이브 스트림 시작 / Start live stream
+
+| | |
+|---|---|
+| Auth | USER |
+| Request Body | `StartLiveStreamRequest` (optional) |
+| Response | `LiveStreamResponse` |
+
+#### POST `/live-streams/{id}/stop`
+> 라이브 스트림 종료 / Stop live stream
+
+| | |
+|---|---|
+| Auth | USER |
+| Response | `LiveStreamResponse` |
+
+#### GET `/live-streams/{id}`
+> 라이브 스트림 상세 / Get live stream detail
+
+| | |
+|---|---|
+| Auth | PUBLIC |
+| Response | `LiveStreamResponse` |
+
+#### GET `/live-streams`
+> 라이브 스트림 목록 / List live streams by status
+
+| | |
+|---|---|
+| Auth | PUBLIC |
+| Query | `status?` (StreamStatus), pagination (default size=20) |
+| Response | `List<LiveStreamResponse>` with `PageMeta` |
+
+#### GET `/live-streams/live`
+> 현재 진행 중인 라이브 / List currently live streams
+
+| | |
+|---|---|
+| Auth | PUBLIC |
+| Query | pagination (default size=20) |
+| Response | `List<LiveStreamResponse>` with `PageMeta` |
+
+#### POST `/live-streams/{id}/viewers/join`
+> 시청 참여 / Join stream as viewer
+
+| | |
+|---|---|
+| Auth | USER |
+| Response | `ViewerCountResponse` |
+
+#### POST `/live-streams/{id}/viewers/leave`
+> 시청 종료 / Leave stream
+
+| | |
+|---|---|
+| Auth | USER |
+| Response | `ViewerCountResponse` |
+
+#### GET `/live-streams/{id}/viewers`
+> 시청자 수 조회 / Get viewer count
+
+| | |
+|---|---|
+| Auth | PUBLIC |
+| Response | `ViewerCountResponse` |
+
 ---
 
 ## 6. Commerce Service
@@ -1925,6 +2048,32 @@ Internal port: 8083
 |---|---|
 | Auth | PUBLIC |
 | Response | `List<CouponResponse>` |
+
+### 6.7 Subscriptions
+
+#### GET `/subscriptions/me`
+> 내 구독 조회 / Get active subscription
+
+| | |
+|---|---|
+| Auth | USER |
+| Response | `EntitlementResponse` |
+
+#### POST `/subscriptions/cancel`
+> 구독 취소 / Cancel subscription
+
+| | |
+|---|---|
+| Auth | USER |
+| Response | `null` |
+
+#### POST `/subscriptions/renew`
+> 구독 갱신 / Renew subscription
+
+| | |
+|---|---|
+| Auth | USER |
+| Response | `EntitlementResponse` |
 
 ---
 
@@ -2700,7 +2849,19 @@ Internal port: 8085
 | | |
 |---|---|
 | Auth | ADMIN |
+| Query | `period?` (day/week/month, default: month) |
 | Response | `DashboardStatsResponse { totalVisitors, totalViews, revenue, topContent[], activeUsersTrend[] }` |
+
+### 8.14 Organization Management
+
+#### PUT `/admin/api/v1/organizations/{id}/verify`
+> 단체 인증 토글 / Toggle organization verification status
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Response | `OrganizationVerifyResponse` |
+| Notes | Toggles `is_verified` flag. Captures audit trail (admin user, IP, user-agent). |
 
 ---
 
@@ -2739,11 +2900,575 @@ Rate limiting uses Redis when available (`pochak.rate-limit.type=redis`), with a
 
 ---
 
-## 10. Policy Compliance Matrix
+## 10. App BFF Service
+
+BFF (Backend-for-Frontend) aggregation layer for mobile apps. Combines data from multiple core services into mobile-optimized responses.
+
+Base path (via Gateway): `/app`
+
+### 10.1 Home
+
+#### GET `/home`
+> 앱 홈 화면 / App home page (aggregated)
+
+| | |
+|---|---|
+| Auth | PUBLIC |
+| Response | `AppHomeResponse` (aggregated from Content + Commerce services) |
+
+### 10.2 Auth
+
+#### GET `/auth/oauth2/start/{provider}`
+> OAuth2 시작 / Initiate OAuth2 flow (mobile PKCE)
+
+| | |
+|---|---|
+| Auth | PUBLIC |
+| Query | `code_challenge`, `code_challenge_method` (default: S256) |
+| Response | OAuth2 provider redirect data |
+
+#### POST `/auth/signup/minor`
+> 미성년자 가입 / Minor signup (proxied)
+
+| | |
+|---|---|
+| Auth | USER |
+| Request Body | Minor signup data |
+| Response | Proxied identity service response |
+
+#### GET `/auth/guardian/verify`
+> 보호자 인증 / Guardian verification (proxied)
+
+| | |
+|---|---|
+| Auth | PUBLIC |
+| Query | `token` |
+| Response | Proxied identity service response |
+
+### 10.3 Player
+
+#### GET `/player/{type}/{id}`
+> 플레이어 페이지 / Player page (aggregated)
+
+| | |
+|---|---|
+| Auth | USER |
+| Path | `type`: content type (live/vod/clip), `id`: content ID |
+| Response | `AppPlayerResponse` (aggregated from Content + Commerce + Entitlement) |
+
+### 10.4 My Page
+
+#### GET `/mypage`
+> 마이페이지 / My page (aggregated)
+
+| | |
+|---|---|
+| Auth | USER |
+| Response | `AppMyPageResponse` (aggregated from Identity + Commerce + Content) |
+
+### 10.5 Push Notifications
+
+#### POST `/push/register`
+> 푸시 토큰 등록 / Register push token (proxied)
+
+| | |
+|---|---|
+| Auth | USER |
+| Request Body | Push token registration data |
+| Response | Proxied identity service response |
+
+#### DELETE `/push/unregister`
+> 푸시 토큰 해제 / Unregister push token (proxied)
+
+| | |
+|---|---|
+| Auth | USER |
+| Response | Proxied identity service response |
+
+### 10.6 Version Check
+
+#### GET `/version/check`
+> 앱 버전 확인 / Check app version
+
+| | |
+|---|---|
+| Auth | PUBLIC |
+| Query | `platform` (default: AOS) |
+| Response | `AppVersionResponse` |
+
+---
+
+## 11. Web BFF Service
+
+BFF aggregation layer for web clients.
+
+Base path (via Gateway): `/web`
+
+### 11.1 Home
+
+#### GET `/home`
+> 웹 홈 화면 / Web home page (aggregated)
+
+| | |
+|---|---|
+| Auth | PUBLIC |
+| Response | `WebHomeResponse` (aggregated from Content + Commerce services) |
+
+### 11.2 Auth
+
+#### GET `/auth/oauth2/start/{provider}`
+> OAuth2 시작 / Initiate OAuth2 flow (web)
+
+| | |
+|---|---|
+| Auth | PUBLIC |
+| Response | OAuth2 provider redirect data |
+
+#### POST `/auth/login`
+> 로그인 / Login (proxied)
+
+| | |
+|---|---|
+| Auth | PUBLIC |
+| Request Body | Login credentials |
+| Response | Proxied identity service response |
+
+#### POST `/auth/signup`
+> 회원가입 / Signup (proxied)
+
+| | |
+|---|---|
+| Auth | PUBLIC |
+| Request Body | Signup data |
+| Response | Proxied identity service response |
+
+### 11.3 Player
+
+#### GET `/player/{type}/{id}`
+> 플레이어 페이지 / Player page (aggregated)
+
+| | |
+|---|---|
+| Auth | USER |
+| Path | `type`: content type, `id`: content ID |
+| Response | `WebPlayerResponse` (aggregated from Content + Commerce) |
+
+### 11.4 My Page
+
+#### GET `/mypage`
+> 마이페이지 / My page (aggregated)
+
+| | |
+|---|---|
+| Auth | USER |
+| Response | `WebMyPageResponse` (aggregated from Identity + Commerce + Content) |
+
+---
+
+## 12. BO BFF Service
+
+BFF aggregation layer for back-office admin UI. Proxies and aggregates admin operations.
+
+Base path (via Gateway): `/bo`
+
+### 12.1 Dashboard
+
+#### GET `/dashboard`
+> 관리자 대시보드 / Admin dashboard (aggregated)
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Response | `BoDashboardResponse` (aggregated KPIs from all services) |
+
+### 12.2 Content Management
+
+Generic CRUD proxy for content resources (live, vod, clips, etc.).
+
+#### GET `/content/{resource}`
+> 콘텐츠 목록 / List content resources
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Path | `resource`: content type (live/vod/clips/etc.) |
+| Query | Filter/pagination params forwarded to Content Service |
+| Response | Proxied content list |
+
+#### GET `/content/{resource}/{id}`
+> 콘텐츠 상세 / Get content resource detail
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### POST `/content/{resource}`
+> 콘텐츠 생성 / Create content resource
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Request Body | Resource-specific creation data |
+
+#### PUT `/content/{resource}/{id}`
+> 콘텐츠 수정 / Update content resource
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Request Body | Resource-specific update data |
+
+#### DELETE `/content/{resource}/{id}`
+> 콘텐츠 삭제 / Delete content resource
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Status | 204 No Content |
+
+### 12.3 Member Management
+
+#### GET `/members`
+> 회원 목록 / List members
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Query | Filter/pagination params |
+
+#### GET `/members/{id}`
+> 회원 상세 / Get member detail
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### PUT `/members/{id}/status`
+> 회원 상태 변경 / Update member status
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Request Body | Status update data |
+
+### 12.4 Site Management
+
+#### GET `/site/banners`
+> 배너 목록 / List banners
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Query | Filter/pagination params |
+
+#### POST `/site/banners`
+> 배너 생성 / Create banner
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### PUT `/site/banners/{id}`
+> 배너 수정 / Update banner
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### DELETE `/site/banners/{id}`
+> 배너 삭제 / Delete banner
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Status | 204 No Content |
+
+#### GET `/site/notices`
+> 공지사항 목록 / List notices
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### POST `/site/notices`
+> 공지사항 생성 / Create notice
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### PUT `/site/notices/{id}`
+> 공지사항 수정 / Update notice
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### DELETE `/site/notices/{id}`
+> 공지사항 삭제 / Delete notice
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Status | 204 No Content |
+
+### 12.5 RBAC Management
+
+#### GET `/rbac/roles`
+> 역할 목록 / List roles
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### POST `/rbac/roles`
+> 역할 생성 / Create role
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### PUT `/rbac/roles/{id}`
+> 역할 수정 / Update role
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### DELETE `/rbac/roles/{id}`
+> 역할 삭제 / Delete role
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Status | 204 No Content |
+
+#### GET `/rbac/groups`
+> 그룹 목록 / List groups
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### POST `/rbac/groups`
+> 그룹 생성 / Create group
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### PUT `/rbac/groups/{id}`
+> 그룹 수정 / Update group
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### DELETE `/rbac/groups/{id}`
+> 그룹 삭제 / Delete group
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Status | 204 No Content |
+
+#### GET `/rbac/menus`
+> 메뉴 목록 / List menus
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### GET `/rbac/functions`
+> 기능 목록 / List functions
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+### 12.6 Operation Management
+
+#### GET `/venues`
+> 시설 목록 / List venues
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### GET `/venues/{id}`
+> 시설 상세 / Get venue detail
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### POST `/venues`
+> 시설 생성 / Create venue
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### PUT `/venues/{id}`
+> 시설 수정 / Update venue
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### DELETE `/venues/{id}`
+> 시설 삭제 / Delete venue
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Status | 204 No Content |
+
+#### GET `/cameras`
+> 카메라 목록 / List cameras
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### GET `/cameras/{id}`
+> 카메라 상세 / Get camera detail
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### POST `/cameras`
+> 카메라 생성 / Create camera
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### PUT `/cameras/{id}`
+> 카메라 수정 / Update camera
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### DELETE `/cameras/{id}`
+> 카메라 삭제 / Delete camera
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Status | 204 No Content |
+
+#### GET `/reservations`
+> 예약 목록 / List reservations
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### GET `/reservations/{id}`
+> 예약 상세 / Get reservation detail
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### PUT `/reservations/{id}`
+> 예약 수정 / Update reservation
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### GET `/streaming/ingest`
+> 인제스트 목록 / List ingest sessions
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### POST `/streaming/ingest`
+> 인제스트 생성 / Create ingest session
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### DELETE `/streaming/ingest/{id}`
+> 인제스트 삭제 / Delete ingest session
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Status | 204 No Content |
+
+### 12.7 Commerce Management
+
+#### GET `/products`
+> 상품 목록 / List products
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### GET `/products/{id}`
+> 상품 상세 / Get product detail
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### POST `/products`
+> 상품 생성 / Create product
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### PUT `/products/{id}`
+> 상품 수정 / Update product
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### DELETE `/products/{id}`
+> 상품 삭제 / Delete product
+
+| | |
+|---|---|
+| Auth | ADMIN |
+| Status | 204 No Content |
+
+#### GET `/refunds`
+> 환불 목록 / List refunds
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### GET `/refunds/{id}`
+> 환불 상세 / Get refund detail
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+#### PUT `/refunds/{id}`
+> 환불 처리 / Process refund
+
+| | |
+|---|---|
+| Auth | ADMIN |
+
+---
+
+## 13. Policy Compliance Matrix
 
 This matrix maps API endpoints to POCHAK_POLICY.md requirements.
 
-### 10.1 CUG (Closed User Group) Access Control
+### 13.1 CUG (Closed User Group) Access Control
 
 | Policy Requirement | Implementing Endpoints | Notes |
 |---|---|---|
@@ -2752,7 +3477,7 @@ This matrix maps API endpoints to POCHAK_POLICY.md requirements.
 | OPEN 단체: 자유 가입 | `POST /memberships/join` | Auto-APPROVED for OPEN orgs |
 | CLOSED 단체: 관리자 승인 필요 | `POST /memberships/join`, `PUT /memberships/{id}/approve` | PENDING until manager approval |
 
-### 10.2 ABAC Video Permission
+### 13.2 ABAC Video Permission
 
 | Policy Requirement | Implementing Endpoints | Notes |
 |---|---|---|
@@ -2760,7 +3485,7 @@ This matrix maps API endpoints to POCHAK_POLICY.md requirements.
 | 조직 멤버십 기반 접근 | `GET /contents/{type}/{id}/access` | VideoAclService checks membership table |
 | 구독권 기반 접근 | `GET /entitlements/check`, `GET /contents/{type}/{id}/stream` | Commerce entitlement checked during stream access |
 
-### 10.3 Subscription & Purchase
+### 13.3 Subscription & Purchase
 
 | Policy Requirement | Implementing Endpoints | Notes |
 |---|---|---|
@@ -2769,7 +3494,7 @@ This matrix maps API endpoints to POCHAK_POLICY.md requirements.
 | 쿠폰 등록/사용 | `POST /coupons/register`, `POST /coupons/{id}/use` | Coupon applies discount at purchase |
 | 환불 정책 | `POST /refunds`, `PUT /refunds/{id}/process` | Admin processes refund, entitlement revoked |
 
-### 10.4 Guardian & Minor Protection
+### 13.4 Guardian & Minor Protection
 
 | Policy Requirement | Implementing Endpoints | Notes |
 |---|---|---|
@@ -2777,7 +3502,7 @@ This matrix maps API endpoints to POCHAK_POLICY.md requirements.
 | 보호자 인증 후 가입 | `POST /auth/signup/minor`, `POST /auth/guardian/verify` | Guardian consent token required |
 | 보호자 관계 해제 | `DELETE /guardians/{id}` | Revokes guardian-minor link |
 
-### 10.5 Security (SEC-001 ~ SEC-006)
+### 13.5 Security (SEC-001 ~ SEC-006)
 
 | SEC ID | Description | Implementation |
 |---|---|---|
@@ -2788,7 +3513,7 @@ This matrix maps API endpoints to POCHAK_POLICY.md requirements.
 | SEC-005 | Rate limiting | Auth: 10/min, General: 100/min via Redis or in-memory |
 | SEC-006 | Auth code instead of URL tokens | One-time 30s auth code via `AuthCodeStore`, exchanged at `/auth/oauth2/token` |
 
-### 10.6 User Withdrawal
+### 13.6 User Withdrawal
 
 | Policy Requirement | Implementing Endpoints | Notes |
 |---|---|---|
