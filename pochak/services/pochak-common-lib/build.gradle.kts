@@ -38,6 +38,9 @@ dependencies {
     implementation("jakarta.servlet:jakarta.servlet-api")
     compileOnly("jakarta.persistence:jakarta.persistence-api:3.1.0")
     compileOnly("org.springframework.data:spring-data-jpa")
+    compileOnly("org.springframework.boot:spring-boot-starter-security")
+    compileOnly("org.springframework.data:spring-data-redis")
+    compileOnly("org.springframework.boot:spring-boot-starter-web")
 }
 
 publishing {
