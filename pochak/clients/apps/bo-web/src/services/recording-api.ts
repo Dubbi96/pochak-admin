@@ -41,7 +41,7 @@ export async function getRecordingSessions(
   if (filter.sort) params.sort = filter.sort;
 
   return gatewayApi.get<PageResponse<RecordingSession>>(
-    "/api/bo/recordings",
+    "/api/v1/admin/recordings",
     params
   );
 }
@@ -49,20 +49,20 @@ export async function getRecordingSessions(
 export async function getRecordingById(
   id: number
 ): Promise<RecordingSession> {
-  return gatewayApi.get<RecordingSession>(`/api/bo/recordings/${id}`);
+  return gatewayApi.get<RecordingSession>(`/api/v1/admin/recordings/${id}`);
 }
 
 export async function forceTerminateRecording(
   id: number
 ): Promise<void> {
-  await gatewayApi.post(`/api/bo/recordings/${id}/terminate`);
+  await gatewayApi.post(`/api/v1/admin/recordings/${id}/terminate`);
 }
 
 export async function getVenueRecordingSummaries(): Promise<
   VenueRecordingSummary[]
 > {
   return gatewayApi.get<VenueRecordingSummary[]>(
-    "/api/bo/recordings/venue-summary"
+    "/api/v1/admin/recordings/venue-summary"
   );
 }
 
@@ -79,7 +79,7 @@ export async function getShareStatistics(params?: {
   if (params?.size !== undefined) q.size = String(params.size);
 
   return gatewayApi.get<PageResponse<ShareStatItem>>(
-    "/api/bo/recordings/share-stats",
+    "/api/v1/admin/recordings/share-stats",
     q
   );
 }
@@ -96,7 +96,7 @@ export async function getCalendarSessions(
   if (venueId) params.venueId = String(venueId);
 
   return gatewayApi.get<RecordingSession[]>(
-    "/api/bo/recordings/calendar",
+    "/api/v1/admin/recordings/calendar",
     params
   );
 }
