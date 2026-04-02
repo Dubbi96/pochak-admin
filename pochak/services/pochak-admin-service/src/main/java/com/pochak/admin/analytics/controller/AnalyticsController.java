@@ -31,10 +31,12 @@ public class AnalyticsController {
     /**
      * Dashboard aggregated stats for BO.
      * Returns KPIs: visitors, views, revenue, top content, active users trend.
+     * @param period day, week, or month (default: month)
      */
     @GetMapping("/dashboard")
-    public ApiResponse<DashboardStatsResponse> getDashboardStats() {
-        DashboardStatsResponse stats = dashboardService.getDashboardStats();
+    public ApiResponse<DashboardStatsResponse> getDashboardStats(
+            @RequestParam(value = "period", required = false, defaultValue = "month") String period) {
+        DashboardStatsResponse stats = dashboardService.getDashboardStats(period);
         return ApiResponse.ok(stats);
     }
 }
