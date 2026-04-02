@@ -72,7 +72,7 @@ export function createApiClient(config?: AxiosRequestConfig): AxiosInstance {
 
       return req;
     },
-    (error) => Promise.reject(error),
+    (error: unknown) => Promise.reject(error),
   );
 
   // ---- Response interceptor ----
