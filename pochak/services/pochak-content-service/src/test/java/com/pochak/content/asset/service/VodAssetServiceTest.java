@@ -148,4 +148,30 @@ class VodAssetServiceTest {
         assertThat(result.getContent().get(1).getTitle()).isEqualTo("VOD 2");
         assertThat(result.getTotalElements()).isEqualTo(2);
     }
+
+    @Test
+    @DisplayName("Should search VOD assets by keyword")
+    void testSearchByKeyword() {
+        // given
+        Pageable pageable = PageRequest.of(0, 20);
+
+        VodAsset vod1 = VodAsset.builder()
+                .id(1L).match(testMatch).title("Highlights - Team A vs Team B")
+                .vodUrl("https://cdn.example.com/vod1.mp4")
+                .visibility(LiveAsset.Visibility.PUBLIC)
+                .ownerType(LiveAsset.OwnerType.SYSTEM)
+                .encodingStatus(VodAsset.EncodingStatus.COMPLETED)
+                .isDisplayed(true).viewCount(100)
+                .build();
+
+        given(vodAssetRepository.searchByTitle("Highlights", pageable)).willReturn(List.of(vod1));
+
+        // when
+        var result = vodAssetService.search("Highlights", pageable);
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getTitle()).isEqualTo("Highlights - Team A vs Team B");
+        verify(vodAssetRepository).searchByTitle("Highlights", pageable);
+    }
 }

@@ -39,6 +39,13 @@ public class ClipController {
         return ApiResponse.success(page.getContent(), toPageMeta(page));
     }
 
+    @GetMapping("/search")
+    public ApiResponse<List<ClipAssetListResponse>> search(
+            @RequestParam String keyword,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ApiResponse.success(clipAssetService.search(keyword, pageable));
+    }
+
     @GetMapping("/{id}")
     public ApiResponse<ClipAssetDetailResponse> getDetail(@PathVariable Long id) {
         return ApiResponse.success(clipAssetService.getDetail(id));
