@@ -41,6 +41,13 @@ public class VodController {
         return ApiResponse.success(page.getContent(), toPageMeta(page));
     }
 
+    @GetMapping("/search")
+    public ApiResponse<List<VodAssetListResponse>> search(
+            @RequestParam String keyword,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ApiResponse.success(vodAssetService.search(keyword, pageable));
+    }
+
     @GetMapping("/{id}")
     public ApiResponse<VodAssetDetailResponse> getDetail(@PathVariable Long id) {
         return ApiResponse.success(vodAssetService.getDetail(id));

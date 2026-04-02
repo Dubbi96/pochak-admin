@@ -97,6 +97,12 @@ public class ClipAssetService {
         entity.softDelete();
     }
 
+    public List<ClipAssetListResponse> search(String keyword, Pageable pageable) {
+        return clipAssetRepository.searchByTitle(keyword, pageable).stream()
+                .map(ClipAssetListResponse::from)
+                .toList();
+    }
+
     @Transactional
     public ClipAssetDetailResponse createFromRange(CreateClipFromRangeRequest request) {
         if (request.getStartTimeSeconds() >= request.getEndTimeSeconds()) {
