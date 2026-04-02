@@ -14,8 +14,8 @@
 |----------|-------|--------|
 | CRITICAL | 4 | **3건 수정 완료**, 1건 진행 중 (DATA-001) |
 | HIGH | 13 | **13건 수정 완료** |
-| MEDIUM | 12 | **10건 수정 완료**, 2건 미착수 (BIZ-005, BIZ-006) |
-| LOW | 4 | **1건 수정 완료**, 3건 미착수 |
+| MEDIUM | 12 | **12건 수정 완료** |
+| LOW | 4 | **2건 수정 완료**, 2건 미착수 (BIZ-003, BIZ-004) |
 
 ---
 
@@ -184,8 +184,8 @@
 | DATA-008 | competition_visits 영구 접근, 만료 없음 | expires_at 컬럼 + invite_code 버전 관리 | **FIXED** |
 | DATA-009 | 상품 변경 후 Entitlement 참조 stale | 구매 시 상품 스냅샷 저장 | **FIXED** |
 | BIZ-002 | join_policy 변경 시 PENDING 요청 미처리 | INVITE_ONLY 전환 시 일괄 거절 | **FIXED** |
-| BIZ-005 | GUARDIAN 역할에 user_relations 미연동 | identity-service 관계 조회 API + ACL 연동 | 미착수 |
-| BIZ-006 | 커뮤니티 타 단체 게시물 모더레이션 갭 | 조직별 역할 검증 + BO 리포트 연동 | 미착수 |
+| BIZ-005 | GUARDIAN 역할에 user_relations 미연동 | identity-service 관계 조회 API + ACL 연동 | **FIXED** |
+| BIZ-006 | 커뮤니티 타 단체 게시물 모더레이션 갭 | 조직별 역할 검증 + BO 리포트 연동 | **FIXED** |
 
 ---
 
@@ -193,7 +193,7 @@
 
 | ID | 요약 | Status |
 |----|------|--------|
-| SEC-013 | 비공개 대회 inviteCode 별도 Rate Limit | 미착수 |
+| SEC-013 | 비공개 대회 inviteCode 별도 Rate Limit | **FIXED** |
 | BIZ-003 | CUG 단체의 PUBLIC 대회 콘텐츠 가시성 정책 명확화 | 미착수 |
 | BIZ-004 | 비공개 대회 초대 접근 vs 콘텐츠 접근 범위 명확화 | 미착수 |
 | BIZ-010 | 휴면 사용자 전환 스케줄러 없음 | **FIXED** (스케줄러 생성 완료) |
@@ -239,13 +239,13 @@
 | 16 | DATA-010: Circuit Breaker + 캐시 | **Done** |
 | 17 | DATA-005: Flyway 도입 | **Done** (롤백 스크립트 미작성) |
 
-### Phase 4: 비즈니스 정합성 — `PARTIALLY COMPLETED`
+### Phase 4: 비즈니스 정합성 — `COMPLETED`
 
 | # | 항목 | Status |
 |---|------|--------|
 | 18 | BIZ-002: join_policy 변경 처리 | **Done** |
-| 19 | BIZ-005: GUARDIAN 관계 연동 | Pending |
-| 20 | BIZ-006: 커뮤니티 모더레이션 | Pending |
+| 19 | BIZ-005: GUARDIAN 관계 연동 | **Done** |
+| 20 | BIZ-006: 커뮤니티 모더레이션 | **Done** |
 | 21 | BIZ-007: 포인트 만료 스케줄러 | **Done** |
 | 22 | BIZ-010: 휴면 스케줄러 | **Done** |
 

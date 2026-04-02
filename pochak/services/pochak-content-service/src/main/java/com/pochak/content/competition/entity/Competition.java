@@ -93,7 +93,7 @@ public class Competition {
     private LocalDateTime updatedAt;
 
     public enum CompetitionStatus {
-        SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+        SCHEDULED, ONGOING, COMPLETED, CANCELLED
     }
 
     public enum CompetitionType {

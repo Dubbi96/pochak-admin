@@ -25,4 +25,10 @@ public class CreateMembershipRequest {
     private Integer uniformNumber;
 
     private String nickname;
+
+    /**
+     * Required when role=GUARDIAN. The userId of the minor this guardian is responsible for.
+     * Must correspond to a verified guardian relationship in identity-service.
+     */
+    private Long guardianForUserId;
 }

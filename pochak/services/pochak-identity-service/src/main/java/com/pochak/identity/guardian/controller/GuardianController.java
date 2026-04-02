@@ -1,6 +1,7 @@
 package com.pochak.identity.guardian.controller;
 
 import com.pochak.common.response.ApiResponse;
+import com.pochak.identity.guardian.dto.GuardianRelationshipVerifyDto;
 import com.pochak.identity.guardian.dto.GuardianRequestDto;
 import com.pochak.identity.guardian.dto.GuardianResponseDto;
 import com.pochak.identity.guardian.dto.PaymentLimitCheckDto;
@@ -86,5 +87,17 @@ public class GuardianController {
             @RequestParam Long minorId,
             @RequestParam Integer amount) {
         return ApiResponse.success(guardianService.checkPaymentLimit(minorId, amount));
+    }
+
+    /**
+     * 보호자 관계 검증 (content 서비스에서 GUARDIAN 멤버십 부여 시 호출)
+     * Returns verified=true if a VERIFIED guardian relationship exists for the given guardian-minor pair.
+     */
+    @GetMapping("/verify-relationship")
+    public ApiResponse<GuardianRelationshipVerifyDto> verifyRelationship(
+            @RequestParam Long guardianId,
+            @RequestParam Long minorId) {
+        boolean verified = guardianService.isVerifiedGuardian(guardianId, minorId);
+        return ApiResponse.success(new GuardianRelationshipVerifyDto(guardianId, minorId, verified));
     }
 }

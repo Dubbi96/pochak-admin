@@ -165,6 +165,15 @@ public class GuardianService {
     }
 
     /**
+     * 보호자-미성년자 관계가 VERIFIED 상태인지 확인 (inter-service call용)
+     */
+    public boolean isVerifiedGuardian(Long guardianId, Long minorId) {
+        return guardianRepository.findByGuardianIdAndMinorId(guardianId, minorId)
+                .map(r -> r.getStatus() == GuardianStatus.VERIFIED)
+                .orElse(false);
+    }
+
+    /**
      * 14세 미만 여부 확인
      */
     public boolean isMinorByAge(LocalDate birthDate) {

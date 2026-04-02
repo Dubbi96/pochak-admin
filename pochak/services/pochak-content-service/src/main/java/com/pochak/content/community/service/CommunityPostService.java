@@ -6,6 +6,8 @@ import com.pochak.content.community.dto.*;
 import com.pochak.content.community.entity.CommunityPost;
 import com.pochak.content.community.entity.ModerationStatus;
 import com.pochak.content.community.repository.CommunityPostRepository;
+import com.pochak.content.membership.entity.Membership;
+import com.pochak.content.membership.repository.MembershipRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -21,6 +23,7 @@ public class CommunityPostService {
 
     private final CommunityPostRepository communityPostRepository;
     private final ModerationService moderationService;
+    private final MembershipRepository membershipRepository;
 
     /**
      * List posts with optional filters.
@@ -91,36 +94,58 @@ public class CommunityPostService {
     }
 
     /**
-     * Soft-delete a post. Author or MANAGER can delete.
-     * Role check for MANAGER is handled at the controller level via X-User-Role header.
+     * Soft-delete a post. Author or organization ADMIN/MANAGER can delete.
+     * BIZ-006: Validates moderator role against the post's organization membership, not X-User-Role header.
      */
     @Transactional
-    public void deletePost(Long id, Long userId, String userRole) {
+    public void deletePost(Long id, Long userId) {
         CommunityPost post = findActivePost(id);
 
-        if (!post.isOwnedBy(userId) && !"MANAGER".equalsIgnoreCase(userRole)) {
-            throw new BusinessException(ErrorCode.FORBIDDEN, "Only the author or a manager can delete this post");
+        if (!post.isOwnedBy(userId) && !isOrgModerator(userId, post.getOrganizationId())) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "Only the author or an organization manager can delete this post");
         }
 
         post.softDelete();
     }
 
     /**
-     * Pin a post. MANAGER only (role check at controller level).
+     * Pin a post. Only organization ADMIN/MANAGER can pin.
+     * BIZ-006: Validates moderator role against the post's organization.
      */
     @Transactional
-    public void pinPost(Long id) {
+    public void pinPost(Long id, Long userId) {
         CommunityPost post = findActivePost(id);
+        if (!isOrgModerator(userId, post.getOrganizationId())) {
+            throw new BusinessException(ErrorCode.FORBIDDEN,
+                    "Only an organization manager can pin posts");
+        }
         post.pin();
     }
 
     /**
-     * Unpin a post.
+     * Unpin a post. Only organization ADMIN/MANAGER can unpin.
+     * BIZ-006: Validates moderator role against the post's organization.
      */
     @Transactional
-    public void unpinPost(Long id) {
+    public void unpinPost(Long id, Long userId) {
         CommunityPost post = findActivePost(id);
+        if (!isOrgModerator(userId, post.getOrganizationId())) {
+            throw new BusinessException(ErrorCode.FORBIDDEN,
+                    "Only an organization manager can unpin posts");
+        }
         post.unpin();
+    }
+
+    /**
+     * Check if user is ADMIN or MANAGER of the given organization.
+     */
+    private boolean isOrgModerator(Long userId, Long organizationId) {
+        return membershipRepository
+                .findByUserIdAndTargetTypeAndTargetIdAndActiveTrue(
+                        userId, Membership.TargetType.ORGANIZATION, organizationId)
+                .map(m -> m.getRole() == Membership.MembershipRole.ADMIN
+                        || m.getRole() == Membership.MembershipRole.MANAGER)
+                .orElse(false);
     }
 
     private CommunityPost findActivePost(Long id) {

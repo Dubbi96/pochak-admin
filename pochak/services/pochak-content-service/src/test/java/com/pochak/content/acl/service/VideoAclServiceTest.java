@@ -2,9 +2,14 @@ package com.pochak.content.acl.service;
 
 import com.pochak.content.acl.entity.VideoAcl;
 import com.pochak.content.acl.repository.VideoAclRepository;
+import com.pochak.content.asset.repository.ClipAssetRepository;
+import com.pochak.content.asset.repository.LiveAssetRepository;
+import com.pochak.content.asset.repository.VodAssetRepository;
+import com.pochak.content.client.CommerceEntitlementClient;
 import com.pochak.content.entitlement.dto.AccessCheckResponse;
 import com.pochak.content.membership.entity.Membership;
 import com.pochak.content.membership.repository.MembershipRepository;
+import com.pochak.content.organization.repository.OrganizationRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +32,21 @@ class VideoAclServiceTest {
 
     @Mock
     private MembershipRepository membershipRepository;
+
+    @Mock
+    private OrganizationRepository organizationRepository;
+
+    @Mock
+    private LiveAssetRepository liveAssetRepository;
+
+    @Mock
+    private VodAssetRepository vodAssetRepository;
+
+    @Mock
+    private ClipAssetRepository clipAssetRepository;
+
+    @Mock
+    private CommerceEntitlementClient commerceEntitlementClient;
 
     @InjectMocks
     private VideoAclService videoAclService;

@@ -91,9 +91,8 @@ public class CommunityPostController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ApiResponse<Void> deletePost(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long userId,
-            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
-        communityPostService.deletePost(id, userId, userRole);
+            @RequestHeader("X-User-Id") Long userId) {
+        communityPostService.deletePost(id, userId);
         return ApiResponse.success(null);
     }
 
@@ -102,18 +101,22 @@ public class CommunityPostController {
      * PUT /communities/posts/{id}/pin
      */
     @PutMapping("/posts/{id}/pin")
-    public ApiResponse<Void> pinPost(@PathVariable Long id) {
-        communityPostService.pinPost(id);
+    public ApiResponse<Void> pinPost(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long userId) {
+        communityPostService.pinPost(id, userId);
         return ApiResponse.success(null);
     }
 
     /**
-     * Unpin a community post.
+     * Unpin a community post (MANAGER only).
      * PUT /communities/posts/{id}/unpin
      */
     @PutMapping("/posts/{id}/unpin")
-    public ApiResponse<Void> unpinPost(@PathVariable Long id) {
-        communityPostService.unpinPost(id);
+    public ApiResponse<Void> unpinPost(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long userId) {
+        communityPostService.unpinPost(id, userId);
         return ApiResponse.success(null);
     }
 
