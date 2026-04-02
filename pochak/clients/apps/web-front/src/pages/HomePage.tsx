@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { LuChevronLeft, LuChevronRight, LuPlay } from 'react-icons/lu';
+import {
+  LuChevronLeft, LuChevronRight, LuPlay, LuVideo,
+  LuCalendarDays, LuShare2, LuArrowRight,
+} from 'react-icons/lu';
 import { motion, AnimatePresence } from 'framer-motion';
 import SectionHeader from '@/components/SectionHeader';
 import HScrollRow from '@/components/HScrollRow';
@@ -82,9 +85,13 @@ function HeroBanner({
                 <LuPlay className="w-4 h-4 fill-current" />
                 시청하기
               </button>
-              <button className="relative overflow-hidden flex items-center gap-2 h-11 px-6 rounded-lg border border-white/[0.12] bg-white/[0.06] text-white font-semibold text-[14px] tracking-[-0.02em] hover:bg-white/[0.12] hover:border-white/[0.2] transition-all duration-200 backdrop-blur-md active:scale-[0.97] active:duration-75">
-                상세정보
-              </button>
+              <Link
+                to="/city"
+                className="relative overflow-hidden flex items-center gap-2 h-11 px-6 rounded-lg border border-white/[0.12] bg-white/[0.06] text-white font-semibold text-[14px] tracking-[-0.02em] hover:bg-white/[0.12] hover:border-white/[0.2] transition-all duration-200 backdrop-blur-md active:scale-[0.97] active:duration-75"
+              >
+                <LuVideo className="w-4 h-4" />
+                촬영 시작하기
+              </Link>
             </div>
           </motion.div>
         </div>
@@ -466,6 +473,119 @@ export default function HomePage() {
         {/* 인기 팀/클럽 */}
         <div style={{ paddingTop: 16, paddingBottom: 16 }}>
           <TeamsSection items={channels} />
+        </div>
+
+        {/* ── 다가오는 내 촬영 (로그인 시) ── */}
+        <div style={{ paddingTop: 16, paddingBottom: 16 }}>
+          <div className="flex items-center justify-between pb-3.5 border-b border-border-subtle">
+            <div className="flex items-center gap-3">
+              <span className="inline-block w-[3px] h-5 rounded-full bg-primary shadow-[0_0_8px_rgba(16,185,92,0.4)]" />
+              <h2 className="text-[19px] font-bold tracking-[-0.03em] text-white/95">다가오는 내 촬영</h2>
+            </div>
+            <Link to="/my/recordings" className="flex items-center gap-0.5 text-[14px] font-medium text-pochak-text-tertiary hover:text-primary transition-colors duration-200 group">
+              전체보기
+              <LuChevronRight className="size-3.5 group-hover:translate-x-0.5 transition-transform duration-200" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3" style={{ gap: 12, marginTop: 16 }}>
+            {[
+              { title: '동대문 리틀야구 리그전', venue: '잠실 유소년 야구장', date: '04.10 (목)', time: '10:00~12:00' },
+              { title: '서초FC 연습 경기', venue: '화성 드림파크 풋살 센터', date: '04.15 (화)', time: '14:00~16:00' },
+              { title: '강남 유소년 야구 대회', venue: '잠실 유소년 야구장', date: '04.05 (토)', time: '09:00~11:00' },
+            ].map((rec, i) => (
+              <Link key={i} to="/my/recordings" className="flex items-center gap-4 rounded-xl bg-pochak-surface border border-border-subtle p-4 hover:border-white/[0.15] transition-all group">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <LuVideo className="h-5 w-5 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14px] font-semibold text-white group-hover:text-primary transition-colors truncate">{rec.title}</p>
+                  <p className="text-[12px] text-white/40 truncate">{rec.venue}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-[13px] font-medium text-primary">{rec.date}</p>
+                  <p className="text-[11px] text-white/35">{rec.time}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* ── 인기 공유 영상 ── */}
+        <div style={{ paddingTop: 16, paddingBottom: 16 }}>
+          <div className="flex items-center justify-between pb-3.5 border-b border-border-subtle">
+            <div className="flex items-center gap-3">
+              <span className="inline-block w-[3px] h-5 rounded-full bg-[#7A5AF8] shadow-[0_0_8px_rgba(122,90,248,0.4)]" />
+              <h2 className="text-[19px] font-bold tracking-[-0.03em] text-white/95">인기 공유 영상</h2>
+              <span className="flex items-center gap-1 h-[22px] px-2.5 rounded-full bg-[#7A5AF8]/12 border border-[#7A5AF8]/20 text-[#7A5AF8] text-[12px] font-bold">
+                <LuShare2 className="h-3 w-3" />
+                HOT
+              </span>
+            </div>
+            <Link to="/contents?sort=shared" className="flex items-center gap-0.5 text-[14px] font-medium text-pochak-text-tertiary hover:text-primary transition-colors duration-200 group">
+              더보기
+              <LuChevronRight className="size-3.5 group-hover:translate-x-0.5 transition-transform duration-200" />
+            </Link>
+          </div>
+          <div className="mt-4">
+            <HScrollRow>
+              {clipContents.slice(0, 6).map((clip) => (
+                <ClipCard key={`shared-${clip.id}`} id={clip.id} title={clip.title} viewCount={clip.viewCount} thumbnailUrl={clip.thumbnailUrl} />
+              ))}
+            </HScrollRow>
+          </div>
+        </div>
+
+        {/* ── 가치 제안 배너 (비로그인 사용자용) ── */}
+        <div style={{ paddingTop: 16, paddingBottom: 16 }}>
+          <div className="relative rounded-2xl overflow-hidden border border-primary/20">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/15 via-pochak-surface to-pochak-surface" />
+            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center gap-6 p-6 lg:p-8">
+              <div className="flex-1">
+                <h3 className="text-[22px] font-bold tracking-[-0.03em] text-white">
+                  쉽게 촬영하고, 일정 관리하고, 공유하세요
+                </h3>
+                <p className="text-[15px] text-white/55 leading-6" style={{ marginTop: 8 }}>
+                  포착은 유소년 스포츠 촬영을 위한 올인원 플랫폼입니다.
+                  시설 예약부터 다각도 촬영, 하이라이트 클립 제작까지 한 곳에서.
+                </p>
+                <div className="flex flex-wrap gap-4" style={{ marginTop: 16 }}>
+                  {[
+                    { icon: LuVideo, label: '쉬운 촬영', desc: '카메라 예약 + 원클릭 녹화' },
+                    { icon: LuCalendarDays, label: '일정 관리', desc: '캘린더로 촬영 일정 한눈에' },
+                    { icon: LuShare2, label: '공유', desc: '클립 제작 + SNS 공유' },
+                  ].map(item => {
+                    const Icon = item.icon;
+                    return (
+                      <div key={item.label} className="flex items-start gap-3">
+                        <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0">
+                          <Icon className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-[14px] font-bold text-white">{item.label}</p>
+                          <p className="text-[12px] text-white/40">{item.desc}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="flex flex-col gap-3 flex-shrink-0">
+                <Link
+                  to="/signup"
+                  className="flex items-center gap-2 h-11 px-7 rounded-lg bg-gradient-to-r from-primary to-pochak-accent-bright text-primary-foreground font-bold text-[14px] hover:shadow-glow-md hover:brightness-110 transition-all active:scale-[0.97]"
+                >
+                  무료로 시작하기
+                  <LuArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  to="/about"
+                  className="flex items-center justify-center gap-2 h-11 px-7 rounded-lg border border-white/[0.12] text-white/70 font-semibold text-[14px] hover:bg-white/[0.06] transition-all"
+                >
+                  더 알아보기
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* 이슈 — News section per screenshot */}
