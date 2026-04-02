@@ -92,6 +92,7 @@ const menuItems: MenuItem[] = [
       { label: "촬영예약(뽈)", href: "/reservations/booking", icon: <Coins size={16} /> },
     ],
   },
+  { label: "촬영 관리", href: "/recordings", icon: <Video size={18} /> },
   { label: "스튜디오 관리", href: "/studio", icon: <Clapperboard size={18} /> },
   {
     label: "컨텐츠 관리",
