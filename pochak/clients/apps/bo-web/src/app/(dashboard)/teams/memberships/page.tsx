@@ -25,12 +25,10 @@ import { ExportButton } from "@/components/common/export-button";
 import { Search, CheckCircle, XCircle, UserCog, Eye, Clock } from "lucide-react";
 import type { PageResponse } from "@/types/common";
 import {
-  getMemberships,
   approveMembership,
   rejectMembershipWithReason,
   changeMembershipRole,
   type Membership,
-  type MembershipFilter,
   type MembershipTargetTypeFilter,
   type MembershipRoleFilter,
   type MembershipApprovalStatusFilter,
@@ -107,15 +105,6 @@ export default function MembershipsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const filters: MembershipFilter = {
-        targetType: targetTypeFilter,
-        role: roleFilter,
-        approvalStatus: statusFilter,
-        searchKeyword,
-      };
-
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
       if (targetTypeFilter !== "ALL") apiParams.targetType = targetTypeFilter;
       if (roleFilter !== "ALL") apiParams.role = roleFilter;
@@ -128,12 +117,9 @@ export default function MembershipsPage() {
       );
       if (apiResult) {
         setData(apiResult);
-        return;
       }
-
-      // Mock fallback
-      const result = await getMemberships(filters, page);
-      setData(result);
+    } catch {
+      /* API error - data remains in initial empty state */
     } finally {
       setLoading(false);
     }

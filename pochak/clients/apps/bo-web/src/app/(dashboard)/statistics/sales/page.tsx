@@ -22,7 +22,6 @@ import {
   Settings,
 } from "lucide-react";
 import {
-  getSalesStatistics,
   exportToCsv,
   type SalesStatistics,
   type ChartDataPoint,
@@ -186,20 +185,15 @@ export default function SalesStatisticsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiResult = await adminApi.get<SalesStatistics>(
         "/admin/api/v1/statistics/sales",
         { year, month }
       );
       if (apiResult) {
         setData(apiResult);
-        return;
       }
-
-      // Mock fallback
-      const result = await getSalesStatistics(Number(year), Number(month));
-      setData(result);
+    } catch {
+      /* API error - data remains in initial empty state */
     } finally {
       setLoading(false);
     }

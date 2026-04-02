@@ -24,7 +24,6 @@ import {
 import { Search, CheckCircle, XCircle, Eye } from "lucide-react";
 import type { PageResponse } from "@/types/common";
 import {
-  getRefunds,
   approveRefund,
   rejectRefund,
   REFUND_CATEGORY_LABELS,
@@ -76,8 +75,6 @@ export default function RefundsPage() {
         searchKeyword: searchKeyword || undefined,
       };
 
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
       if (category !== "ALL") apiParams.category = category;
       if (kind !== "ALL") apiParams.kind = kind;
@@ -88,14 +85,7 @@ export default function RefundsPage() {
         "/admin/api/v1/commerce/refunds",
         apiParams
       );
-      if (apiResult) {
-        setData(apiResult);
-        return;
-      }
-
-      // Mock fallback
-      const result = await getRefunds(filters, page);
-      setData(result);
+      setData(apiResult);
     } finally {
       setLoading(false);
     }

@@ -32,10 +32,8 @@ import {
   Trash2,
 } from "lucide-react";
 import {
-  getActiveEndpoints,
   getEndpointStatus,
   createIngestEndpoint,
-  getProcessingJobs,
   convertLiveToVod,
   getCompletedLiveSessions,
   type IngestEndpoint,
@@ -113,8 +111,6 @@ export default function StreamingPage() {
   const fetchEndpoints = useCallback(async () => {
     setLoadingEndpoints(true);
     try {
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiResult = await adminApi.get<IngestEndpoint[]>(
         "/admin/api/v1/streaming/endpoints"
       );
@@ -128,22 +124,9 @@ export default function StreamingPage() {
           })
         );
         setStatuses(statusMap);
-        return;
       }
-
-      // Mock fallback
-      const data = await getActiveEndpoints();
-      setEndpoints(data);
-
-      // Fetch status for each endpoint
-      const statusMap: Record<number, IngestStatus> = {};
-      await Promise.all(
-        data.map(async (ep) => {
-          const st = await getEndpointStatus(ep.id);
-          statusMap[ep.id] = st;
-        })
-      );
-      setStatuses(statusMap);
+    } catch {
+      /* API error - data remains in initial empty state */
     } finally {
       setLoadingEndpoints(false);
     }
@@ -152,19 +135,14 @@ export default function StreamingPage() {
   const fetchJobs = useCallback(async () => {
     setLoadingJobs(true);
     try {
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiResult = await adminApi.get<VodProcessingJob[]>(
         "/admin/api/v1/streaming/jobs"
       );
       if (apiResult) {
         setJobs(apiResult);
-        return;
       }
-
-      // Mock fallback
-      const data = await getProcessingJobs();
-      setJobs(data);
+    } catch {
+      /* API error - data remains in initial empty state */
     } finally {
       setLoadingJobs(false);
     }

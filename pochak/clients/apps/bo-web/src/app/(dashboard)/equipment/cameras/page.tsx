@@ -21,9 +21,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Plus, Search } from "lucide-react";
-import type { Camera, CameraFilter } from "@/types/camera";
+import type { Camera } from "@/types/camera";
 import type { PageResponse } from "@/types/common";
-import { getCameras, createCamera } from "@/services/operation-api";
+import { createCamera } from "@/services/operation-api";
 import { adminApi } from "@/lib/api-client";
 
 // ── Camera Modal ───────────────────────────────────────────────────────────────
@@ -183,13 +183,6 @@ export default function CamerasPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const filters: CameraFilter = {
-        type: typeFilter === "ALL" ? undefined : typeFilter,
-        keyword: keyword || undefined,
-      };
-
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
       if (typeFilter !== "ALL") apiParams.type = typeFilter;
       if (keyword) apiParams.keyword = keyword;
@@ -198,14 +191,7 @@ export default function CamerasPage() {
         "/admin/api/v1/equipment/cameras",
         apiParams
       );
-      if (apiResult) {
-        setData(apiResult);
-        return;
-      }
-
-      // Mock fallback
-      const result = await getCameras(filters, page);
-      setData(result);
+      setData(apiResult);
     } finally {
       setLoading(false);
     }

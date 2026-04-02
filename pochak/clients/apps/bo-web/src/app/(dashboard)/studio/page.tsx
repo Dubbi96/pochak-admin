@@ -32,7 +32,6 @@ import {
   Clapperboard,
 } from "lucide-react";
 import {
-  getStudioSessions,
   createStudioSession,
   getStudioVenueOptions,
   getSessionKPIs,
@@ -478,8 +477,6 @@ export default function StudioPage() {
         dateTo: dateTo || null,
       };
 
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = {};
       if (filters.status) apiParams.status = filters.status;
       if (filters.venueId) apiParams.venueId = String(filters.venueId);
@@ -492,12 +489,9 @@ export default function StudioPage() {
       );
       if (apiResult) {
         setSessions(apiResult);
-        return;
       }
-
-      // Mock fallback
-      const data = await getStudioSessions(filters);
-      setSessions(data);
+    } catch {
+      /* API error - data remains in initial empty state */
     } finally {
       setLoading(false);
     }

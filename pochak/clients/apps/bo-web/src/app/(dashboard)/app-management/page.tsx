@@ -25,10 +25,8 @@ import { FileUpload } from "@/components/common/file-upload";
 import { Plus, Smartphone, Megaphone, Pencil, Trash2 } from "lucide-react";
 import type { PageResponse } from "@/types/common";
 import {
-  getAppVersions,
   createAppVersion,
   updateVersionStatus,
-  getAdvertisements,
   createAdvertisement,
   updateAdvertisement,
   deleteAdvertisement,
@@ -427,8 +425,6 @@ export default function AppManagementPage() {
   const fetchVersions = useCallback(async () => {
     setVersionsLoading(true);
     try {
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = {};
       if (versionPlatformFilter !== "ALL") apiParams.platform = versionPlatformFilter;
 
@@ -436,14 +432,7 @@ export default function AppManagementPage() {
         "/admin/api/v1/app-management/versions",
         apiParams
       );
-      if (apiResult) {
-        setVersions(apiResult);
-        return;
-      }
-
-      // Mock fallback
-      const data = await getAppVersions();
-      setVersions({ content: data, totalElements: data.length, totalPages: 1, page: 0, size: data.length });
+      setVersions(apiResult);
     } finally {
       setVersionsLoading(false);
     }
@@ -452,8 +441,6 @@ export default function AppManagementPage() {
   const fetchAds = useCallback(async () => {
     setAdsLoading(true);
     try {
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = {};
       if (adPlacementFilter !== "ALL") apiParams.placement = adPlacementFilter;
       if (adStatusFilter !== "ALL") apiParams.status = adStatusFilter;
@@ -462,14 +449,7 @@ export default function AppManagementPage() {
         "/admin/api/v1/app-management/ads",
         apiParams
       );
-      if (apiResult) {
-        setAds(apiResult);
-        return;
-      }
-
-      // Mock fallback
-      const data = await getAdvertisements();
-      setAds({ content: data, totalElements: data.length, totalPages: 1, page: 0, size: data.length });
+      setAds(apiResult);
     } finally {
       setAdsLoading(false);
     }

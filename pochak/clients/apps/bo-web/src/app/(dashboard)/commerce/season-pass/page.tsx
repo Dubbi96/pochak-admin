@@ -24,7 +24,6 @@ import {
 import { Plus, Search, Power, Check } from "lucide-react";
 import type { PageResponse } from "@/types/common";
 import {
-  getSeasonPasses,
   createSeasonPass,
   updateSeasonPass,
   toggleSeasonPassActive,
@@ -238,8 +237,6 @@ export default function SeasonPassPage() {
         searchKeyword: searchKeyword || undefined,
       };
 
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
       if (category !== "ALL") apiParams.category = category;
       if (statusFilter !== "ALL") apiParams.status = statusFilter;
@@ -249,14 +246,7 @@ export default function SeasonPassPage() {
         "/admin/api/v1/commerce/season-pass",
         apiParams
       );
-      if (apiResult) {
-        setData(apiResult);
-        return;
-      }
-
-      // Mock fallback
-      const result = await getSeasonPasses(filters, page);
-      setData(result);
+      setData(apiResult);
     } finally {
       setLoading(false);
     }

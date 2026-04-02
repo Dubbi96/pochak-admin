@@ -93,15 +93,14 @@ export default function MenusPage() {
   });
 
   const loadTree = useCallback(async () => {
-    // Try real API first, fall back to mock
-    // TODO(Phase 4B): remove mock fallback once backend is stable
-    const apiResult = await adminApi.get<MenuNode[]>("/admin/api/v1/operations/menus/tree");
-    if (apiResult) {
-      setTree(apiResult);
-      return;
+    try {
+      const apiResult = await adminApi.get<MenuNode[]>("/admin/api/v1/operations/menus/tree");
+      if (apiResult) {
+        setTree(apiResult);
+      }
+    } catch {
+      /* API error */
     }
-    const data = await adminRbacApi.menus.tree();
-    setTree(data);
   }, []);
 
   useEffect(() => {

@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, CalendarDays, List, Plus, X } from "lucide-react";
 import {
-  getScheduleEvents,
   createScheduleEvent,
   deleteScheduleEvent,
   getVenueOptions,
@@ -284,8 +283,6 @@ export default function ReservationsPage() {
         month,
       };
 
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { year: String(year), month: String(month) };
       if (filters.sportCode) apiParams.sportCode = filters.sportCode;
       if (filters.status) apiParams.status = filters.status;
@@ -298,12 +295,9 @@ export default function ReservationsPage() {
       );
       if (apiResult) {
         setEvents(apiResult);
-        return;
       }
-
-      // Mock fallback
-      const data = await getScheduleEvents(filters);
-      setEvents(data);
+    } catch {
+      /* API error - data remains in initial empty state */
     } finally {
       setLoading(false);
     }

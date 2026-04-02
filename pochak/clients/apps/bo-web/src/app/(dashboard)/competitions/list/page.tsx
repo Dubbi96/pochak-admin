@@ -25,14 +25,12 @@ import { FileUpload } from "@/components/common/file-upload";
 import { Plus, Search, Download } from "lucide-react";
 import type {
   Competition,
-  CompetitionFilter,
   CompetitionType,
   CompetitionStatus,
   CompetitionVisibility,
 } from "@/types/competition";
 import type { PageResponse } from "@/types/common";
 import {
-  getCompetitions,
   createCompetition,
   updateCompetition,
 } from "@/services/competition-api";
@@ -446,24 +444,6 @@ export default function CompetitionsListPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const filters: CompetitionFilter = {
-        isActive:
-          statusFilter === "ALL"
-            ? null
-            : statusFilter === "ACTIVE"
-              ? true
-              : false,
-        status:
-          competitionStatusFilter === "ALL"
-            ? null
-            : (competitionStatusFilter as CompetitionStatus),
-        sportCode: sportFilter === "ALL" ? null : sportFilter,
-        searchType: searchType as "ALL" | "TOURNAMENT" | "LEAGUE",
-        keyword: keyword || undefined,
-      };
-
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
       if (statusFilter !== "ALL") apiParams.isActive = statusFilter === "ACTIVE" ? "true" : "false";
       if (competitionStatusFilter !== "ALL") apiParams.status = competitionStatusFilter;
@@ -475,14 +455,7 @@ export default function CompetitionsListPage() {
         "/admin/api/v1/competitions",
         apiParams
       );
-      if (apiResult) {
-        setData(apiResult);
-        return;
-      }
-
-      // Mock fallback
-      const result = await getCompetitions(filters, page);
-      setData(result);
+      setData(apiResult);
     } finally {
       setLoading(false);
     }

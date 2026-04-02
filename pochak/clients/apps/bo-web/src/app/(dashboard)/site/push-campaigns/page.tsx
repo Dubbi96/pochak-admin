@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Search, Bell } from "lucide-react";
 import {
-  getPushCampaigns,
   createPushCampaign,
   cancelPushCampaign,
   type PushCampaign,
@@ -215,8 +214,6 @@ export default function PushCampaignsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
       if (statusFilter !== "ALL") apiParams.status = statusFilter;
       if (searchKeyword) apiParams.searchKeyword = searchKeyword;
@@ -225,17 +222,7 @@ export default function PushCampaignsPage() {
         "/admin/api/v1/site/push-campaigns",
         apiParams
       );
-      if (apiResult) {
-        setData(apiResult);
-        return;
-      }
-
-      // Mock fallback
-      const result = await getPushCampaigns({
-        status: statusFilter,
-        searchKeyword: searchKeyword || undefined,
-      }, page);
-      setData(result);
+      setData(apiResult);
     } finally {
       setLoading(false);
     }

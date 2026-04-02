@@ -24,7 +24,6 @@ import { Plus, Search, Download, Upload, Copy } from "lucide-react";
 import type { Match, MatchFilter, MatchStatus, LinkStatus } from "@/types/match";
 import type { PageResponse } from "@/types/common";
 import {
-  getMatches,
   createMatch,
   updateMatch,
   getCompetitionOptions,
@@ -415,8 +414,6 @@ export default function MatchSchedulePage() {
         cardKeyword: cardKeyword || undefined,
       };
 
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
       if (filters.dateFrom) apiParams.dateFrom = filters.dateFrom;
       if (filters.dateTo) apiParams.dateTo = filters.dateTo;
@@ -432,14 +429,7 @@ export default function MatchSchedulePage() {
         "/admin/api/v1/competitions/schedule",
         apiParams
       );
-      if (apiResult) {
-        setData(apiResult);
-        return;
-      }
-
-      // Mock fallback
-      const result = await getMatches(filters, page);
-      setData(result);
+      setData(apiResult);
     } finally {
       setLoading(false);
     }

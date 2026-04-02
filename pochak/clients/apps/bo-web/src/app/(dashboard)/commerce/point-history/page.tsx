@@ -20,7 +20,6 @@ import { Search, Download } from "lucide-react";
 import { ExportButton } from "@/components/common/export-button";
 import type { PageResponse } from "@/types/common";
 import {
-  getPointHistory,
   exportPointHistoryCsv,
   POINT_TYPE_LABELS,
   type PointHistory,
@@ -73,8 +72,6 @@ export default function PointHistoryPage() {
         searchKeyword: searchKeyword || undefined,
       };
 
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
       if (type !== "ALL") apiParams.type = type;
       if (filters.dateFrom) apiParams.dateFrom = filters.dateFrom;
@@ -88,14 +85,7 @@ export default function PointHistoryPage() {
         "/admin/api/v1/commerce/point-history",
         apiParams
       );
-      if (apiResult) {
-        setData(apiResult);
-        return;
-      }
-
-      // Mock fallback
-      const result = await getPointHistory(filters, page);
-      setData(result);
+      setData(apiResult);
     } finally {
       setLoading(false);
     }

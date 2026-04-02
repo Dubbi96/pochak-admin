@@ -23,7 +23,6 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Pencil } from "lucide-react";
 import {
-  getPricing,
   updatePricing,
   type PricingItem,
   type PricingTab,
@@ -135,20 +134,11 @@ function PricingTable({ tab }: { tab: PricingTab }) {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiResult = await adminApi.get<PricingItem[]>(
         "/admin/api/v1/commerce/pricing",
         { tab }
       );
-      if (apiResult) {
-        setItems(apiResult);
-        return;
-      }
-
-      // Mock fallback
-      const result = await getPricing(tab);
-      setItems(result);
+      setItems(apiResult);
     } finally {
       setLoading(false);
     }

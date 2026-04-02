@@ -22,10 +22,9 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Search, X, GripVertical, Image as ImageIcon } from "lucide-react";
 import { FileUpload } from "@/components/common/file-upload";
-import type { Sport, SportFilter } from "@/types/sport";
+import type { Sport } from "@/types/sport";
 import type { PageResponse } from "@/types/common";
 import {
-  getSports,
   createSport,
   updateSport,
   updateSportOrder,
@@ -242,6 +241,8 @@ export default function SportsListPage() {
   const [orderMap, setOrderMap] = useState<Record<number, number>>({});
   const [orderChanged, setOrderChanged] = useState(false);
 
+  const [error, setError] = useState<string | null>(null);
+
   // Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSport, setEditingSport] = useState<Sport | null>(null);
@@ -249,18 +250,6 @@ export default function SportsListPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const filters: SportFilter = {
-        isActive:
-          statusFilter === "ALL"
-            ? null
-            : statusFilter === "ACTIVE"
-              ? true
-              : false,
-        keyword: keyword || undefined,
-      };
-
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = { page: String(page) };
       if (statusFilter !== "ALL") apiParams.isActive = statusFilter === "ACTIVE" ? "true" : "false";
       if (keyword) apiParams.keyword = keyword;
@@ -275,19 +264,9 @@ export default function SportsListPage() {
         apiResult.content.forEach((s) => { map[s.id] = s.displayOrder; });
         setOrderMap(map);
         setOrderChanged(false);
-        return;
       }
-
-      // Mock fallback
-      const result = await getSports(filters, page);
-      setData(result);
-
-      const map: Record<number, number> = {};
-      result.content.forEach((s) => {
-        map[s.id] = s.displayOrder;
-      });
-      setOrderMap(map);
-      setOrderChanged(false);
+    } catch {
+      setError("데이터를 불러오는데 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -344,6 +323,13 @@ export default function SportsListPage() {
           등록
         </Button>
       </div>
+
+      {/* Error */}
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {/* Filter Bar */}
       <div className="flex flex-wrap items-end gap-4 rounded-lg border border-gray-200 bg-white p-4">

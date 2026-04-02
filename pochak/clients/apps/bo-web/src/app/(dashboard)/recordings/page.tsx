@@ -136,88 +136,6 @@ function formatTime(iso: string | null): string {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-// ── Mock data generators (until API is ready) ────────────────────────
-
-function generateMockSessions(page: number, size: number): PageResponse<RecordingSession> {
-  const statuses: RecordingStatus[] = ["SCHEDULED", "RECORDING", "COMPLETED", "FAILED", "CANCELLED"];
-  const venues = ["서울종합운동장", "잠실체육관", "고척스카이돔", "인천문학경기장", "수원월드컵경기장"];
-  const sports = ["축구", "야구", "농구", "배구", "테니스"];
-  const total = 87;
-  const content: RecordingSession[] = [];
-
-  for (let i = 0; i < Math.min(size, total - (page - 1) * size); i++) {
-    const idx = (page - 1) * size + i;
-    const status = statuses[idx % statuses.length];
-    const venueIdx = idx % venues.length;
-    const now = new Date();
-    const start = new Date(now.getTime() - (idx * 3600000));
-    const end = new Date(start.getTime() + 7200000);
-
-    content.push({
-      id: 1000 + idx,
-      venueId: venueIdx + 1,
-      venueName: venues[venueIdx],
-      district: ["서울", "인천", "수원", "대전", "부산"][venueIdx],
-      sportCode: `SP${venueIdx + 1}`,
-      sportName: sports[venueIdx],
-      matchId: idx % 3 === 0 ? 2000 + idx : null,
-      matchTitle: idx % 3 === 0 ? `${sports[venueIdx]} 경기 #${idx}` : null,
-      cameraId: 100 + (idx % 10),
-      cameraName: `CAM-${String(100 + (idx % 10))}`,
-      vpuId: 200 + (idx % 5),
-      vpuName: `VPU-${String(200 + (idx % 5))}`,
-      scheduledStart: start.toISOString(),
-      scheduledEnd: end.toISOString(),
-      actualStart: status !== "SCHEDULED" ? start.toISOString() : null,
-      actualEnd: status === "COMPLETED" || status === "FAILED" ? end.toISOString() : null,
-      status,
-      duration: status === "COMPLETED" ? 7200 - idx * 60 : null,
-      fileSize: status === "COMPLETED" ? (1_073_741_824 + idx * 10_000_000) : null,
-      contentId: status === "COMPLETED" ? 3000 + idx : null,
-      shareCount: Math.floor(Math.random() * 500),
-      viewCount: Math.floor(Math.random() * 5000),
-      createdBy: "admin",
-      createdAt: start.toISOString(),
-      updatedAt: end.toISOString(),
-    });
-  }
-
-  return {
-    content,
-    totalElements: total,
-    totalPages: Math.ceil(total / size),
-    page,
-    size,
-  };
-}
-
-function generateMockVenueSummaries(): VenueRecordingSummary[] {
-  const venues = ["서울종합운동장", "잠실체육관", "고척스카이돔", "인천문학경기장", "수원월드컵경기장", "대전한밭스포츠타운"];
-  return venues.map((v, i) => ({
-    venueId: i + 1,
-    venueName: v,
-    district: ["서울", "서울", "서울", "인천", "수원", "대전"][i],
-    totalSessions: 50 + i * 12,
-    activeSessions: i % 3,
-    completedToday: 3 + i,
-    scheduledToday: 2 + (i % 4),
-    failedToday: i % 2,
-  }));
-}
-
-function generateMockShareStats(): PageResponse<ShareStatItem> {
-  const items: ShareStatItem[] = Array.from({ length: 10 }, (_, i) => ({
-    contentId: 3000 + i,
-    contentTitle: `하이라이트 #${i + 1}`,
-    contentType: i % 2 === 0 ? "VOD" : "클립",
-    shareCount: 500 - i * 30,
-    viewCount: 5000 - i * 300,
-    venueName: ["서울종합운동장", "잠실체육관", "고척스카이돔"][i % 3],
-    recordedAt: new Date(Date.now() - i * 86400000).toISOString(),
-  }));
-  return { content: items, totalElements: 10, totalPages: 1, page: 1, size: 10 };
-}
-
 // ── Session List Tab ─────────────────────────────────────────────────
 
 function SessionListTab() {
@@ -236,7 +154,7 @@ function SessionListTab() {
       const result = await getRecordingSessions(filter);
       setData(result);
     } catch {
-      setData(generateMockSessions(filter.page ?? 1, filter.size ?? 10));
+      /* API error - data remains in initial empty state */
     }
   }, [filter]);
 
@@ -567,45 +485,7 @@ function CalendarTab() {
         const data = await getCalendarSessions(year, month + 1);
         setSessions(data);
       } catch {
-        // Generate mock calendar data
-        const mockSessions: RecordingSession[] = [];
-        const statuses: RecordingStatus[] = ["SCHEDULED", "RECORDING", "COMPLETED"];
-        const venues = ["서울종합운동장", "잠실체육관", "고척스카이돔"];
-        for (let d = 1; d <= 28; d++) {
-          if (d % 2 === 0) continue;
-          const count = 1 + (d % 3);
-          for (let j = 0; j < count; j++) {
-            const start = new Date(year, month, d, 9 + j * 3, 0);
-            mockSessions.push({
-              id: d * 10 + j,
-              venueId: j + 1,
-              venueName: venues[j % venues.length],
-              district: "서울",
-              sportCode: "SP1",
-              sportName: "축구",
-              matchId: null,
-              matchTitle: null,
-              cameraId: 100 + j,
-              cameraName: `CAM-${100 + j}`,
-              vpuId: null,
-              vpuName: null,
-              scheduledStart: start.toISOString(),
-              scheduledEnd: new Date(start.getTime() + 7200000).toISOString(),
-              actualStart: null,
-              actualEnd: null,
-              status: statuses[j % statuses.length],
-              duration: null,
-              fileSize: null,
-              contentId: null,
-              shareCount: 0,
-              viewCount: 0,
-              createdBy: "admin",
-              createdAt: start.toISOString(),
-              updatedAt: start.toISOString(),
-            });
-          }
-        }
-        setSessions(mockSessions);
+        /* API error - data remains in initial empty state */
       }
     })();
   }, [year, month]);
@@ -763,7 +643,7 @@ function VenueDashboardTab() {
         const data = await getVenueRecordingSummaries();
         setSummaries(data);
       } catch {
-        setSummaries(generateMockVenueSummaries());
+        /* API error - data remains in initial empty state */
       }
     })();
   }, []);
@@ -845,7 +725,7 @@ function ShareStatsTab() {
         const result = await getShareStatistics({ page: 1, size: 20 });
         setData(result);
       } catch {
-        setData(generateMockShareStats());
+        /* API error - data remains in initial empty state */
       }
     })();
   }, []);

@@ -106,8 +106,6 @@ export default function MembersPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const apiParams: Record<string, string> = {};
       if (search) apiParams.keyword = search;
 
@@ -117,12 +115,9 @@ export default function MembersPage() {
       );
       if (apiResult) {
         setMembers(apiResult);
-        return;
       }
-
-      // Mock fallback
-      const data = await adminRbacApi.members.list(search || undefined);
-      setMembers(data);
+    } catch {
+      /* API error - data remains in initial empty state */
     } finally {
       setLoading(false);
     }

@@ -22,10 +22,6 @@ import {
   ExternalLink,
 } from "lucide-react";
 import {
-  getMonitoringOverview,
-  getEquipmentList,
-  getBroadcastList,
-  getMonitoringAlerts,
   acknowledgeAlert,
   type Equipment,
   type Broadcast,
@@ -157,8 +153,6 @@ export default function MonitoringPage() {
   const fetchAll = React.useCallback(async () => {
     setLoading(true);
     try {
-      // Try real API first, fall back to mock
-      // TODO(Phase 4B): remove mock fallback once backend is stable
       const [apiOv, apiEq, apiBc, apiAl] = await Promise.all([
         adminApi.get<MonitoringOverview>("/admin/api/v1/monitoring/overview"),
         adminApi.get<Equipment[]>("/admin/api/v1/monitoring/equipment"),
@@ -170,20 +164,9 @@ export default function MonitoringPage() {
         setEquipment(apiEq);
         setBroadcasts(apiBc);
         setAlerts(apiAl);
-        return;
       }
-
-      // Mock fallback
-      const [ov, eq, bc, al] = await Promise.all([
-        getMonitoringOverview(),
-        getEquipmentList(),
-        getBroadcastList(),
-        getMonitoringAlerts(),
-      ]);
-      setOverview(ov);
-      setEquipment(eq);
-      setBroadcasts(bc);
-      setAlerts(al);
+    } catch {
+      /* API error - data remains in initial empty state */
     } finally {
       setLoading(false);
     }
