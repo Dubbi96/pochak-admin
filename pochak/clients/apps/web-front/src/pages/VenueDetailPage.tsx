@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import HScrollRow from '@/components/HScrollRow';
 import { VideoCard } from '@/components/Card';
 import { useContents, useTeams } from '@/hooks/useApi';
+import ReservationFlow from '@/components/ReservationFlow';
 
 const mockVenues: Record<string, {
   id: string; name: string; district: string; sport: string;
@@ -23,7 +24,7 @@ const mockVenues: Record<string, {
 
 const defaultVenue = mockVenues.v1;
 
-const tabs = ['소개', '일정', '경기영상', '시설정보'] as const;
+const tabs = ['소개', '예약하기', '일정', '경기영상', '시설정보'] as const;
 
 export default function VenueDetailPage() {
   const { id = 'v1' } = useParams<{ id: string }>();
@@ -152,6 +153,10 @@ export default function VenueDetailPage() {
                 </div>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="예약하기">
+            <ReservationFlow venueId={venue.id} venueName={venue.name} />
           </TabsContent>
 
           <TabsContent value="일정">
