@@ -3,6 +3,7 @@ package com.pochak.content.organization.service;
 import com.pochak.common.exception.BusinessException;
 import com.pochak.content.organization.dto.*;
 import com.pochak.content.organization.entity.Organization;
+import com.pochak.content.membership.repository.MembershipRepository;
 import com.pochak.content.organization.repository.OrganizationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,6 +27,9 @@ class OrganizationServiceTest {
 
     @Mock
     private OrganizationRepository organizationRepository;
+
+    @Mock
+    private MembershipRepository membershipRepository;
 
     @InjectMocks
     private OrganizationService organizationService;

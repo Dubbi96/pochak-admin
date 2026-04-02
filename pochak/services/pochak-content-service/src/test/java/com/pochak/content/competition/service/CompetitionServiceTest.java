@@ -3,6 +3,7 @@ package com.pochak.content.competition.service;
 import com.pochak.common.exception.BusinessException;
 import com.pochak.content.competition.dto.*;
 import com.pochak.content.competition.entity.Competition;
+import com.pochak.content.competition.entity.CompetitionVisibility;
 import com.pochak.content.competition.repository.CompetitionRepository;
 import com.pochak.content.sport.entity.Sport;
 import com.pochak.content.sport.repository.SportRepository;
@@ -78,7 +79,8 @@ class CompetitionServiceTest {
         // given
         Pageable pageable = PageRequest.of(0, 20);
         Page<Competition> page = new PageImpl<>(List.of(testCompetition), pageable, 1);
-        given(competitionRepository.findWithFilters(isNull(), isNull(), isNull(), isNull(), eq(pageable)))
+        given(competitionRepository.findWithFiltersAndVisibility(
+                isNull(), isNull(), isNull(), isNull(), eq(CompetitionVisibility.PUBLIC), eq(pageable)))
                 .willReturn(page);
 
         // when
@@ -146,23 +148,24 @@ class CompetitionServiceTest {
                 .id(3L)
                 .name("Active League")
                 .sport(testSport)
-                .status(Competition.CompetitionStatus.IN_PROGRESS)
+                .status(Competition.CompetitionStatus.ONGOING)
                 .isDisplayed(true)
                 .active(true)
                 .build();
 
         Page<Competition> page = new PageImpl<>(List.of(inProgressCompetition), pageable, 1);
-        given(competitionRepository.findWithFilters(
-                isNull(), eq(Competition.CompetitionStatus.IN_PROGRESS), isNull(), isNull(), eq(pageable)))
+        given(competitionRepository.findWithFiltersAndVisibility(
+                isNull(), eq(Competition.CompetitionStatus.ONGOING), isNull(), isNull(),
+                eq(CompetitionVisibility.PUBLIC), eq(pageable)))
                 .willReturn(page);
 
         // when
         Page<CompetitionListResponse> result = competitionService.listCompetitions(
-                null, Competition.CompetitionStatus.IN_PROGRESS, null, null, pageable);
+                null, Competition.CompetitionStatus.ONGOING, null, null, pageable);
 
         // then
         assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getStatus()).isEqualTo("IN_PROGRESS");
+        assertThat(result.getContent().get(0).getStatus()).isEqualTo("ONGOING");
     }
 
     @Test

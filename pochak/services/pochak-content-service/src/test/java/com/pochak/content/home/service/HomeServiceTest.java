@@ -66,7 +66,7 @@ class HomeServiceTest {
                 .name("K리그 2026")
                 .startDate(LocalDate.of(2026, 3, 1))
                 .endDate(LocalDate.of(2026, 11, 30))
-                .status(Competition.CompetitionStatus.IN_PROGRESS)
+                .status(Competition.CompetitionStatus.ONGOING)
                 .isDisplayed(true)
                 .build();
 

@@ -81,7 +81,7 @@ public class CommunityPost {
     private LocalDateTime deletedAt;
 
     public enum PostType {
-        NEWS, RECRUITING, RECRUITMENT, FREE
+        NEWS, RECRUIT, GENERAL, FREE
     }
 
     public void pin() {

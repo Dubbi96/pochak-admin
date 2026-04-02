@@ -64,6 +64,8 @@ pochak:
       base-url: ${COMMERCE_SERVICE_URL:http://localhost:8083}
       connect-timeout: 2000
       read-timeout: 3000
+    identity:
+      base-url: ${IDENTITY_SERVICE_URL:http://localhost:8081}
 
 springdoc:
   api-docs:

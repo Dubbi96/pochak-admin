@@ -2,6 +2,7 @@ package com.pochak.content.membership.service;
 
 import com.pochak.common.exception.BusinessException;
 import com.pochak.common.exception.ErrorCode;
+import com.pochak.content.client.IdentityGuardianClient;
 import com.pochak.content.membership.dto.*;
 import com.pochak.content.membership.entity.Membership;
 import com.pochak.content.membership.repository.MembershipRepository;
@@ -9,12 +10,14 @@ import com.pochak.content.organization.entity.JoinPolicy;
 import com.pochak.content.organization.entity.Organization;
 import com.pochak.content.organization.repository.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -22,6 +25,7 @@ public class MembershipService {
 
     private final MembershipRepository membershipRepository;
     private final OrganizationRepository organizationRepository;
+    private final IdentityGuardianClient identityGuardianClient;
 
     @Transactional
     @CacheEvict(value = "acl", allEntries = true)
@@ -59,6 +63,23 @@ public class MembershipService {
                     && role != Membership.MembershipRole.MANAGER) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT,
                         "Invalid role for team membership: " + role);
+            }
+        }
+
+        // BIZ-005: GUARDIAN role requires a verified guardian relationship in identity-service
+        if (role == Membership.MembershipRole.GUARDIAN) {
+            if (request.getGuardianForUserId() == null) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT,
+                        "guardianForUserId is required when assigning GUARDIAN role");
+            }
+            boolean verified = identityGuardianClient.isVerifiedGuardian(
+                    request.getUserId(), request.getGuardianForUserId());
+            if (!verified) {
+                log.warn("GUARDIAN membership rejected: no verified relationship between guardian={} and minor={}",
+                        request.getUserId(), request.getGuardianForUserId());
+                throw new BusinessException(ErrorCode.FORBIDDEN,
+                        "No verified guardian relationship exists for this user. "
+                        + "Guardian authentication must be completed in identity-service first.");
             }
         }
 
@@ -123,6 +144,14 @@ public class MembershipService {
             newRole = Membership.MembershipRole.valueOf(request.getRole());
         } catch (IllegalArgumentException e) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "Invalid role: " + request.getRole());
+        }
+
+        // BIZ-005: Cannot change role TO guardian via update — must use createMembership with guardianForUserId
+        if (newRole == Membership.MembershipRole.GUARDIAN
+                && membership.getRole() != Membership.MembershipRole.GUARDIAN) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT,
+                    "Cannot change role to GUARDIAN via update. "
+                    + "Create a new GUARDIAN membership with guardianForUserId instead.");
         }
 
         membership.updateRole(newRole);
