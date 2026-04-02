@@ -110,8 +110,12 @@ services:
       NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:-change-me}
       NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:-change-me}
       JWT_SECRET: pochak-jwt-secret-key-for-development-only-minimum-256-bits-long-enough
+      REDIS_HOST: pochak-redis
+      REDIS_PORT: 6379
     depends_on:
       pochak-postgres:
+        condition: service_healthy
+      pochak-redis:
         condition: service_healthy
       pochak-rabbitmq:
         condition: service_healthy
