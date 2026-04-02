@@ -199,7 +199,7 @@ public class OAuth2Service {
                 .status(User.UserStatus.ACTIVE)
                 .role(User.UserRole.USER)
                 .build();
-        userRepository.save(user);
+        user = userRepository.save(user);
 
         UserAuthAccount authAccount = UserAuthAccount.builder()
                 .user(user)
