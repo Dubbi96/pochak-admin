@@ -52,21 +52,7 @@ export default function LoginPage() {
         return;
       }
     } catch {
-      // Backend unavailable — fall through to mock login
-      console.warn("[Login] Backend unavailable, using mock login");
-    }
-
-    // Mock login fallback (development only)
-    if (username === "admin" && password === "admin1234!") {
-      login("mock-jwt-token", {
-        id: "1",
-        name: "시스템 관리자",
-        email: "admin@pochak.com",
-        role: "MASTER_BO",
-      });
-      router.push("/");
-    } else {
-      setError("로그인에 실패했습니다. (mock: admin / admin1234!)");
+      setError("서버에 연결할 수 없습니다. 네트워크를 확인해주세요.");
     }
     setIsLoading(false);
   };

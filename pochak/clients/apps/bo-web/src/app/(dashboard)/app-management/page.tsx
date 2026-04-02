@@ -442,10 +442,8 @@ export default function AppManagementPage() {
       }
 
       // Mock fallback
-      const data = await getAppVersions(
-        versionPlatformFilter === "ALL" ? null : (versionPlatformFilter as Platform)
-      );
-      setVersions(data);
+      const data = await getAppVersions();
+      setVersions({ content: data, totalElements: data.length, totalPages: 1, page: 0, size: data.length });
     } finally {
       setVersionsLoading(false);
     }
@@ -470,11 +468,8 @@ export default function AppManagementPage() {
       }
 
       // Mock fallback
-      const data = await getAdvertisements(
-        adPlacementFilter === "ALL" ? null : (adPlacementFilter as AdPlacement),
-        adStatusFilter === "ALL" ? null : (adStatusFilter as AdStatus)
-      );
-      setAds(data);
+      const data = await getAdvertisements();
+      setAds({ content: data, totalElements: data.length, totalPages: 1, page: 0, size: data.length });
     } finally {
       setAdsLoading(false);
     }

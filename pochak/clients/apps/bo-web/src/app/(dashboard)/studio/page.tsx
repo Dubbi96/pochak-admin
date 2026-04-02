@@ -504,7 +504,22 @@ export default function StudioPage() {
     fetchData();
   }, [fetchData]);
 
-  const kpis = getSessionKPIs(sessions);
+  const [kpis, setKpis] = useState<{ activeSessions: number; scheduledToday: number; recording: number; completed: number }>({
+    activeSessions: 0,
+    scheduledToday: 0,
+    recording: 0,
+    completed: 0,
+  });
+
+  useEffect(() => {
+    const filters: SessionFilter = {
+      status: statusFilter === "ALL" ? null : (statusFilter as SessionStatus),
+      venueId: venueFilter === "ALL" ? null : Number(venueFilter),
+      dateFrom: dateFrom || null,
+      dateTo: dateTo || null,
+    };
+    getSessionKPIs(filters).then(setKpis);
+  }, [statusFilter, venueFilter, dateFrom, dateTo]);
 
   return (
     <div className="space-y-6">
