@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
  */
 @Slf4j
 @Component
-@ConditionalOnMissingBean(VpuService.class)
+@ConditionalOnMissingBean(name = "realVpuService")
 public class StubVpuService implements VpuService {
 
     @Value("${pochak.streaming.rtmp-base-url:rtmp://ingest.pochak.co.kr/live}")
