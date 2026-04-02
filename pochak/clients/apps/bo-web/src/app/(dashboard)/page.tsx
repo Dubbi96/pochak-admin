@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuthStore } from "@/stores/auth-store";
-import { Users, TrendingUp, Video, ChevronRight } from "lucide-react";
+import { Users, TrendingUp, Video, ChevronRight, RefreshCw } from "lucide-react";
 import { adminApi } from "@/lib/api-client";
+
+type Period = "day" | "week" | "month";
+const PERIOD_LABELS: Record<Period, string> = { day: "일간", week: "주간", month: "월간" };
+const AUTO_REFRESH_INTERVAL = 60_000; // 60 seconds
 
 /** Dashboard summary stats from the legacy admin API */
 interface LegacyDashboardStats {
@@ -63,58 +67,78 @@ function getWeekRangeLabel(): string {
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const [data, setData] = useState<DashboardData | null>(null);
+  const [period, setPeriod] = useState<Period>("day");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    async function fetchDashboard() {
-      try {
-        const analyticsResult = await adminApi.get<{ data: AnalyticsDashboardStats }>(
-          "/admin/api/v1/analytics/dashboard"
-        );
-        const stats = (analyticsResult as any)?.data ?? analyticsResult;
-        if (stats && typeof stats.todayVisitors === "number") {
-          setData({
-            todayVisitors: stats.todayVisitors,
-            todayActiveUsers: stats.todayActiveUsers,
-            todayRevenue: stats.todayRevenue,
-            totalContents: stats.totalContents,
-            todayViews: stats.todayViews,
-            weekViews: stats.weekViews,
-            monthViews: stats.monthViews,
-            topContent: stats.topContent ?? [],
-            activeUsersTrend: stats.activeUsersTrend ?? [],
-          });
-          return;
-        }
-      } catch {
-        // analytics endpoint not available, try legacy
+  const fetchDashboard = useCallback(async (silent = false) => {
+    if (!silent) setIsRefreshing(true);
+    try {
+      const analyticsResult = await adminApi.get<{ data: AnalyticsDashboardStats }>(
+        `/admin/api/v1/analytics/dashboard?period=${period}`
+      );
+      const stats = (analyticsResult as any)?.data ?? analyticsResult;
+      if (stats && typeof stats.todayVisitors === "number") {
+        setData({
+          todayVisitors: stats.todayVisitors,
+          todayActiveUsers: stats.todayActiveUsers,
+          todayRevenue: stats.todayRevenue,
+          totalContents: stats.totalContents,
+          todayViews: stats.todayViews,
+          weekViews: stats.weekViews,
+          monthViews: stats.monthViews,
+          topContent: stats.topContent ?? [],
+          activeUsersTrend: stats.activeUsersTrend ?? [],
+        });
+        setLastUpdated(new Date());
+        return;
       }
-
-      try {
-        const legacy = await adminApi.get<LegacyDashboardStats>(
-          "/admin/api/v1/dashboard/stats"
-        );
-        if (legacy) {
-          setData({
-            todayVisitors: legacy.todayVisitors,
-            todayActiveUsers: legacy.totalMembers,
-            todayRevenue: 0,
-            totalContents: legacy.totalContents,
-            todayViews: 0,
-            weekViews: 0,
-            monthViews: 0,
-            topContent: [],
-            activeUsersTrend: [],
-          });
-        }
-      } catch (err) {
-        if (process.env.NODE_ENV === "development") {
-          console.warn("[Dashboard] Failed to fetch stats:", err);
-        }
-      }
+    } catch {
+      // analytics endpoint not available, try legacy
     }
 
+    try {
+      const legacy = await adminApi.get<LegacyDashboardStats>(
+        "/admin/api/v1/dashboard/stats"
+      );
+      if (legacy) {
+        setData({
+          todayVisitors: legacy.todayVisitors,
+          todayActiveUsers: legacy.totalMembers,
+          todayRevenue: 0,
+          totalContents: legacy.totalContents,
+          todayViews: 0,
+          weekViews: 0,
+          monthViews: 0,
+          topContent: [],
+          activeUsersTrend: [],
+        });
+        setLastUpdated(new Date());
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn("[Dashboard] Failed to fetch stats:", err);
+      }
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [period]);
+
+  // Initial fetch + period change
+  useEffect(() => {
     fetchDashboard();
-  }, []);
+  }, [fetchDashboard]);
+
+  // Auto-refresh polling
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
+      fetchDashboard(true);
+    }, AUTO_REFRESH_INTERVAL);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [fetchDashboard]);
 
   const fmt = (val: number | undefined) =>
     val !== undefined ? val.toLocaleString() : "--";
@@ -124,14 +148,49 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Welcome */}
-      <div>
-        <h1 className="text-xl font-bold text-gray-900">
-          안녕하세요, {user?.name || "관리자"}님
-        </h1>
-        <p className="mt-0.5 text-sm text-gray-400">
-          POCHAK Back Office 대시보드입니다.
-        </p>
+      {/* Welcome + Controls */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">
+            안녕하세요, {user?.name || "관리자"}님
+          </h1>
+          <p className="mt-0.5 text-sm text-gray-400">
+            POCHAK Back Office 대시보드입니다.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Period Selector */}
+          <div className="flex rounded-lg border border-gray-200 bg-white p-0.5">
+            {(["day", "week", "month"] as Period[]).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  period === p
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {PERIOD_LABELS[p]}
+              </button>
+            ))}
+          </div>
+          {/* Manual Refresh */}
+          <button
+            onClick={() => fetchDashboard()}
+            disabled={isRefreshing}
+            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50"
+          >
+            <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
+            새로고침
+          </button>
+          {/* Last Updated */}
+          {lastUpdated && (
+            <span className="text-xs text-gray-400">
+              {lastUpdated.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })} 갱신
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Top KPI Grid: 2 columns */}
