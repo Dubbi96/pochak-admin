@@ -1,4 +1,4 @@
-package com.pochak.operation.config;
+package com.pochak.web.bff.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -15,11 +15,11 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Pochak Operation API")
+                        .title("Pochak Web BFF API")
                         .version("1.0.0")
-                        .description("운영 서비스. 경기장/시설 관리, 카메라 장비, 예약, "
-                                + "스트리밍 인제스트, 트랜스코딩, 스튜디오를 담당합니다."))
+                        .description("Web Frontend용 BFF (Backend For Frontend) API. "
+                                + "Identity, Content, Commerce 서비스를 집약하여 웹 클라이언트에 최적화된 엔드포인트를 제공합니다."))
                 .servers(List.of(
-                        new Server().url("http://localhost:8084").description("Local Dev")));
+                        new Server().url("http://localhost:9080").description("Local Dev")));
     }
 }

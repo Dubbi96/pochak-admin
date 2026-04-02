@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pochak OTT Platform — API Documentation</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f11;
+      color: #e4e4e7;
+      min-height: 100vh;
+    }
+    .header {
+      border-bottom: 1px solid #27272a;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #fafafa;
+    }
+    .header .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      background: #18181b;
+      border: 1px solid #3f3f46;
+      color: #a1a1aa;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 32px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #71717a;
+      margin-bottom: 16px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .card {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      padding: 24px;
+      transition: border-color 0.15s, background 0.15s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .card:hover {
+      border-color: #3f3f46;
+      background: #1c1c1f;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fafafa;
+    }
+    .card-port {
+      font-size: 12px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: #a1a1aa;
+      background: #27272a;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .card-desc {
+      font-size: 13px;
+      color: #a1a1aa;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .card-links {
+      display: flex;
+      gap: 8px;
+    }
+    .card-link {
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .link-scalar {
+      background: #7c3aed;
+      color: #fff;
+    }
+    .link-scalar:hover { background: #6d28d9; }
+    .link-swagger {
+      background: #27272a;
+      color: #a1a1aa;
+      border: 1px solid #3f3f46;
+    }
+    .link-swagger:hover { background: #3f3f46; color: #fafafa; }
+    .link-json {
+      background: #27272a;
+      color: #a1a1aa;
+      border: 1px solid #3f3f46;
+    }
+    .link-json:hover { background: #3f3f46; color: #fafafa; }
+    .arch-diagram {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 48px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.8;
+      color: #a1a1aa;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .arch-diagram .highlight { color: #7c3aed; }
+    .arch-diagram .port { color: #22c55e; }
+    .arch-diagram .arrow { color: #3f3f46; }
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    .dot-green { background: #22c55e; }
+    .dot-blue { background: #3b82f6; }
+    .dot-orange { background: #f59e0b; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Pochak OTT Platform</h1>
+  <span class="badge">API Documentation</span>
+  <span class="badge">v1.0.0</span>
+  <span class="badge">Spring Boot 3.3.5</span>
+</div>
+
+<div class="container">
+
+  <!-- Architecture Overview -->
+  <p class="section-title">Architecture Overview</p>
+  <div class="arch-diagram">Client Apps
+  <span class="arrow">├──</span> Web Front (Vite+React)  <span class="arrow">──→</span>  <span class="highlight">Web BFF</span>   <span class="port">:9080</span>  <span class="arrow">──┐</span>
+  <span class="arrow">├──</span> BO Admin  (Next.js 16)   <span class="arrow">──→</span>  <span class="highlight">BO BFF</span>    <span class="port">:9090</span>  <span class="arrow">──┤</span>
+  <span class="arrow">└──</span> Mobile    (iOS/Android)  <span class="arrow">──→</span>  <span class="highlight">App BFF</span>   <span class="port">:9081</span>  <span class="arrow">──┤</span>
+                                                        <span class="arrow">│</span>
+                              <span class="highlight">Gateway</span>  <span class="port">:8080</span>  <span class="arrow">◄────────────┘</span>
+                              <span class="arrow">│</span>
+        <span class="arrow">┌───────────┬───────────┼───────────┬───────────┐</span>
+        <span class="arrow">▼</span>           <span class="arrow">▼</span>           <span class="arrow">▼</span>           <span class="arrow">▼</span>           <span class="arrow">▼</span>
+  <span class="highlight">Identity</span>  <span class="highlight">Content</span>   <span class="highlight">Commerce</span>  <span class="highlight">Operation</span>  <span class="highlight">Admin</span>
+    <span class="port">:8081</span>      <span class="port">:8082</span>      <span class="port">:8083</span>      <span class="port">:8084</span>      <span class="port">:8085</span>
+        <span class="arrow">└───────────┴───────────┴───────────┴───────────┘</span>
+                         <span class="arrow">▼</span>
+              PostgreSQL 16 (5 schemas)
+              Redis 7  |  RabbitMQ</div>
+
+  <!-- Domain Services -->
+  <p class="section-title">Domain Services</p>
+  <div class="grid">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><span class="status-dot dot-green"></span>Identity</span>
+        <span class="card-port">:8081</span>
+      </div>
+      <p class="card-desc">인증/인가 — 회원가입(국내/미성년/소셜/외국인), 로그인, OAuth2 PKCE, 프로필, 보호자, 푸시 토큰</p>
+      <div class="card-links">
+        <a class="card-link link-scalar" href="identity.html">Scalar</a>
+        <a class="card-link link-swagger" href="http://localhost:8081/swagger-ui.html" target="_blank">Swagger UI</a>
+        <a class="card-link link-json" href="http://localhost:8081/api-docs" target="_blank">JSON</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><span class="status-dot dot-green"></span>Content</span>
+        <span class="card-port">:8082</span>
+      </div>
+      <p class="card-desc">콘텐츠 — LIVE/VOD/CLIP, 스포츠 데이터, 팀/선수, 검색, 태그, 댓글, 커뮤니티, 알림, 시청 기록, 추천</p>
+      <div class="card-links">
+        <a class="card-link link-scalar" href="content.html">Scalar</a>
+        <a class="card-link link-swagger" href="http://localhost:8082/swagger-ui.html" target="_blank">Swagger UI</a>
+        <a class="card-link link-json" href="http://localhost:8082/api-docs" target="_blank">JSON</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><span class="status-dot dot-green"></span>Commerce</span>
+        <span class="card-port">:8083</span>
+      </div>
+      <p class="card-desc">커머스 — 상품, 구매/결제, 쿠폰, 지갑/포인트, 시청 권한(Entitlement), 환불</p>
+      <div class="card-links">
+        <a class="card-link link-scalar" href="commerce.html">Scalar</a>
+        <a class="card-link link-swagger" href="http://localhost:8083/swagger-ui.html" target="_blank">Swagger UI</a>
+        <a class="card-link link-json" href="http://localhost:8083/api-docs" target="_blank">JSON</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><span class="status-dot dot-green"></span>Operation</span>
+        <span class="card-port">:8084</span>
+      </div>
+      <p class="card-desc">운영 — 경기장/시설, 카메라 장비, 예약, 스트리밍 인제스트, 트랜스코딩, 스튜디오</p>
+      <div class="card-links">
+        <a class="card-link link-scalar" href="operation.html">Scalar</a>
+        <a class="card-link link-swagger" href="http://localhost:8084/swagger-ui.html" target="_blank">Swagger UI</a>
+        <a class="card-link link-json" href="http://localhost:8084/api-docs" target="_blank">JSON</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><span class="status-dot dot-blue"></span>Admin</span>
+        <span class="card-port">:8085</span>
+      </div>
+      <p class="card-desc">관리자 — RBAC(역할/사용자/기능/메뉴/그룹), 단체, 분석 통계, CS(문의/신고/약관), 사이트(배너/공지), 앱 버전</p>
+      <div class="card-links">
+        <a class="card-link link-scalar" href="admin.html">Scalar</a>
+        <a class="card-link link-swagger" href="http://localhost:8085/swagger-ui.html" target="_blank">Swagger UI</a>
+        <a class="card-link link-json" href="http://localhost:8085/api-docs" target="_blank">JSON</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- BFF Services -->
+  <p class="section-title">BFF (Backend For Frontend)</p>
+  <div class="grid">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><span class="status-dot dot-orange"></span>Web BFF</span>
+        <span class="card-port">:9080</span>
+      </div>
+      <p class="card-desc">웹 프론트엔드용 — Identity, Content, Commerce 집약. 홈, 인증, 플레이어, 마이페이지</p>
+      <div class="card-links">
+        <a class="card-link link-scalar" href="web-bff.html">Scalar</a>
+        <a class="card-link link-swagger" href="http://localhost:9080/swagger-ui.html" target="_blank">Swagger UI</a>
+        <a class="card-link link-json" href="http://localhost:9080/api-docs" target="_blank">JSON</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><span class="status-dot dot-orange"></span>App BFF</span>
+        <span class="card-port">:9081</span>
+      </div>
+      <p class="card-desc">모바일 앱용 — 전체 서비스 집약. 홈, 인증, 플레이어, 마이페이지, 푸시, 앱 버전</p>
+      <div class="card-links">
+        <a class="card-link link-scalar" href="app-bff.html">Scalar</a>
+        <a class="card-link link-swagger" href="http://localhost:9081/swagger-ui.html" target="_blank">Swagger UI</a>
+        <a class="card-link link-json" href="http://localhost:9081/api-docs" target="_blank">JSON</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><span class="status-dot dot-orange"></span>BO BFF</span>
+        <span class="card-port">:9090</span>
+      </div>
+      <p class="card-desc">관리자 대시보드용 — 전체 서비스 집약. 대시보드, 콘텐츠/회원/사이트/RBAC/운영/커머스 관리</p>
+      <div class="card-links">
+        <a class="card-link link-scalar" href="bo-bff.html">Scalar</a>
+        <a class="card-link link-swagger" href="http://localhost:9090/swagger-ui.html" target="_blank">Swagger UI</a>
+        <a class="card-link link-json" href="http://localhost:9090/api-docs" target="_blank">JSON</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

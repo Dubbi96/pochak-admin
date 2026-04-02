@@ -3,7 +3,7 @@
 # ============================================================
 
 .PHONY: help deps-up deps-down all-up all-down bo-dev mobile-dev \
-        status logs seed rebuild clean
+        status logs seed rebuild clean api-docs watch
 
 # ── Help ────────────────────────────────────────────────────
 help:
@@ -27,6 +27,12 @@ help:
 	@echo "    make seed         시드 데이터 삽입"
 	@echo "    make migrate      마이그레이션 재실행"
 	@echo ""
+	@echo "  Development:"
+	@echo "    make watch        코드 변경 시 자동 재빌드 (docker compose watch)"
+	@echo ""
+	@echo "  Documentation:"
+	@echo "    make api-docs     API 문서 열기 (Scalar UI, http://localhost:4000)"
+	@echo ""
 	@echo "  Monitoring:"
 	@echo "    make status       전체 컨테이너 상태"
 	@echo "    make logs         전체 로그 (follow)"
@@ -45,6 +51,19 @@ help:
 	@echo "    PostgreSQL: localhost:5432"
 	@echo "    Redis:      localhost:6379"
 	@echo ""
+
+# ── Watch Mode (코드 변경 → 자동 재빌드) ─────────────────────
+watch:
+	@echo "Starting watch mode — 코드 변경 시 해당 서비스만 자동 재빌드됩니다."
+	@echo "  Backend:  services/*/src 변경 → rebuild + restart"
+	@echo "  Frontend: clients/apps/*/src 변경 → rebuild + restart"
+	@echo ""
+	cd infra && docker compose watch
+
+# ── API Documentation ───────────────────────────────────────
+api-docs:
+	@echo "Starting API Documentation server on http://localhost:4000"
+	@cd docs/api && python3 -m http.server 4000
 
 # ── Infrastructure ──────────────────────────────────────────
 

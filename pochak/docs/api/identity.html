@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pochak Identity API</title>
+  <style>
+    body { margin: 0; }
+    .back-link {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 9999;
+      background: #18181b;
+      color: #a1a1aa;
+      border: 1px solid #3f3f46;
+      padding: 6px 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-family: -apple-system, sans-serif;
+      font-size: 13px;
+      transition: background 0.15s;
+    }
+    .back-link:hover { background: #27272a; color: #fafafa; }
+    .offline-notice {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #18181b;
+      border: 1px solid #3f3f46;
+      border-radius: 16px;
+      padding: 48px;
+      text-align: center;
+      font-family: -apple-system, sans-serif;
+      z-index: 9998;
+    }
+    .offline-notice h2 { color: #fafafa; margin-bottom: 12px; }
+    .offline-notice p { color: #a1a1aa; font-size: 14px; line-height: 1.6; }
+    .offline-notice code {
+      display: inline-block;
+      background: #27272a;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-top: 8px;
+      color: #7c3aed;
+    }
+  </style>
+</head>
+<body>
+  <a class="back-link" href="index.html">← All Services</a>
+  
+  <div id="offline" class="offline-notice">
+    <h2>Pochak Identity API</h2>
+    <p>인증/인가 — 회원가입, 로그인, OAuth2, 프로필, 보호자</p>
+    <p style="margin-top: 16px;">서비스가 실행 중이 아닙니다. 아래 명령으로 서비스를 시작하세요:</p>
+    <code>make dev-up</code>
+    <p style="margin-top: 8px; font-size: 12px; color: #71717a;">Port 8081</p>
+  </div>
+
+  <script
+    id="api-reference"
+    data-url="http://localhost:8081/api-docs"
+    data-configuration='{"theme": "kepler", "layout": "modern", "darkMode": true, "hideDownloadButton": false}'
+  ></script>
+  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+
+  <script>
+    // Check if service is running
+    fetch('http://localhost:8081/api-docs')
+      .catch(() => {
+        document.getElementById('offline').style.display = 'block';
+        document.getElementById('api-reference').style.display = 'none';
+      });
+  </script>
+</body>
+</html>
