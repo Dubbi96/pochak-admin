@@ -9,7 +9,6 @@ import {
   LuMegaphone,
   LuHeadphones,
   LuLogOut,
-  LuUsers,
 } from 'react-icons/lu';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useTeams } from '@/hooks/useApi';
@@ -24,7 +23,7 @@ interface NavItem {
 const mainNav: NavItem[] = [
   { label: '홈', icon: LuHouse, path: '/home' },
   { label: '일정', icon: LuCalendar, path: '/schedule' },
-  { label: '클립', icon: LuScissors, path: '/contents' },
+  { label: 'POCHAK', icon: LuScissors, path: '/contents' },
   { label: '마이', icon: LuUser, path: '/my' },
 ];
 
@@ -97,8 +96,7 @@ export default function Sidebar() {
             {/* 가입한 클럽 */}
             <Link to="/teams" className="flex items-center justify-between mb-2 px-1 group">
               <div className="flex items-center gap-2">
-                <LuUsers className="size-3.5 text-pochak-text-tertiary" />
-                <span className="text-[14px] tracking-[0.04em] text-pochak-text-tertiary font-semibold">가입한 클럽 &gt;</span>
+                <span className="text-[13px] tracking-[0.04em] text-pochak-text-tertiary font-bold">마이팀 &gt;</span>
               </div>
             </Link>
             <div className="flex flex-col gap-1">
@@ -126,7 +124,7 @@ export default function Sidebar() {
 
             {/* 인기 팀/클럽 */}
             <div className="mt-4 mb-2 px-1">
-              <span className="text-[14px] tracking-[0.04em] text-pochak-text-tertiary font-semibold">인기 팀/클럽 &gt;</span>
+              <span className="text-[13px] tracking-[0.04em] text-pochak-text-tertiary font-bold">인기 &gt;</span>
             </div>
             <div className="flex flex-col gap-1">
               {channels.slice(4, 7).map((ch) => (
@@ -150,6 +148,14 @@ export default function Sidebar() {
                 </Link>
               ))}
             </div>
+
+            {/* 더보기 */}
+            <Link
+              to="/teams"
+              className="flex items-center justify-center h-9 mt-2 mx-1 rounded-lg border border-border-subtle text-[13px] text-pochak-text-tertiary hover:bg-white/[0.05] hover:text-foreground transition-colors"
+            >
+              더보기
+            </Link>
           </div>
         ) : (
           /* ── Collapsed: following avatars ── */
