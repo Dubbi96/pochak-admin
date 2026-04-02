@@ -9,6 +9,7 @@ import { ClipCard } from '@/components/Card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import SectionHeader from '@/components/SectionHeader';
+import ShareModal from '@/components/ShareModal';
 import { useContents } from '@/hooks/useApi';
 
 const SAMPLE_VIDEOS = [
@@ -39,6 +40,7 @@ export default function ClipPlayerPage() {
   const [showPlayIcon, setShowPlayIcon] = useState(false);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   /* ── auto-play on clip change ──────────────────────────── */
   useEffect(() => {
@@ -218,9 +220,14 @@ export default function ClipPlayerPage() {
             <Button variant="secondary" size="sm">
               <LuMessageSquare className="w-4 h-4" /> 23
             </Button>
-            <Button variant="secondary" size="sm">
+            <Button variant="secondary" size="sm" onClick={() => setShareOpen(true)}>
               <LuShare2 className="w-4 h-4" /> 공유
             </Button>
+            <ShareModal
+              open={shareOpen}
+              onClose={() => setShareOpen(false)}
+              title={clip.title}
+            />
             <Button
               variant="action"
               size="icon-sm"

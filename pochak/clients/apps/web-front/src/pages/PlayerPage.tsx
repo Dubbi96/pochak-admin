@@ -11,6 +11,7 @@ import { VideoCard, ClipCard } from '@/components/Card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import SectionHeader from '@/components/SectionHeader';
+import ShareModal from '@/components/ShareModal';
 import { useContents } from '@/hooks/useApi';
 import { formatViewCount } from '@/lib/utils';
 
@@ -524,6 +525,7 @@ export default function PlayerPage() {
   const id = params.id ?? '1';
   const [likeCount, setLikeCount] = useState(100);
   const [liked, setLiked] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const { data: liveContents } = useContents('LIVE');
   const { data: vodContents } = useContents('VOD');
@@ -592,9 +594,14 @@ export default function PlayerPage() {
               >
                 <LuThumbsUp className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} /> {likeCount}
               </Button>
-              <Button variant="secondary" size="sm">
+              <Button variant="secondary" size="sm" onClick={() => setShareOpen(true)}>
                 <LuShare2 className="w-4 h-4" /> 공유
               </Button>
+              <ShareModal
+                open={shareOpen}
+                onClose={() => setShareOpen(false)}
+                title={content.title}
+              />
               <Button variant="secondary" size="icon-sm">
                 <LuEllipsis className="w-4 h-4" />
               </Button>
