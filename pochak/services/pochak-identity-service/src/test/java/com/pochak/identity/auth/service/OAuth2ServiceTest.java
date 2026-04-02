@@ -349,12 +349,12 @@ class OAuth2ServiceTest {
         @DisplayName("Complete signup creates user, links OAuth, returns tokens")
         void completeSignup_newUser_createsAndReturnsTokens() {
             // Mock signup token parsing
-            var claims = new io.jsonwebtoken.impl.DefaultClaims();
-            claims.put("provider", "KAKAO");
-            claims.put("providerId", "12345");
-            claims.put("email", "new@pochak.com");
-            claims.put("name", "새유저");
-            claims.put("profileImageUrl", null);
+            io.jsonwebtoken.Claims claims = org.mockito.Mockito.mock(io.jsonwebtoken.Claims.class);
+            given(claims.get("provider", String.class)).willReturn("KAKAO");
+            given(claims.get("providerId", String.class)).willReturn("12345");
+            given(claims.get("email", String.class)).willReturn("new@pochak.com");
+            given(claims.get("name", String.class)).willReturn("새유저");
+            given(claims.get("profileImageUrl", String.class)).willReturn(null);
 
             given(jwtTokenProvider.parseSignupToken("valid-signup-token")).willReturn(claims);
             given(authAccountRepository.findByProviderAndProviderUserId("KAKAO", "12345"))
@@ -396,12 +396,12 @@ class OAuth2ServiceTest {
         @Test
         @DisplayName("Link OAuth to existing account returns tokens")
         void linkOAuth_existingUser_linksAndReturnsTokens() {
-            var claims = new io.jsonwebtoken.impl.DefaultClaims();
-            claims.put("provider", "GOOGLE");
-            claims.put("providerId", "google-456");
-            claims.put("email", "user@kakao.com");
-            claims.put("name", "카카오유저");
-            claims.put("profileImageUrl", null);
+            io.jsonwebtoken.Claims claims = org.mockito.Mockito.mock(io.jsonwebtoken.Claims.class);
+            given(claims.get("provider", String.class)).willReturn("GOOGLE");
+            given(claims.get("providerId", String.class)).willReturn("google-456");
+            given(claims.get("email", String.class)).willReturn("user@kakao.com");
+            given(claims.get("name", String.class)).willReturn("카카오유저");
+            given(claims.get("profileImageUrl", String.class)).willReturn(null);
 
             given(jwtTokenProvider.parseSignupToken("link-token")).willReturn(claims);
             given(userRepository.findByEmail("user@kakao.com")).willReturn(Optional.of(existingUser));
@@ -423,12 +423,12 @@ class OAuth2ServiceTest {
         @Test
         @DisplayName("Link OAuth with non-existent email → throws BusinessException")
         void linkOAuth_noUser_throwsException() {
-            var claims = new io.jsonwebtoken.impl.DefaultClaims();
-            claims.put("provider", "GOOGLE");
-            claims.put("providerId", "google-456");
-            claims.put("email", "nonexistent@pochak.com");
-            claims.put("name", null);
-            claims.put("profileImageUrl", null);
+            io.jsonwebtoken.Claims claims = org.mockito.Mockito.mock(io.jsonwebtoken.Claims.class);
+            given(claims.get("provider", String.class)).willReturn("GOOGLE");
+            given(claims.get("providerId", String.class)).willReturn("google-456");
+            given(claims.get("email", String.class)).willReturn("nonexistent@pochak.com");
+            given(claims.get("name", String.class)).willReturn(null);
+            given(claims.get("profileImageUrl", String.class)).willReturn(null);
 
             given(jwtTokenProvider.parseSignupToken("bad-link-token")).willReturn(claims);
             given(userRepository.findByEmail("nonexistent@pochak.com")).willReturn(Optional.empty());
