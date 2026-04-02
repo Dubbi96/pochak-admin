@@ -1,35 +1,25 @@
-HELP.md
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+# ============================================================
+# Pochak OTT Platform - Only track pochak/ directory
+# Everything else in ~/Dubbi is separate projects
+# ============================================================
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+# Ignore everything at root level
+/*
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
+# Except pochak project
+!/pochak/
+!/pochak/**
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+# Except this gitignore
+!/.gitignore
 
-### VS Code ###
-.vscode/
-src/main/resources/key/**
-src/main/resources/application-local.ymlATS-API.zip
+# Standard ignores within pochak
+pochak/**/node_modules/
+pochak/**/.next/
+pochak/**/dist/
+pochak/**/build/
+pochak/**/.gradle/
+pochak/**/*.jar
+pochak/**/.DS_Store
+pochak/**/.env
+pochak/**/.env.local
