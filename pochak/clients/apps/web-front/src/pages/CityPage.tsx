@@ -8,6 +8,11 @@ import {
   LuMapPin,
   LuSearch,
   LuTimerReset,
+  LuSlidersHorizontal,
+  LuX,
+  LuArrowUpDown,
+  LuCamera,
+  LuVideo,
 } from 'react-icons/lu';
 import FilterChip from '@/components/FilterChip';
 import { useVenues } from '@/hooks/useApi';
@@ -18,14 +23,57 @@ import { useTeams } from '@/hooks/useApi';
 
 const sportFilters = ['전체', '축구', '농구', '야구', '배구', '풋살', '핸드볼'];
 
-const cityVenues = [
-  { id: 'v1', name: '잠실 유소년 야구장', district: '서울 송파구', sport: '야구', address: '잠실동 10-2', note: '오늘 18:00까지 예약 가능', badge: '인기', schedule: '주말 리그 12경기', color: '#165DFF', imageUrl: 'https://images.unsplash.com/photo-1459865264687-595d652de67e?w=640&h=360&fit=crop' },
-  { id: 'v2', name: '화성 드림파크 풋살 센터', district: '경기 화성시', sport: '풋살', address: '우정읍 체육로 17', note: '야간 조명 운영', badge: '추천', schedule: '야간 경기 다수', color: '#00A76F', imageUrl: 'https://images.unsplash.com/photo-1552667466-07770ae110d0?w=640&h=360&fit=crop' },
-  { id: 'v3', name: '춘천 체육관 A코트', district: '강원 춘천시', sport: '농구', address: '중앙로 88', note: '이번 주 대회 진행 중', badge: 'LIVE', schedule: '주간 이벤트 4건', color: '#FF8B00', imageUrl: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=640&h=360&fit=crop' },
-  { id: 'v4', name: '부산 해운대 배구 센터', district: '부산 해운대구', sport: '배구', address: '우동 411-3', note: '실내 코트 3면', badge: '신규', schedule: '체험 수업 모집', color: '#7A5AF8', imageUrl: 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=640&h=360&fit=crop' },
-  { id: 'v5', name: '고양 시민 축구장', district: '경기 고양시', sport: '축구', address: '주엽동 231', note: '주말 경기장 대관 가능', badge: '예약', schedule: '유소년 매치 9건', color: '#EF4444', imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=640&h=360&fit=crop' },
-  { id: 'v6', name: '대전 한밭 핸드볼관', district: '대전 서구', sport: '핸드볼', address: '둔산로 77', note: '평일 저녁 리그 운영', badge: '클럽', schedule: '지역 리그 운영', color: '#14B8A6', imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=640&h=360&fit=crop' },
+type PriceRange = '전체' | '무료' | '~1만' | '~3만' | '~5만' | '5만+';
+type ProductType = '전체' | 'SPACE_ONLY' | 'SPACE_CAMERA' | 'CAMERA_ONLY';
+type SortOption = 'popular' | 'price_asc' | 'price_desc' | 'newest' | 'distance';
+
+const priceRangeFilters: { label: string; value: PriceRange }[] = [
+  { label: '전체', value: '전체' },
+  { label: '무료', value: '무료' },
+  { label: '~1만원', value: '~1만' },
+  { label: '~3만원', value: '~3만' },
+  { label: '~5만원', value: '~5만' },
+  { label: '5만원+', value: '5만+' },
 ];
+
+const productTypeFilters: { label: string; value: ProductType; icon: typeof LuBuilding2 }[] = [
+  { label: '전체', value: '전체', icon: LuBuilding2 },
+  { label: '공간만', value: 'SPACE_ONLY', icon: LuBuilding2 },
+  { label: '공간+카메라', value: 'SPACE_CAMERA', icon: LuVideo },
+  { label: '카메라만', value: 'CAMERA_ONLY', icon: LuCamera },
+];
+
+const sortOptions: { label: string; value: SortOption }[] = [
+  { label: '인기순', value: 'popular' },
+  { label: '가격 낮은순', value: 'price_asc' },
+  { label: '가격 높은순', value: 'price_desc' },
+  { label: '최신순', value: 'newest' },
+  { label: '거리순', value: 'distance' },
+];
+
+const cityVenues = [
+  { id: 'v1', name: '잠실 유소년 야구장', district: '서울 송파구', sport: '야구', address: '잠실동 10-2', note: '오늘 18:00까지 예약 가능', badge: '인기', schedule: '주말 리그 12경기', color: '#165DFF', imageUrl: 'https://images.unsplash.com/photo-1459865264687-595d652de67e?w=640&h=360&fit=crop', minPrice: 50000, productTypes: ['SPACE_ONLY', 'SPACE_CAMERA'] as ProductType[] },
+  { id: 'v2', name: '화성 드림파크 풋살 센터', district: '경기 화성시', sport: '풋살', address: '우정읍 체육로 17', note: '야간 조명 운영', badge: '추천', schedule: '야간 경기 다수', color: '#00A76F', imageUrl: 'https://images.unsplash.com/photo-1552667466-07770ae110d0?w=640&h=360&fit=crop', minPrice: 30000, productTypes: ['SPACE_ONLY'] as ProductType[] },
+  { id: 'v3', name: '춘천 체육관 A코트', district: '강원 춘천시', sport: '농구', address: '중앙로 88', note: '이번 주 대회 진행 중', badge: 'LIVE', schedule: '주간 이벤트 4건', color: '#FF8B00', imageUrl: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=640&h=360&fit=crop', minPrice: 0, productTypes: ['SPACE_ONLY'] as ProductType[] },
+  { id: 'v4', name: '부산 해운대 배구 센터', district: '부산 해운대구', sport: '배구', address: '우동 411-3', note: '실내 코트 3면', badge: '신규', schedule: '체험 수업 모집', color: '#7A5AF8', imageUrl: 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=640&h=360&fit=crop', minPrice: 25000, productTypes: ['SPACE_ONLY', 'SPACE_CAMERA', 'CAMERA_ONLY'] as ProductType[] },
+  { id: 'v5', name: '고양 시민 축구장', district: '경기 고양시', sport: '축구', address: '주엽동 231', note: '주말 경기장 대관 가능', badge: '예약', schedule: '유소년 매치 9건', color: '#EF4444', imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=640&h=360&fit=crop', minPrice: 80000, productTypes: ['SPACE_CAMERA'] as ProductType[] },
+  { id: 'v6', name: '대전 한밭 핸드볼관', district: '대전 서구', sport: '핸드볼', address: '둔산로 77', note: '평일 저녁 리그 운영', badge: '클럽', schedule: '지역 리그 운영', color: '#14B8A6', imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=640&h=360&fit=crop', minPrice: 45000, productTypes: ['SPACE_ONLY', 'CAMERA_ONLY'] as ProductType[] },
+];
+
+function matchesPriceRange(price: number, range: PriceRange): boolean {
+  if (range === '전체') return true;
+  if (range === '무료') return price === 0;
+  if (range === '~1만') return price > 0 && price <= 10000;
+  if (range === '~3만') return price > 0 && price <= 30000;
+  if (range === '~5만') return price > 0 && price <= 50000;
+  if (range === '5만+') return price > 50000;
+  return true;
+}
+
+function formatPrice(n: number): string {
+  if (n === 0) return '무료';
+  return n.toLocaleString('ko-KR') + '원~';
+}
 
 const cityPrograms = [
   { title: '이번 주 인기 시설', desc: '조회수와 예약률이 높은 시설을 우선 배치합니다.' },
@@ -98,13 +146,20 @@ function CityVenueCard({
           {venue.address}
         </p>
 
-        <div className="mt-3 flex gap-2 text-[13px]">
-          <span className="inline-flex h-6 items-center rounded-md bg-white/[0.06] border border-border-subtle px-2 text-white/55">
-            {venue.sport}
-          </span>
-          <span className="inline-flex h-6 items-center rounded-md bg-white/[0.06] border border-border-subtle px-2 text-white/55 truncate">
-            {venue.note}
-          </span>
+        <div className="flex items-center justify-between" style={{ marginTop: 8 }}>
+          <div className="flex gap-2 text-[13px]">
+            <span className="inline-flex h-6 items-center rounded-md bg-white/[0.06] border border-border-subtle px-2 text-white/55">
+              {venue.sport}
+            </span>
+            <span className="inline-flex h-6 items-center rounded-md bg-white/[0.06] border border-border-subtle px-2 text-white/55 truncate">
+              {venue.note}
+            </span>
+          </div>
+          {'minPrice' in venue && (
+            <span className="text-[14px] font-bold text-primary">
+              {formatPrice((venue as typeof cityVenues[number]).minPrice)}
+            </span>
+          )}
         </div>
       </div>
     </Link>
@@ -176,22 +231,48 @@ function ScheduleLinkCard({
 export default function CityPage() {
   const [keyword, setKeyword] = useState('');
   const [selectedSport, setSelectedSport] = useState('전체');
+  const [priceRange, setPriceRange] = useState<PriceRange>('전체');
+  const [productType, setProductType] = useState<ProductType>('전체');
+  const [sortBy, setSortBy] = useState<SortOption>('popular');
+  const [availableDate, setAvailableDate] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [showSort, setShowSort] = useState(false);
   const debouncedKeyword = useDebounce(keyword, 300);
   const { data: venues, loading } = useVenues(debouncedKeyword || undefined, selectedSport !== '전체' ? selectedSport : undefined);
   const { data: channels } = useTeams();
 
   const venueList = Array.isArray(venues) && venues.length > 0 ? venues : cityVenues;
 
+  const activeFilterCount = [
+    priceRange !== '전체',
+    productType !== '전체',
+    !!availableDate,
+  ].filter(Boolean).length;
+
+  const resetFilters = () => {
+    setPriceRange('전체');
+    setProductType('전체');
+    setAvailableDate('');
+    setSortBy('popular');
+  };
+
   const filteredVenues = useMemo(() => {
-    return venueList.filter((venue) => {
+    let result = venueList.filter((venue) => {
       const name = 'name' in venue && typeof venue.name === 'string' ? venue.name : '';
       const address = 'address' in venue && typeof venue.address === 'string' ? venue.address : '';
       const sport = 'sport' in venue && typeof venue.sport === 'string' ? venue.sport : '';
       const matchQuery = !debouncedKeyword || `${name} ${address}`.toLowerCase().includes(debouncedKeyword.toLowerCase());
       const matchSport = selectedSport === '전체' || sport === selectedSport;
-      return matchQuery && matchSport;
+      const matchPrice = priceRange === '전체' || ('minPrice' in venue && matchesPriceRange((venue as typeof cityVenues[number]).minPrice, priceRange));
+      const matchProduct = productType === '전체' || ('productTypes' in venue && (venue as typeof cityVenues[number]).productTypes.includes(productType));
+      return matchQuery && matchSport && matchPrice && matchProduct;
     }) as Array<(typeof cityVenues)[number]>;
-  }, [debouncedKeyword, selectedSport, venueList]);
+
+    if (sortBy === 'price_asc') result = [...result].sort((a, b) => a.minPrice - b.minPrice);
+    else if (sortBy === 'price_desc') result = [...result].sort((a, b) => b.minPrice - a.minPrice);
+
+    return result;
+  }, [debouncedKeyword, selectedSport, priceRange, productType, sortBy, venueList]);
 
   const highlightedVenues = filteredVenues.slice(0, 2);
   const nearbyVenues = filteredVenues.slice(0, 6);
@@ -253,6 +334,113 @@ export default function CityPage() {
                 />
               ))}
             </div>
+
+            {/* ── Advanced filters toggle ── */}
+            <div className="mt-4 flex items-center gap-2">
+              <Button
+                variant={showFilters ? 'primary' : 'outline'}
+                size="sm"
+                className="gap-1.5"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <LuSlidersHorizontal className="h-3.5 w-3.5" />
+                상세 필터
+                {activeFilterCount > 0 && (
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-[10px] font-bold">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
+              <Button
+                variant={showSort ? 'primary' : 'outline'}
+                size="sm"
+                className="gap-1.5"
+                onClick={() => setShowSort(!showSort)}
+              >
+                <LuArrowUpDown className="h-3.5 w-3.5" />
+                {sortOptions.find(s => s.value === sortBy)?.label}
+              </Button>
+              {activeFilterCount > 0 && (
+                <button onClick={resetFilters} className="text-[12px] text-white/40 hover:text-white flex items-center gap-1 transition-colors">
+                  <LuX className="h-3 w-3" />
+                  초기화
+                </button>
+              )}
+            </div>
+
+            {/* ── Sort dropdown ── */}
+            {showSort && (
+              <div className="mt-2 rounded-lg bg-pochak-surface border border-border-subtle p-2 flex flex-wrap gap-1">
+                {sortOptions.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => { setSortBy(opt.value); setShowSort(false); }}
+                    className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
+                      sortBy === opt.value ? 'bg-primary/15 text-primary' : 'text-white/55 hover:text-white hover:bg-white/[0.06]'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* ── Filter panel ── */}
+            {showFilters && (
+              <div className="mt-2 rounded-xl bg-pochak-surface border border-border-subtle p-4 flex flex-col gap-4">
+                <div>
+                  <p className="text-[13px] text-white/50 font-medium" style={{ marginBottom: 6 }}>가격대</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {priceRangeFilters.map(f => (
+                      <button
+                        key={f.value}
+                        onClick={() => setPriceRange(f.value)}
+                        className={`px-3 py-1.5 rounded-lg text-[12px] font-medium border transition-colors ${
+                          priceRange === f.value
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-border-subtle text-white/55 hover:border-white/[0.15]'
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[13px] text-white/50 font-medium" style={{ marginBottom: 6 }}>상품 유형</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {productTypeFilters.map(f => {
+                      const Icon = f.icon;
+                      return (
+                        <button
+                          key={f.value}
+                          onClick={() => setProductType(f.value)}
+                          className={`px-3 py-1.5 rounded-lg text-[12px] font-medium border flex items-center gap-1.5 transition-colors ${
+                            productType === f.value
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-border-subtle text-white/55 hover:border-white/[0.15]'
+                          }`}
+                        >
+                          <Icon className="h-3 w-3" />
+                          {f.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[13px] text-white/50 font-medium" style={{ marginBottom: 6 }}>예약 가능 날짜</p>
+                  <input
+                    type="date"
+                    value={availableDate}
+                    onChange={e => setAvailableDate(e.target.value)}
+                    className="rounded-lg bg-white/[0.04] border border-border-subtle px-3 py-2 text-[13px] text-white focus:border-primary/50 focus:outline-none transition-colors"
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="mt-auto pt-4 py-3">
               <div className="flex items-center justify-between">
