@@ -146,11 +146,11 @@ async function getSeasonPassHistory(
 
 // ── Component ──────────────────────────────────────────────────────
 
-function KpiCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
+function KpiCard({ label, value, sub, color, colorStyle }: { label: string; value: string; sub?: string; color?: string; colorStyle?: React.CSSProperties }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
       <p className="text-xs text-gray-500">{label}</p>
-      <p className={`text-xl font-bold ${color ?? "text-gray-900"}`}>{value}</p>
+      <p className={`text-xl font-bold ${color ?? "text-gray-900"}`} style={colorStyle}>{value}</p>
       {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
     </div>
   );
@@ -203,9 +203,10 @@ export default function SeasonPassHistoryPage() {
             onClick={() => setTab(key)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
               tab === key
-                ? "border-blue-600 text-blue-600"
+                ? ""
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
+            style={tab === key ? { borderBottomColor: "var(--c-primary)", color: "var(--c-primary)" } : undefined}
           >
             {label}
           </button>
@@ -286,7 +287,7 @@ export default function SeasonPassHistoryPage() {
           {/* KPI Cards - Group 1: Counts */}
           <div className="grid grid-cols-5 gap-4">
             <KpiCard label="전체 건수" value={`${stats.totalCount.toLocaleString()}건`} />
-            <KpiCard label="이용중" value={`${stats.activeCount.toLocaleString()}건`} color="text-blue-600" />
+            <KpiCard label="이용중" value={`${stats.activeCount.toLocaleString()}건`} colorStyle={{ color: "var(--c-primary)" }} />
             <KpiCard label="만료" value={`${stats.expiredCount.toLocaleString()}건`} color="text-gray-500" />
             <KpiCard label="취소/환불" value={`${stats.cancelledRefundedCount.toLocaleString()}건`} color="text-red-500" />
             <KpiCard label="구독 활성" value={`${stats.subscriptionActiveCount.toLocaleString()}건`} color="text-emerald-600" />

@@ -212,7 +212,7 @@ export default function InappRefundsPage() {
                     {item.amount.toLocaleString()}원
                   </td>
                   <td className="px-4 py-3">
-                    <button className="text-blue-600 hover:underline font-medium">
+                    <button className="hover:underline font-medium" style={{ color: "var(--c-primary)" }}>
                       {item.requesterName}
                     </button>
                     <p className="text-xs text-gray-400">{item.requesterEmail}</p>

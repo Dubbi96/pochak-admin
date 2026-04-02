@@ -272,9 +272,10 @@ export default function UploadPage() {
                           : isDone
                             ? "bg-emerald-500 text-white"
                             : isCurrent
-                              ? "bg-blue-500 text-white"
+                              ? ""
                               : "bg-gray-200 text-gray-500"
                       }`}
+                      style={isCurrent && !isFailed && !isDone ? { backgroundColor: "var(--c-primary)", color: "var(--fg-on-primary)" } : undefined}
                     >
                       {isDone ? (
                         <CheckCircle size={16} />
@@ -304,9 +305,12 @@ export default function UploadPage() {
                     ? "bg-emerald-500"
                     : activeJob.status === "FAILED"
                       ? "bg-red-500"
-                      : "bg-blue-500"
+                      : ""
                 }`}
-                style={{ width: `${activeJob.progressPercent}%` }}
+                style={{
+                  width: `${activeJob.progressPercent}%`,
+                  ...(activeJob.status !== "COMPLETED" && activeJob.status !== "FAILED" ? { backgroundColor: "var(--c-primary)" } : {}),
+                }}
               />
             </div>
           </div>
@@ -382,9 +386,12 @@ export default function UploadPage() {
                                   ? "bg-emerald-500"
                                   : job.status === "FAILED"
                                     ? "bg-red-500"
-                                    : "bg-blue-500"
+                                    : ""
                               }`}
-                              style={{ width: `${job.progressPercent}%` }}
+                              style={{
+                                width: `${job.progressPercent}%`,
+                                ...(job.status !== "COMPLETED" && job.status !== "FAILED" ? { backgroundColor: "var(--c-primary)" } : {}),
+                              }}
                             />
                           </div>
                           <span className="text-xs text-gray-500 w-[32px] text-right">

@@ -23,10 +23,12 @@ import { adminApi } from "@/lib/api-client";
 function BarChart({
   data,
   color = "bg-emerald-500",
+  colorStyle,
   height = 160,
 }: {
   data: ChartDataPoint[];
   color?: string;
+  colorStyle?: React.CSSProperties;
   height?: number;
 }) {
   const maxValue = Math.max(...data.map((d) => d.value), 1);
@@ -39,8 +41,8 @@ function BarChart({
             {d.value.toLocaleString()}
           </span>
           <div
-            className={`${color} w-full max-w-[48px] rounded-t transition-all`}
-            style={{ height: `${(d.value / maxValue) * 100}%`, minHeight: 4 }}
+            className={`${colorStyle ? "" : color} w-full max-w-[48px] rounded-t transition-all`}
+            style={{ height: `${(d.value / maxValue) * 100}%`, minHeight: 4, ...colorStyle }}
           />
           <span className="text-xs text-gray-600">{d.label}</span>
         </div>
@@ -324,7 +326,7 @@ export default function UserStatisticsPage() {
               <div className="pt-4">
                 <BarChart
                   data={data.genderDistribution}
-                  color="bg-blue-500"
+                  colorStyle={{ backgroundColor: "var(--c-primary)" }}
                   height={160}
                 />
               </div>
