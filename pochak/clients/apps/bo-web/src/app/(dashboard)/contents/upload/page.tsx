@@ -131,7 +131,7 @@ export default function UploadPage() {
 
       const ticket = await createUploadTicket(req);
       // Simulate upload completion (in real impl, client uploads to presigned URL)
-      const job = await confirmUpload(ticket.id);
+      const job = await confirmUpload({ ticketId: ticket.id });
       setActiveJob(job);
 
       // Clear form
