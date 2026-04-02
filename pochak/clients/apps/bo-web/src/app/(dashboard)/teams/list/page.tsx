@@ -112,7 +112,11 @@ export default function TeamListPage() {
   const [quickAssignRole, setQuickAssignRole] = useState<MembershipRole>("ADMIN");
   const [quickAssignSearch, setQuickAssignSearch] = useState("");
 
-  const orgOptions = getOrganizationOptions();
+  const [orgOptions, setOrgOptions] = useState<{ value: string; label: string }[]>([]);
+
+  useEffect(() => {
+    getOrganizationOptions().then(setOrgOptions);
+  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
