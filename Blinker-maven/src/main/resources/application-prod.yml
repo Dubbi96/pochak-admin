@@ -1,3 +1,0 @@
-gcs:
-  credentials:
-    path: /app/blinker-backend-key.json
