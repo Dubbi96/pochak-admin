@@ -35,7 +35,7 @@ public class JwtTokenProvider {
                 .claim("role", role)
                 .issuedAt(now)
                 .expiration(expiry)
-                .signWith(secretKey)
+                .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -47,7 +47,7 @@ public class JwtTokenProvider {
                 .subject(String.valueOf(userId))
                 .issuedAt(now)
                 .expiration(expiry)
-                .signWith(secretKey)
+                .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -102,7 +102,7 @@ public class JwtTokenProvider {
         return builder
                 .issuedAt(now)
                 .expiration(expiry)
-                .signWith(secretKey)
+                .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
 
