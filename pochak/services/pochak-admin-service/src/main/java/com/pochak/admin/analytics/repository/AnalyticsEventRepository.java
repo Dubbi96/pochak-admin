@@ -28,6 +28,13 @@ public interface AnalyticsEventRepository extends JpaRepository<AnalyticsEvent, 
     List<Object[]> dailyActiveSessionsSince(@Param("since") LocalDateTime since);
 
     @Query(value = """
+        SELECT COALESCE(SUM(CAST(e.properties->>'amount' AS BIGINT)), 0)
+        FROM admin.analytics_events e
+        WHERE e.event_name = 'purchase' AND e.event_time >= :since
+        """, nativeQuery = true)
+    long sumRevenueByEventTimeSince(@Param("since") LocalDateTime since);
+
+    @Query(value = """
         SELECT e.properties->>'contentId' AS content_id, COUNT(*) AS view_count
         FROM admin.analytics_events e
         WHERE e.event_name = 'content_play' AND e.event_time >= :since

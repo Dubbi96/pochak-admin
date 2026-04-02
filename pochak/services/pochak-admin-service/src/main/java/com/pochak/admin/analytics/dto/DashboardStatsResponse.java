@@ -9,33 +9,23 @@ import java.util.List;
 @Builder
 public class DashboardStatsResponse {
 
-    // Visitor counts
-    private long todayVisitors;
-    private long weekVisitors;
-    private long monthVisitors;
+    // Selected period: day, week, month
+    private String period;
 
-    // Active unique users
-    private long todayActiveUsers;
-    private long weekActiveUsers;
-    private long monthActiveUsers;
+    // Period-specific aggregations
+    private long visitors;
+    private long activeUsers;
+    private long views;
+    private long revenue;
+    private long purchaseCount;
 
-    // Content views
-    private long todayViews;
-    private long weekViews;
-    private long monthViews;
-
-    // Revenue (purchase events)
-    private long todayRevenue;
-    private long weekRevenue;
-    private long monthRevenue;
-
-    // Total content count (from content_play distinct contentIds)
+    // Total content count (distinct contentIds in content_play events for this period)
     private long totalContents;
 
-    // Top content by views
+    // Top content by views within the period
     private List<TopContentItem> topContent;
 
-    // Daily active users trend (last 30 days)
+    // Daily active users trend within the period
     private List<DailyActiveItem> activeUsersTrend;
 
     @Getter

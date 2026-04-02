@@ -14,50 +14,41 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AnalyticsDashboardService {
 
+    private static final Set<String> VALID_PERIODS = Set.of("day", "week", "month");
+
     private final AnalyticsEventRepository analyticsEventRepository;
 
     @Transactional(readOnly = true)
-    public DashboardStatsResponse getDashboardStats() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime todayStart = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
-        LocalDateTime weekStart = todayStart.minusDays(7);
-        LocalDateTime monthStart = todayStart.minusDays(30);
+    public DashboardStatsResponse getDashboardStats(String period) {
+        if (period == null || period.isBlank()) {
+            period = "month";
+        }
+        if (!VALID_PERIODS.contains(period)) {
+            throw new IllegalArgumentException("Invalid period: " + period + ". Must be one of: day, week, month");
+        }
 
         long totalEvents = analyticsEventRepository.count();
 
-        // If no events exist, return mock data for initial dashboard display
         if (totalEvents == 0) {
-            return buildMockResponse();
+            return buildMockResponse(period);
         }
 
-        // Visitor counts (distinct sessions)
-        long todayVisitors = analyticsEventRepository.countDistinctSessionsSince(todayStart);
-        long weekVisitors = analyticsEventRepository.countDistinctSessionsSince(weekStart);
-        long monthVisitors = analyticsEventRepository.countDistinctSessionsSince(monthStart);
+        LocalDateTime since = computeSince(period);
 
-        // Active users (distinct userIds)
-        long todayActiveUsers = analyticsEventRepository.countDistinctUsersSince(todayStart);
-        long weekActiveUsers = analyticsEventRepository.countDistinctUsersSince(weekStart);
-        long monthActiveUsers = analyticsEventRepository.countDistinctUsersSince(monthStart);
+        long visitors = analyticsEventRepository.countDistinctSessionsSince(since);
+        long activeUsers = analyticsEventRepository.countDistinctUsersSince(since);
+        long views = analyticsEventRepository.countByEventNameAndEventTimeAfter("content_play", since);
+        long purchaseCount = analyticsEventRepository.countByEventNameAndEventTimeAfter("purchase", since);
+        long revenue = analyticsEventRepository.sumRevenueByEventTimeSince(since);
 
-        // Views (content_play events)
-        long todayViews = analyticsEventRepository.countByEventNameAndEventTimeAfter("content_play", todayStart);
-        long weekViews = analyticsEventRepository.countByEventNameAndEventTimeAfter("content_play", weekStart);
-        long monthViews = analyticsEventRepository.countByEventNameAndEventTimeAfter("content_play", monthStart);
-
-        // Revenue (purchase events count as proxy; real revenue would sum amounts from properties)
-        long todayRevenue = analyticsEventRepository.countByEventNameAndEventTimeAfter("purchase", todayStart);
-        long weekRevenue = analyticsEventRepository.countByEventNameAndEventTimeAfter("purchase", weekStart);
-        long monthRevenue = analyticsEventRepository.countByEventNameAndEventTimeAfter("purchase", monthStart);
-
-        // Top content
-        List<Object[]> topContentRaw = analyticsEventRepository.topContentByViews(monthStart, 10);
+        List<Object[]> topContentRaw = analyticsEventRepository.topContentByViews(since, 10);
         List<TopContentItem> topContent = topContentRaw.stream()
                 .map(row -> TopContentItem.builder()
                         .contentId((String) row[0])
@@ -65,8 +56,7 @@ public class AnalyticsDashboardService {
                         .build())
                 .toList();
 
-        // Daily active users trend (last 30 days)
-        List<Object[]> dailyRaw = analyticsEventRepository.dailyActiveSessionsSince(monthStart);
+        List<Object[]> dailyRaw = analyticsEventRepository.dailyActiveSessionsSince(since);
         List<DailyActiveItem> trend = dailyRaw.stream()
                 .map(row -> DailyActiveItem.builder()
                         .date(row[0].toString())
@@ -75,29 +65,29 @@ public class AnalyticsDashboardService {
                 .toList();
 
         return DashboardStatsResponse.builder()
-                .todayVisitors(todayVisitors)
-                .weekVisitors(weekVisitors)
-                .monthVisitors(monthVisitors)
-                .todayActiveUsers(todayActiveUsers)
-                .weekActiveUsers(weekActiveUsers)
-                .monthActiveUsers(monthActiveUsers)
-                .todayViews(todayViews)
-                .weekViews(weekViews)
-                .monthViews(monthViews)
-                .todayRevenue(todayRevenue)
-                .weekRevenue(weekRevenue)
-                .monthRevenue(monthRevenue)
-                .totalContents(todayViews + weekViews) // placeholder
+                .period(period)
+                .visitors(visitors)
+                .activeUsers(activeUsers)
+                .views(views)
+                .purchaseCount(purchaseCount)
+                .revenue(revenue)
+                .totalContents(views)
                 .topContent(topContent)
                 .activeUsersTrend(trend)
                 .build();
     }
 
-    /**
-     * Returns mock data when no analytics events exist yet.
-     * This ensures the BO dashboard shows meaningful placeholder values.
-     */
-    private DashboardStatsResponse buildMockResponse() {
+    private LocalDateTime computeSince(String period) {
+        LocalDateTime todayStart = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+        return switch (period) {
+            case "day" -> todayStart;
+            case "week" -> todayStart.minusDays(7);
+            case "month" -> todayStart.minusDays(30);
+            default -> todayStart.minusDays(30);
+        };
+    }
+
+    private DashboardStatsResponse buildMockResponse(String period) {
         List<TopContentItem> mockTopContent = List.of(
                 TopContentItem.builder().contentId("live-001").viewCount(1247).build(),
                 TopContentItem.builder().contentId("vod-003").viewCount(892).build(),
@@ -108,26 +98,41 @@ public class AnalyticsDashboardService {
 
         List<DailyActiveItem> mockTrend = new ArrayList<>();
         LocalDate today = LocalDate.now();
-        for (int i = 29; i >= 0; i--) {
+        int days = switch (period) {
+            case "day" -> 1;
+            case "week" -> 7;
+            default -> 30;
+        };
+        for (int i = days - 1; i >= 0; i--) {
             mockTrend.add(DailyActiveItem.builder()
                     .date(today.minusDays(i).toString())
                     .activeUsers((long) (50 + Math.random() * 150))
                     .build());
         }
 
+        long mockVisitors = switch (period) {
+            case "day" -> 142;
+            case "week" -> 873;
+            default -> 3241;
+        };
+        long mockActiveUsers = switch (period) {
+            case "day" -> 89;
+            case "week" -> 512;
+            default -> 1876;
+        };
+        long mockViews = switch (period) {
+            case "day" -> 324;
+            case "week" -> 2156;
+            default -> 8743;
+        };
+
         return DashboardStatsResponse.builder()
-                .todayVisitors(142)
-                .weekVisitors(873)
-                .monthVisitors(3241)
-                .todayActiveUsers(89)
-                .weekActiveUsers(512)
-                .monthActiveUsers(1876)
-                .todayViews(324)
-                .weekViews(2156)
-                .monthViews(8743)
-                .todayRevenue(5)
-                .weekRevenue(32)
-                .monthRevenue(127)
+                .period(period)
+                .visitors(mockVisitors)
+                .activeUsers(mockActiveUsers)
+                .views(mockViews)
+                .purchaseCount(0)
+                .revenue(0)
                 .totalContents(456)
                 .topContent(mockTopContent)
                 .activeUsersTrend(mockTrend)
