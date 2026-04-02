@@ -1,4 +1,5 @@
-export { apiClient, createApiClient } from "./client";
+export { apiClient, createApiClient, setTokenProvider } from "./client";
+export type { TokenProvider } from "./client";
 export type {
   ApiResponse,
   PageResponse,
