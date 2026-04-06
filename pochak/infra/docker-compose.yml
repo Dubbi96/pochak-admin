@@ -81,7 +81,7 @@ services:
       JWT_SECRET: pochak-jwt-secret-key-for-development-only-minimum-256-bits-long-enough
       REDIS_HOST: pochak-redis
       REDIS_PORT: 6379
-      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3200,http://localhost:8097
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3300,http://localhost:8097
     depends_on:
       pochak-postgres:
         condition: service_healthy
@@ -237,7 +237,7 @@ services:
       dockerfile: apps/public-web/Dockerfile
     container_name: pochak-public-web
     ports:
-      - "3200:3200"
+      - "3300:3300"
     depends_on:
       - pochak-gateway
     develop:
