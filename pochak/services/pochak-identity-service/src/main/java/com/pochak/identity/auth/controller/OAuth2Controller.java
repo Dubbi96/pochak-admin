@@ -33,7 +33,7 @@ public class OAuth2Controller {
     private final AuthCodeStore authCodeStore;
     private final PkceStateStore pkceStateStore;
 
-    @Value("${app.web-base-url:http://localhost:3100}")
+    @Value("${app.web-base-url:http://localhost:3200}")
     private String webBaseUrl;
 
     @Value("${oauth2.kakao.rest-api-key:}")

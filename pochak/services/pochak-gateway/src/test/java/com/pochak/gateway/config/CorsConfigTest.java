@@ -38,7 +38,7 @@ class CorsConfigTest {
             Field field = CorsConfig.class.getDeclaredField("allowedOriginsRaw");
             field.setAccessible(true);
             field.set(corsConfig,
-                    "http://localhost:3000,http://localhost:3100,http://localhost:8097,"
+                    "http://localhost:3000,http://localhost:3200,http://localhost:8097,"
                     + "http://localhost:9080,http://localhost:9081,http://localhost:9090,"
                     + "pochak://callback,pochakapp://");
         } catch (Exception e) {
@@ -141,16 +141,16 @@ class CorsConfigTest {
         }
 
         @Test
-        @DisplayName("Request from localhost:3100 returns CORS headers")
-        void localhost3100_returnsCorsHeaders() {
-            MockServerHttpRequest request = corsGet("/api/v1/contents", "http://localhost:3100").build();
+        @DisplayName("Request from localhost:3200 returns CORS headers")
+        void localhost3200_returnsCorsHeaders() {
+            MockServerHttpRequest request = corsGet("/api/v1/contents", "http://localhost:3200").build();
             MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
             corsFilter.filter(exchange, chain).block();
 
             String acao = exchange.getResponse().getHeaders()
                     .getFirst(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN);
-            assertThat(acao).isEqualTo("http://localhost:3100");
+            assertThat(acao).isEqualTo("http://localhost:3200");
         }
 
         @Test
