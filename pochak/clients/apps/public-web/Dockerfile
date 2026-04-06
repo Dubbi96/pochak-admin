@@ -18,6 +18,6 @@ FROM nginx:alpine
 COPY --from=builder /app/clients/apps/public-web/dist /usr/share/nginx/html
 COPY --from=builder /app/clients/apps/public-web/nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 3100
+EXPOSE 3200
 
 CMD ["nginx", "-g", "daemon off;"]

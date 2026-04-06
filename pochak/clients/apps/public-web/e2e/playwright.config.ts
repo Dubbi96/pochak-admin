@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: process.env.E2E_BASE_URL || 'http://localhost:3100',
+    baseURL: process.env.E2E_BASE_URL || 'http://localhost:3200',
     trace: 'on-first-retry',
   },
   projects: [
@@ -20,8 +20,8 @@ export default defineConfig({
   webServer: process.env.CI
     ? undefined
     : {
-        command: 'cd .. && npm run dev -- --port 3100',
-        port: 3100,
+        command: 'cd .. && npm run dev -- --port 3200',
+        port: 3200,
         reuseExistingServer: true,
       },
 });
