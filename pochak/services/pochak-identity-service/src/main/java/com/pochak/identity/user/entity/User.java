@@ -167,7 +167,7 @@ public class User {
     }
 
     public enum UserRole {
-        USER, ADMIN, MANAGER
+        USER, ADMIN, MANAGER, PARTNER
     }
 
     /**
