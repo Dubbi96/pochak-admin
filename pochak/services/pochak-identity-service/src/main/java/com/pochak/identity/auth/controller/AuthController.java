@@ -14,10 +14,6 @@ public class AuthController {
 
     private final AuthService authService;
 
-    /**
-     * @deprecated Use SignupController POST /auth/signup instead.
-     * Kept temporarily for backward compatibility.
-     */
     @Deprecated
     @PostMapping("/signup/legacy")
     public ApiResponse<TokenResponse> signUpLegacy(@Valid @RequestBody SignUpRequest request) {
@@ -45,8 +41,14 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ApiResponse<Void> logout(@RequestHeader("X-User-Id") Long userId) {
-        authService.logout(userId);
+    public ApiResponse<Void> logout(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        String accessToken = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            accessToken = authHeader.substring(7);
+        }
+        authService.logout(userId, accessToken);
         return ApiResponse.success(null);
     }
 

@@ -14,7 +14,7 @@ public interface AuthService {
     @Deprecated
     TokenResponse socialLogin(SocialLoginRequest request);
 
-    void logout(Long userId);
+    void logout(Long userId, String accessToken);
 
     void withdraw(Long userId);
 }

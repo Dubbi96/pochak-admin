@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDebounce } from '@/hooks/useDebounce';
 import {
   LuBuilding2,
   LuCalendarDays,
   LuChevronRight,
+  LuMap,
   LuMapPin,
   LuSearch,
   LuTimerReset,
@@ -20,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import HScrollRow from '@/components/HScrollRow';
 import { useTeams } from '@/hooks/useApi';
+import { NaverMap, NaverMarkerCluster } from '@/components/naver-map';
 
 const sportFilters = ['전체', '축구', '농구', '야구', '배구', '풋살', '핸드볼'];
 
@@ -52,12 +54,12 @@ const sortOptions: { label: string; value: SortOption }[] = [
 ];
 
 const cityVenues = [
-  { id: 'v1', name: '잠실 유소년 야구장', district: '서울 송파구', sport: '야구', address: '잠실동 10-2', note: '오늘 18:00까지 예약 가능', badge: '인기', schedule: '주말 리그 12경기', color: '#165DFF', imageUrl: 'https://images.unsplash.com/photo-1459865264687-595d652de67e?w=640&h=360&fit=crop', minPrice: 50000, productTypes: ['SPACE_ONLY', 'SPACE_CAMERA'] as ProductType[] },
-  { id: 'v2', name: '화성 드림파크 풋살 센터', district: '경기 화성시', sport: '풋살', address: '우정읍 체육로 17', note: '야간 조명 운영', badge: '추천', schedule: '야간 경기 다수', color: '#00A76F', imageUrl: 'https://images.unsplash.com/photo-1552667466-07770ae110d0?w=640&h=360&fit=crop', minPrice: 30000, productTypes: ['SPACE_ONLY'] as ProductType[] },
-  { id: 'v3', name: '춘천 체육관 A코트', district: '강원 춘천시', sport: '농구', address: '중앙로 88', note: '이번 주 대회 진행 중', badge: 'LIVE', schedule: '주간 이벤트 4건', color: '#FF8B00', imageUrl: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=640&h=360&fit=crop', minPrice: 0, productTypes: ['SPACE_ONLY'] as ProductType[] },
-  { id: 'v4', name: '부산 해운대 배구 센터', district: '부산 해운대구', sport: '배구', address: '우동 411-3', note: '실내 코트 3면', badge: '신규', schedule: '체험 수업 모집', color: '#7A5AF8', imageUrl: 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=640&h=360&fit=crop', minPrice: 25000, productTypes: ['SPACE_ONLY', 'SPACE_CAMERA', 'CAMERA_ONLY'] as ProductType[] },
-  { id: 'v5', name: '고양 시민 축구장', district: '경기 고양시', sport: '축구', address: '주엽동 231', note: '주말 경기장 대관 가능', badge: '예약', schedule: '유소년 매치 9건', color: '#EF4444', imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=640&h=360&fit=crop', minPrice: 80000, productTypes: ['SPACE_CAMERA'] as ProductType[] },
-  { id: 'v6', name: '대전 한밭 핸드볼관', district: '대전 서구', sport: '핸드볼', address: '둔산로 77', note: '평일 저녁 리그 운영', badge: '클럽', schedule: '지역 리그 운영', color: '#14B8A6', imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=640&h=360&fit=crop', minPrice: 45000, productTypes: ['SPACE_ONLY', 'CAMERA_ONLY'] as ProductType[] },
+  { id: 'v1', name: '잠실 유소년 야구장', district: '서울 송파구', sport: '야구', address: '잠실동 10-2', note: '오늘 18:00까지 예약 가능', badge: '인기', schedule: '주말 리그 12경기', color: '#165DFF', imageUrl: 'https://images.unsplash.com/photo-1459865264687-595d652de67e?w=640&h=360&fit=crop', minPrice: 50000, productTypes: ['SPACE_ONLY', 'SPACE_CAMERA'] as ProductType[], lat: 37.5133, lng: 127.0722 },
+  { id: 'v2', name: '화성 드림파크 풋살 센터', district: '경기 화성시', sport: '풋살', address: '우정읍 체육로 17', note: '야간 조명 운영', badge: '추천', schedule: '야간 경기 다수', color: '#00A76F', imageUrl: 'https://images.unsplash.com/photo-1552667466-07770ae110d0?w=640&h=360&fit=crop', minPrice: 30000, productTypes: ['SPACE_ONLY'] as ProductType[], lat: 37.1994, lng: 126.8310 },
+  { id: 'v3', name: '춘천 체육관 A코트', district: '강원 춘천시', sport: '농구', address: '중앙로 88', note: '이번 주 대회 진행 중', badge: 'LIVE', schedule: '주간 이벤트 4건', color: '#FF8B00', imageUrl: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=640&h=360&fit=crop', minPrice: 0, productTypes: ['SPACE_ONLY'] as ProductType[], lat: 37.8813, lng: 127.7298 },
+  { id: 'v4', name: '부산 해운대 배구 센터', district: '부산 해운대구', sport: '배구', address: '우동 411-3', note: '실내 코트 3면', badge: '신규', schedule: '체험 수업 모집', color: '#7A5AF8', imageUrl: 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=640&h=360&fit=crop', minPrice: 25000, productTypes: ['SPACE_ONLY', 'SPACE_CAMERA', 'CAMERA_ONLY'] as ProductType[], lat: 35.1631, lng: 129.1636 },
+  { id: 'v5', name: '고양 시민 축구장', district: '경기 고양시', sport: '축구', address: '주엽동 231', note: '주말 경기장 대관 가능', badge: '예약', schedule: '유소년 매치 9건', color: '#EF4444', imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=640&h=360&fit=crop', minPrice: 80000, productTypes: ['SPACE_CAMERA'] as ProductType[], lat: 37.6727, lng: 126.7511 },
+  { id: 'v6', name: '대전 한밭 핸드볼관', district: '대전 서구', sport: '핸드볼', address: '둔산로 77', note: '평일 저녁 리그 운영', badge: '클럽', schedule: '지역 리그 운영', color: '#14B8A6', imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=640&h=360&fit=crop', minPrice: 45000, productTypes: ['SPACE_ONLY', 'CAMERA_ONLY'] as ProductType[], lat: 36.3504, lng: 127.3845 },
 ];
 
 function matchesPriceRange(price: number, range: PriceRange): boolean {
@@ -157,7 +159,7 @@ function CityVenueCard({
           </div>
           {'minPrice' in venue && (
             <span className="text-[14px] font-bold text-primary">
-              {formatPrice((venue as typeof cityVenues[number]).minPrice)}
+              {formatPrice((venue as (typeof cityVenues)[number]).minPrice)}
             </span>
           )}
         </div>
@@ -237,6 +239,8 @@ export default function CityPage() {
   const [availableDate, setAvailableDate] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [showSort, setShowSort] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [naverMap, setNaverMap] = useState<naver.maps.Map | null>(null);
   const debouncedKeyword = useDebounce(keyword, 300);
   const { data: venues, loading } = useVenues(debouncedKeyword || undefined, selectedSport !== '전체' ? selectedSport : undefined);
   const { data: channels } = useTeams();
@@ -263,8 +267,8 @@ export default function CityPage() {
       const sport = 'sport' in venue && typeof venue.sport === 'string' ? venue.sport : '';
       const matchQuery = !debouncedKeyword || `${name} ${address}`.toLowerCase().includes(debouncedKeyword.toLowerCase());
       const matchSport = selectedSport === '전체' || sport === selectedSport;
-      const matchPrice = priceRange === '전체' || ('minPrice' in venue && matchesPriceRange((venue as typeof cityVenues[number]).minPrice, priceRange));
-      const matchProduct = productType === '전체' || ('productTypes' in venue && (venue as typeof cityVenues[number]).productTypes.includes(productType));
+      const matchPrice = priceRange === '전체' || ('minPrice' in venue && matchesPriceRange((venue as (typeof cityVenues)[number]).minPrice, priceRange));
+      const matchProduct = productType === '전체' || ('productTypes' in venue && (venue as (typeof cityVenues)[number]).productTypes.includes(productType));
       return matchQuery && matchSport && matchPrice && matchProduct;
     }) as Array<(typeof cityVenues)[number]>;
 
@@ -273,6 +277,24 @@ export default function CityPage() {
 
     return result;
   }, [debouncedKeyword, selectedSport, priceRange, productType, sortBy, venueList]);
+
+  const clusterItems = useMemo(() =>
+    filteredVenues
+      .filter((v) => v.lat && v.lng)
+      .map((v) => ({
+        position: { lat: v.lat, lng: v.lng },
+        title: v.name,
+        data: v,
+      })),
+    [filteredVenues],
+  );
+
+  const handleClusterItemClick = useCallback((item: { data?: unknown }) => {
+    const venue = item.data as (typeof cityVenues)[number] | undefined;
+    if (venue) {
+      window.location.href = `/city/venue/${venue.id}`;
+    }
+  }, []);
 
   const highlightedVenues = filteredVenues.slice(0, 2);
   const nearbyVenues = filteredVenues.slice(0, 6);
@@ -359,6 +381,15 @@ export default function CityPage() {
               >
                 <LuArrowUpDown className="h-3.5 w-3.5" />
                 {sortOptions.find(s => s.value === sortBy)?.label}
+              </Button>
+              <Button
+                variant={showMap ? 'primary' : 'outline'}
+                size="sm"
+                className="gap-1.5"
+                onClick={() => setShowMap(!showMap)}
+              >
+                <LuMap className="h-3.5 w-3.5" />
+                지도
               </Button>
               {activeFilterCount > 0 && (
                 <button onClick={resetFilters} className="text-[12px] text-white/40 hover:text-white flex items-center gap-1 transition-colors">
@@ -459,6 +490,35 @@ export default function CityPage() {
           </div>
         </div>
       </section>
+
+      {/* ── 지도 (Naver Maps) ── */}
+      {showMap && (
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-[19px] font-semibold tracking-[-0.03em] text-white">시설 지도</h2>
+              <p className="mt-1 text-[14px] text-white/46">지도에서 시설 위치를 확인하세요. 마커를 클릭하면 상세 페이지로 이동합니다.</p>
+            </div>
+            <span className="text-[14px] text-white/32">{clusterItems.length}곳 표시</span>
+          </div>
+          <div className="rounded-xl overflow-hidden border border-border-subtle">
+            <NaverMap
+              center={{ lat: 36.5, lng: 127.5 }}
+              zoom={7}
+              style={{ width: '100%', height: 400 }}
+              onMapReady={setNaverMap}
+            >
+              {naverMap && (
+                <NaverMarkerCluster
+                  map={naverMap}
+                  items={clusterItems}
+                  onClick={handleClusterItemClick}
+                />
+              )}
+            </NaverMap>
+          </div>
+        </section>
+      )}
 
       {/* ── 인기 시설 ── */}
       <section>

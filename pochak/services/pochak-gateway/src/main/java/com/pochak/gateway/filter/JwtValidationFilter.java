@@ -26,36 +26,21 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
     private static final String X_USER_ROLE = "X-User-Role";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String TOKEN_BLACKLIST_PREFIX = "token-blacklist:";
+    private static final String EXPECTED_ISSUER = "pochak-identity";
+    private static final String EXPECTED_AUDIENCE = "pochak-api";
+    private static final String EXPECTED_TOKEN_TYPE = "access";
 
     private static final List<String> PUBLIC_PATHS = List.of(
-            "/api/v1/auth/login",
-            "/api/v1/auth/signup",
-            "/api/v1/auth/social",
-            "/api/v1/auth/oauth2",
-            "/api/v1/auth/refresh",
-            "/api/v1/auth/check-duplicate",
-            "/api/v1/auth/phone/check",
-            "/api/v1/auth/phone/send-code",
-            "/api/v1/auth/phone/verify-code",
-            "/api/v1/auth/guardian/verify",
-            "/api/v1/home",
-            "/api/v1/contents",
-            "/api/v1/search",
-            "/api/v1/competitions",
-            "/api/v1/sports",
-            "/api/v1/schedule",
-            "/api/v1/venues",
-            "/api/v1/clubs",
-            "/api/v1/streaming",
-            "/api/v1/communities",
-            "/api/v1/matches",
-            "/api/v1/teams",
-            "/api/v1/organizations",
-            "/api/v1/recommendations",
-            "/admin/api/v1/auth",
-            "/actuator",
-            "/api-docs",
-            "/swagger-ui"
+            "/api/v1/auth/login", "/api/v1/auth/signup", "/api/v1/auth/social",
+            "/api/v1/auth/oauth2", "/api/v1/auth/refresh", "/api/v1/auth/check-duplicate",
+            "/api/v1/auth/phone/check", "/api/v1/auth/phone/send-code",
+            "/api/v1/auth/phone/verify-code", "/api/v1/auth/guardian/verify",
+            "/api/v1/home", "/api/v1/contents", "/api/v1/search",
+            "/api/v1/competitions", "/api/v1/sports", "/api/v1/schedule",
+            "/api/v1/venues", "/api/v1/clubs", "/api/v1/streaming",
+            "/api/v1/communities", "/api/v1/matches", "/api/v1/teams",
+            "/api/v1/organizations", "/api/v1/recommendations",
+            "/admin/api/v1/auth", "/actuator", "/api-docs", "/swagger-ui"
     );
 
     private final SecretKey secretKey;
@@ -72,36 +57,27 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();
 
-        // SEC-001: ALWAYS strip untrusted X-User-Id and X-User-Role headers first
         ServerHttpRequest cleanedRequest = request.mutate()
-                .headers(h -> {
-                    h.remove(X_USER_ID);
-                    h.remove(X_USER_ROLE);
-                })
+                .headers(h -> { h.remove(X_USER_ID); h.remove(X_USER_ROLE); })
                 .build();
         ServerWebExchange cleanedExchange = exchange.mutate().request(cleanedRequest).build();
 
         String authHeader = cleanedRequest.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         boolean hasValidAuth = authHeader != null && authHeader.startsWith(BEARER_PREFIX);
 
-        // Public path handling
         if (isPublicPath(path)) {
             if (!hasValidAuth) {
-                // Public path, no JWT: pass through with clean headers (no user context)
                 return chain.filter(cleanedExchange);
             }
-            // Public path with JWT: try to parse and attach user context
             try {
                 return buildAuthenticatedExchange(cleanedExchange, cleanedRequest, authHeader, path)
                         .flatMap(chain::filter)
                         .onErrorResume(e -> chain.filter(cleanedExchange));
             } catch (Exception e) {
-                // Invalid JWT on public path: pass through without user context
                 return chain.filter(cleanedExchange);
             }
         }
 
-        // Protected path: JWT is required
         if (!hasValidAuth) {
             cleanedExchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return cleanedExchange.getResponse().setComplete();
@@ -127,10 +103,6 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
         }
     }
 
-    /**
-     * Parses JWT, checks token blacklist, enforces admin role check,
-     * and returns exchange with X-User-Id/X-User-Role headers.
-     */
     private Mono<ServerWebExchange> buildAuthenticatedExchange(
             ServerWebExchange exchange, ServerHttpRequest request, String authHeader, String path) {
 
@@ -138,43 +110,46 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
 
         Claims claims = Jwts.parser()
                 .verifyWith(secretKey)
+                .requireIssuer(EXPECTED_ISSUER)
+                .requireAudience(EXPECTED_AUDIENCE)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
 
+        String tokenType = claims.get("typ", String.class);
+        if (tokenType != null && !EXPECTED_TOKEN_TYPE.equals(tokenType)) {
+            throw new RuntimeException("Invalid token type: " + tokenType);
+        }
+
         String userId = claims.getSubject();
         String role = claims.get("role", String.class);
+        String jti = claims.getId();
 
-        // SEC-004: Admin endpoints require ADMIN role
         if (path.startsWith("/api/v1/admin") && !"ADMIN".equalsIgnoreCase(role)) {
             throw new SecurityException("Forbidden: ADMIN role required");
         }
 
-        // SEC-002: Check Redis-based token blacklist
-        return isTokenBlacklisted(userId)
+        return isTokenBlacklisted(jti, userId)
                 .flatMap(blacklisted -> {
                     if (blacklisted) {
                         exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                         exchange.getResponse().getHeaders().add("X-Auth-Error", "Token has been revoked");
                         return Mono.error(new RuntimeException("Token has been revoked"));
                     }
-
                     ServerHttpRequest mutatedRequest = request.mutate()
                             .header(X_USER_ID, userId)
                             .header(X_USER_ROLE, role)
                             .build();
-
                     return Mono.just(exchange.mutate().request(mutatedRequest).build());
                 });
     }
 
-    /**
-     * SEC-002: Checks if the user's token has been blacklisted in Redis.
-     * Blacklist entries are populated by the identity service on logout/block
-     * with a TTL matching the access token's remaining lifetime.
-     */
-    private Mono<Boolean> isTokenBlacklisted(String userId) {
-        return redisTemplate.hasKey(TOKEN_BLACKLIST_PREFIX + userId);
+    private Mono<Boolean> isTokenBlacklisted(String jti, String userId) {
+        Mono<Boolean> jtiCheck = (jti != null)
+                ? redisTemplate.hasKey(TOKEN_BLACKLIST_PREFIX + "jti:" + jti)
+                : Mono.just(false);
+        Mono<Boolean> userCheck = redisTemplate.hasKey(TOKEN_BLACKLIST_PREFIX + userId);
+        return jtiCheck.zipWith(userCheck, (a, b) -> a || b);
     }
 
     private boolean isPublicPath(String path) {
@@ -182,7 +157,5 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
     }
 
     @Override
-    public int getOrder() {
-        return -1;
-    }
+    public int getOrder() { return -1; }
 }

@@ -11,15 +11,16 @@ import HScrollRow from '@/components/HScrollRow';
 import { VideoCard } from '@/components/Card';
 import { useContents, useTeams } from '@/hooks/useApi';
 import ReservationFlow from '@/components/ReservationFlow';
+import { NaverMap, NaverMarker } from '@/components/naver-map';
 
 const mockVenues: Record<string, {
   id: string; name: string; district: string; sport: string;
   address: string; phone: string; hours: string; note: string;
   color: string; imageUrl: string; facilities: string[];
-  description: string;
+  description: string; lat: number; lng: number;
 }> = {
-  v1: { id: 'v1', name: '잠실 유소년 야구장', district: '서울 송파구', sport: '야구', address: '서울특별시 송파구 잠실동 10-2', phone: '02-1234-5678', hours: '09:00 ~ 21:00', note: '오늘 18:00까지 예약 가능', color: '#165DFF', imageUrl: 'https://images.unsplash.com/photo-1459865264687-595d652de67e?w=1200&h=500&fit=crop', facilities: ['야간조명', '주차장', '샤워실', '관람석 200석'], description: '서울 송파구에 위치한 유소년 전용 야구장입니다. 국제 규격에 맞춘 시설을 갖추고 있으며, 주말 리그와 대회가 활발히 진행됩니다.' },
-  v2: { id: 'v2', name: '화성 드림파크 풋살 센터', district: '경기 화성시', sport: '풋살', address: '경기도 화성시 우정읍 체육로 17', phone: '031-9876-5432', hours: '06:00 ~ 23:00', note: '야간 조명 운영', color: '#00A76F', imageUrl: 'https://images.unsplash.com/photo-1552667466-07770ae110d0?w=1200&h=500&fit=crop', facilities: ['인조잔디', '야간조명', '주차장', '탈의실'], description: '경기 화성에 위치한 최신 풋살 센터입니다. 3개의 풋살 코트를 보유하고 있으며, 야간 조명 시설이 완비되어 있습니다.' },
+  v1: { id: 'v1', name: '잠실 유소년 야구장', district: '서울 송파구', sport: '야구', address: '서울특별시 송파구 잠실동 10-2', phone: '02-1234-5678', hours: '09:00 ~ 21:00', note: '오늘 18:00까지 예약 가능', color: '#165DFF', imageUrl: 'https://images.unsplash.com/photo-1459865264687-595d652de67e?w=1200&h=500&fit=crop', facilities: ['야간조명', '주차장', '샤워실', '관람석 200석'], description: '서울 송파구에 위치한 유소년 전용 야구장입니다. 국제 규격에 맞춘 시설을 갖추고 있으며, 주말 리그와 대회가 활발히 진행됩니다.', lat: 37.5133, lng: 127.0722 },
+  v2: { id: 'v2', name: '화성 드림파크 풋살 센터', district: '경기 화성시', sport: '풋살', address: '경기도 화성시 우정읍 체육로 17', phone: '031-9876-5432', hours: '06:00 ~ 23:00', note: '야간 조명 운영', color: '#00A76F', imageUrl: 'https://images.unsplash.com/photo-1552667466-07770ae110d0?w=1200&h=500&fit=crop', facilities: ['인조잔디', '야간조명', '주차장', '탈의실'], description: '경기 화성에 위치한 최신 풋살 센터입니다. 3개의 풋살 코트를 보유하고 있으며, 야간 조명 시설이 완비되어 있습니다.', lat: 37.1994, lng: 126.8310 },
 };
 
 const defaultVenue = mockVenues.v1;
@@ -29,6 +30,7 @@ const tabs = ['소개', '예약하기', '일정', '경기영상', '시설정보'
 export default function VenueDetailPage() {
   const { id = 'v1' } = useParams<{ id: string }>();
   const [isSaved, setIsSaved] = useState(false);
+  const [venueMap, setVenueMap] = useState<naver.maps.Map | null>(null);
   const { data: liveContents } = useContents('LIVE');
   const { data: vodContents } = useContents('VOD');
   const { data: channels } = useTeams();
@@ -103,6 +105,25 @@ export default function VenueDetailPage() {
           );
         })}
       </div>
+
+      {/* ── Map ── */}
+      <section className="rounded-xl overflow-hidden border border-border-subtle">
+        <NaverMap
+          center={{ lat: venue.lat, lng: venue.lng }}
+          zoom={16}
+          style={{ width: '100%', height: 280 }}
+          onMapReady={setVenueMap}
+        >
+          {venueMap && (
+            <NaverMarker
+              map={venueMap}
+              position={{ lat: venue.lat, lng: venue.lng }}
+              title={venue.name}
+              infoContent={`<strong>${venue.name}</strong><br/>${venue.address}`}
+            />
+          )}
+        </NaverMap>
+      </section>
 
       {/* ── Tabs ── */}
       <section className="py-4">

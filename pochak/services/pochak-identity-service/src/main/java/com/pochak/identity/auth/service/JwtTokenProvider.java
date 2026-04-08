@@ -9,9 +9,17 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtTokenProvider {
+
+    public static final String ISSUER = "pochak-identity";
+    public static final String AUDIENCE = "pochak-api";
+    public static final String TOKEN_TYPE_ACCESS = "access";
+    public static final String TOKEN_TYPE_REFRESH = "refresh";
+    public static final String TOKEN_TYPE_SIGNUP = "signup";
+    public static final String CLAIM_TOKEN_TYPE = "typ";
 
     private final SecretKey secretKey;
     private final long accessTokenExpiration;
@@ -31,8 +39,12 @@ public class JwtTokenProvider {
         Date expiry = new Date(now.getTime() + accessTokenExpiration);
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .issuer(ISSUER)
+                .audience().add(AUDIENCE).and()
                 .subject(String.valueOf(userId))
                 .claim("role", role)
+                .claim(CLAIM_TOKEN_TYPE, TOKEN_TYPE_ACCESS)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(secretKey, Jwts.SIG.HS256)
@@ -44,7 +56,11 @@ public class JwtTokenProvider {
         Date expiry = new Date(now.getTime() + refreshTokenExpiration);
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .issuer(ISSUER)
+                .audience().add(AUDIENCE).and()
                 .subject(String.valueOf(userId))
+                .claim(CLAIM_TOKEN_TYPE, TOKEN_TYPE_REFRESH)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(secretKey, Jwts.SIG.HS256)
@@ -54,9 +70,29 @@ public class JwtTokenProvider {
     public Claims parseToken(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
+                .requireIssuer(ISSUER)
+                .requireAudience(AUDIENCE)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public Claims parseAccessToken(String token) {
+        Claims claims = parseToken(token);
+        String typ = claims.get(CLAIM_TOKEN_TYPE, String.class);
+        if (!TOKEN_TYPE_ACCESS.equals(typ)) {
+            throw new RuntimeException("Expected access token but got: " + typ);
+        }
+        return claims;
+    }
+
+    public Claims parseRefreshToken(String token) {
+        Claims claims = parseToken(token);
+        String typ = claims.get(CLAIM_TOKEN_TYPE, String.class);
+        if (!TOKEN_TYPE_REFRESH.equals(typ)) {
+            throw new RuntimeException("Expected refresh token but got: " + typ);
+        }
+        return claims;
     }
 
     public boolean validateToken(String token) {
@@ -78,21 +114,26 @@ public class JwtTokenProvider {
         return claims.get("role", String.class);
     }
 
+    public String getJtiFromToken(String token) {
+        Claims claims = parseToken(token);
+        return claims.getId();
+    }
+
     public long getAccessTokenExpiration() {
         return accessTokenExpiration;
     }
 
-    /**
-     * Generate a short-lived token carrying OAuth provider info for signup flow.
-     * Valid for 30 minutes.
-     */
     public String generateSignupToken(String provider, String providerId, String email,
                                       String name, String profileImageUrl) {
         Date now = new Date();
-        Date expiry = new Date(now.getTime() + 1800000); // 30 min
+        Date expiry = new Date(now.getTime() + 1800000);
 
         var builder = Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .issuer(ISSUER)
+                .audience().add(AUDIENCE).and()
                 .subject("signup")
+                .claim(CLAIM_TOKEN_TYPE, TOKEN_TYPE_SIGNUP)
                 .claim("provider", provider)
                 .claim("providerId", providerId)
                 .claim("email", email);
@@ -106,9 +147,6 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    /**
-     * Parse signup token and return claims.
-     */
     public Claims parseSignupToken(String token) {
         Claims claims = parseToken(token);
         if (!"signup".equals(claims.getSubject())) {

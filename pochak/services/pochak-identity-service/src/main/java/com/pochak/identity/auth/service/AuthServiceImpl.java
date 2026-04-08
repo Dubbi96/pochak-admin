@@ -11,6 +11,7 @@ import com.pochak.identity.user.entity.UserRefreshToken;
 import com.pochak.identity.user.repository.UserAuthAccountRepository;
 import com.pochak.identity.user.repository.UserRefreshTokenRepository;
 import com.pochak.identity.user.repository.UserRepository;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,6 +26,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -34,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AuthServiceImpl implements AuthService {
 
     private static final int MAX_LOGIN_ATTEMPTS = 5;
-    private static final long LOCKOUT_DURATION_MILLIS = 15 * 60 * 1000L; // 15 minutes
+    private static final long LOCKOUT_DURATION_MILLIS = 15 * 60 * 1000L;
 
     private final ConcurrentHashMap<String, LoginAttempt> loginAttempts = new ConcurrentHashMap<>();
 
@@ -44,21 +46,18 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final EventPublisher eventPublisher;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     @Transactional
     public TokenResponse signUp(SignUpRequest request) {
-        // Validate nickname (username) uniqueness
         if (userRepository.existsByNickname(request.getNickname())) {
             throw new BusinessException(ErrorCode.DUPLICATE, "Nickname already exists");
         }
-
-        // Validate email uniqueness
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new BusinessException(ErrorCode.DUPLICATE, "Email already exists");
         }
 
-        // Create User entity with hashed password
         User user = User.builder()
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
@@ -67,10 +66,8 @@ public class AuthServiceImpl implements AuthService {
                 .status(User.UserStatus.ACTIVE)
                 .role(User.UserRole.USER)
                 .build();
-
         userRepository.save(user);
 
-        // Create UserAuthAccount for EMAIL provider
         UserAuthAccount authAccount = UserAuthAccount.builder()
                 .user(user)
                 .provider("EMAIL")
@@ -79,9 +76,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         authAccountRepository.save(authAccount);
 
-        // TODO: Create Wallet entry via REST call to wallet-service
-
-        return generateTokenResponse(user);
+        return generateTokenResponse(user, UUID.randomUUID().toString());
     }
 
     @Override
@@ -89,14 +84,12 @@ public class AuthServiceImpl implements AuthService {
     public TokenResponse signIn(SignInRequest request) {
         String email = request.getEmail();
 
-        // SEC-011: Check login failure lockout
         LoginAttempt attempt = loginAttempts.get(email);
         if (attempt != null && attempt.count >= MAX_LOGIN_ATTEMPTS) {
             if (Instant.now().toEpochMilli() - attempt.firstAttemptTime < LOCKOUT_DURATION_MILLIS) {
                 throw new BusinessException(ErrorCode.FORBIDDEN,
                         "계정이 일시적으로 잠겼습니다. 15분 후 재시도해주세요.");
             }
-            // Lockout expired, reset
             loginAttempts.remove(email);
         }
 
@@ -111,65 +104,59 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "Invalid credentials");
         }
 
-        // SEC-011: Reset counter on successful login
         loginAttempts.remove(email);
 
-        // Check user status
         switch (user.getStatus()) {
             case SUSPENDED:
                 throw new BusinessException(ErrorCode.FORBIDDEN, "Account is suspended");
             case WITHDRAWN:
                 throw new BusinessException(ErrorCode.FORBIDDEN, "Account has been withdrawn");
             case INACTIVE:
-                // Dormant/inactive account - allow login but could flag for reactivation
-                break;
             case ACTIVE:
                 break;
         }
 
         user.updateLastLogin();
-
-        return generateTokenResponse(user);
+        return generateTokenResponse(user, UUID.randomUUID().toString());
     }
 
     @Override
     @Transactional
     public TokenResponse refresh(String refreshToken) {
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
+        Claims claims;
+        try {
+            claims = jwtTokenProvider.parseRefreshToken(refreshToken);
+        } catch (Exception e) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "Invalid or expired refresh token");
         }
 
-        Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
+        Long userId = Long.parseLong(claims.getSubject());
         UserRefreshToken storedToken = refreshTokenRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED, "Refresh token not found"));
 
-        if (!storedToken.getToken().equals(refreshToken)) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED, "Refresh token mismatch");
+        if (!storedToken.matchesToken(refreshToken)) {
+            log.warn("SEC: Refresh token reuse detected for userId={}, family={}",
+                    userId, storedToken.getTokenFamily());
+            storedToken.markReuseDetected();
+            refreshTokenRepository.save(storedToken);
+            tokenBlacklistService.blacklistByUserId(userId,
+                    jwtTokenProvider.getAccessTokenExpiration() / 1000);
+            refreshTokenRepository.deleteByUserId(userId);
+            throw new BusinessException(ErrorCode.UNAUTHORIZED,
+                    "Refresh token reuse detected. All sessions revoked.");
         }
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "User not found"));
 
-        return generateTokenResponse(user);
+        return generateTokenResponse(user, storedToken.getTokenFamily());
     }
 
-    /**
-     * SEC-012: This endpoint blindly trusts client-supplied provider and providerUserId
-     * without server-side verification. Use OAuth2Service.processOAuthCallbackWithResult()
-     * which does proper server-side code exchange instead.
-     */
     @Deprecated
     @Override
     @Transactional
     public TokenResponse socialLogin(SocialLoginRequest request) {
-        // TODO [SEC-012]: This endpoint is INSECURE. Client-supplied provider/providerUserId
-        // are not validated against the OAuth provider. An attacker can impersonate any user
-        // by sending arbitrary provider credentials. Migrate callers to the OAuth2 callback
-        // flow (OAuth2Service.processOAuthCallbackWithResult()) which performs server-side
-        // authorization code exchange.
-        log.warn("SEC-012: socialLogin called with unverified provider={}, providerUserId={}. "
-                        + "This endpoint does NOT validate tokens with the OAuth provider and should be removed. "
-                        + "Use OAuth2Service.processOAuthCallbackWithResult() instead.",
+        log.warn("SEC-012: socialLogin called with unverified provider={}, providerUserId={}.",
                 request.getProvider(), request.getProviderUserId());
 
         Optional<UserAuthAccount> existingAccount = authAccountRepository
@@ -179,7 +166,6 @@ public class AuthServiceImpl implements AuthService {
         if (existingAccount.isPresent()) {
             user = existingAccount.get().getUser();
         } else {
-            // Create new user for first-time social login
             user = User.builder()
                     .email(request.getProvider() + "_" + request.getProviderUserId() + "@pochak.social")
                     .nickname(request.getProvider() + "_user_" + request.getProviderUserId())
@@ -197,13 +183,24 @@ public class AuthServiceImpl implements AuthService {
         }
 
         user.updateLastLogin();
-
-        return generateTokenResponse(user);
+        return generateTokenResponse(user, UUID.randomUUID().toString());
     }
 
     @Override
     @Transactional
-    public void logout(Long userId) {
+    public void logout(Long userId, String accessToken) {
+        if (accessToken != null) {
+            try {
+                Claims claims = jwtTokenProvider.parseAccessToken(accessToken);
+                String jti = claims.getId();
+                long remainingMs = claims.getExpiration().getTime() - System.currentTimeMillis();
+                if (remainingMs > 0) {
+                    tokenBlacklistService.blacklistByJti(jti, remainingMs / 1000);
+                }
+            } catch (Exception e) {
+                log.warn("Could not blacklist access token on logout for userId={}: {}", userId, e.getMessage());
+            }
+        }
         refreshTokenRepository.findByUserId(userId)
                 .ifPresent(refreshTokenRepository::delete);
     }
@@ -214,31 +211,23 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "User not found"));
 
-        // 1. Compute deterministic email hash for re-registration prevention
         String emailHash = "withdrawn_" + sha256Hex(user.getEmail());
 
-        // 2. Clear PII immediately (Decision 8-3: no grace period)
         user.clearPii(emailHash);
         user.withdraw();
         userRepository.save(user);
 
-        // 3. Publish event for cross-schema cleanup (Decision 8-1: RabbitMQ)
         eventPublisher.publish(new UserWithdrawnEvent(userId, emailHash, LocalDateTime.now()));
 
-        // 4. Delete refresh tokens
+        tokenBlacklistService.blacklistByUserId(userId,
+                jwtTokenProvider.getAccessTokenExpiration() / 1000);
         refreshTokenRepository.findByUserId(userId)
                 .ifPresent(refreshTokenRepository::delete);
 
-        // 5. Delete OAuth accounts
         authAccountRepository.deleteAllByUserId(userId);
-
         log.info("User withdrawn: userId={}", userId);
     }
 
-    /**
-     * Compute SHA-256 hex digest of the given input.
-     * Used to create a deterministic hash of the email for re-registration prevention.
-     */
     private static String sha256Hex(String input) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -249,7 +238,6 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    // SEC-011: Record a failed login attempt
     private void recordLoginFailure(String email) {
         loginAttempts.compute(email, (key, existing) -> {
             if (existing == null) {
@@ -260,7 +248,6 @@ public class AuthServiceImpl implements AuthService {
         });
     }
 
-    // SEC-011: Periodically clean up expired lockout entries (every 5 minutes)
     @Scheduled(fixedRate = 5 * 60 * 1000)
     public void cleanupExpiredLoginAttempts() {
         long now = Instant.now().toEpochMilli();
@@ -278,14 +265,13 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    private TokenResponse generateTokenResponse(User user) {
+    private TokenResponse generateTokenResponse(User user, String tokenFamily) {
         String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getRole().name());
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
 
-        // Store refresh token
         UserRefreshToken tokenEntity = refreshTokenRepository.findByUserId(user.getId())
                 .orElse(UserRefreshToken.builder().userId(user.getId()).build());
-        tokenEntity.updateToken(refreshToken);
+        tokenEntity.updateToken(refreshToken, tokenFamily);
         refreshTokenRepository.save(tokenEntity);
 
         return TokenResponse.builder()
