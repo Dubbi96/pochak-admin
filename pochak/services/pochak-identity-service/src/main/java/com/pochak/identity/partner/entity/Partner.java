@@ -1,5 +1,6 @@
 package com.pochak.identity.partner.entity;
 
+import com.pochak.common.encryption.ProbabilisticEncryptConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -29,10 +30,12 @@ public class Partner {
     @Column(name = "business_number", nullable = false, unique = true, length = 20)
     private String businessNumber;
 
-    @Column(name = "contact_phone", nullable = false, length = 20)
+    @Convert(converter = ProbabilisticEncryptConverter.class)
+    @Column(name = "contact_phone", nullable = false, length = 500)
     private String contactPhone;
 
-    @Column(name = "bank_account", length = 50)
+    @Convert(converter = ProbabilisticEncryptConverter.class)
+    @Column(name = "bank_account", length = 500)
     private String bankAccount;
 
     @Column(name = "bank_name", length = 50)

@@ -1,5 +1,6 @@
 package com.pochak.identity.auth.entity;
 
+import com.pochak.common.encryption.DeterministicEncryptConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -18,7 +19,8 @@ public class EmailVerification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 255)
+    @Convert(converter = DeterministicEncryptConverter.class)
+    @Column(nullable = false, length = 500)
     private String email;
 
     @Column(nullable = false, length = 10)

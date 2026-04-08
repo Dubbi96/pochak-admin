@@ -1,5 +1,6 @@
 package com.pochak.identity.user.entity;
 
+import com.pochak.common.encryption.ProbabilisticEncryptConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -30,7 +31,8 @@ public class UserAuthAccount {
     @Column(name = "provider_user_id", nullable = false, length = 255)
     private String providerUserId;
 
-    @Column(name = "provider_email", length = 255)
+    @Convert(converter = ProbabilisticEncryptConverter.class)
+    @Column(name = "provider_email", length = 500)
     private String providerEmail;
 
     @CreationTimestamp

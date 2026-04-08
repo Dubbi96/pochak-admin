@@ -4,6 +4,7 @@
 *.war
 *.ear
 build/
+bin/
 .gradle/
 out/
 !gradle/wrapper/gradle-wrapper.jar

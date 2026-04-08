@@ -6,7 +6,9 @@ import com.pochak.admin.rbac.entity.*;
 import com.pochak.admin.rbac.repository.*;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,9 +19,25 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminAuthService {
+
+    private static final int MINIMUM_SECRET_LENGTH = 32;
+
+    @PostConstruct
+    void validateJwtSecret() {
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            throw new IllegalStateException(
+                    "JWT_SECRET environment variable is required for admin service.");
+        }
+        if (jwtSecret.length() < MINIMUM_SECRET_LENGTH) {
+            throw new IllegalStateException(
+                    "JWT_SECRET must be at least " + MINIMUM_SECRET_LENGTH + " characters.");
+        }
+        log.info("Admin JWT secret validated (length={})", jwtSecret.length());
+    }
 
     private final AdminUserRepository adminUserRepository;
     private final PasswordEncoder passwordEncoder;
@@ -28,7 +46,7 @@ public class AdminAuthService {
     private final AdminRoleMenuRepository adminRoleMenuRepository;
     private final AdminRoleFunctionRepository adminRoleFunctionRepository;
 
-    @Value("${jwt.secret:default-secret-key-for-pochak-admin-service-minimum-256-bits-long}")
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
     @Value("${jwt.access-token-expiry:3600000}")
@@ -119,14 +137,19 @@ public class AdminAuthService {
         Date now = new Date();
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .issuer("pochak-identity")
+                .audience().add("pochak-api").and()
                 .subject(adminUser.getId().toString())
+                .claim("role", "ADMIN")
+                .claim("typ", "access")
                 .claim("loginId", adminUser.getLoginId())
                 .claim("name", adminUser.getName())
                 .claim("roles", roles)
                 .claim("permissions", permissions)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + expiry))
-                .signWith(key)
+                .signWith(key, Jwts.SIG.HS256)
                 .compact();
     }
 }
