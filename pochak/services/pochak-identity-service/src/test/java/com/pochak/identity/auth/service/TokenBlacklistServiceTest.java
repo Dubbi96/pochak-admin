@@ -1,9 +1,9 @@
 package com.pochak.identity.auth.service;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -29,104 +29,176 @@ class TokenBlacklistServiceTest {
     @InjectMocks
     private TokenBlacklistService tokenBlacklistService;
 
-    // ==================== blacklist tests ====================
+    // ==================== blacklistByJti tests ====================
 
-    @Test
-    @DisplayName("blacklist() should store token in Redis with key token-blacklist:{userId}")
-    void blacklist_shouldStoreTokenWithCorrectKey() {
-        // given
-        Long userId = 1L;
-        String accessToken = "jwt-access-token-value";
-        long ttlSeconds = 1800L;
+    @Nested
+    @DisplayName("blacklistByJti")
+    class BlacklistByJti {
 
-        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        @Test
+        @DisplayName("should store jti in Redis with key token-blacklist:jti:{jti}")
+        void blacklistByJti_shouldStoreWithCorrectKey() {
+            // given
+            String jti = "abc-123-def";
+            long ttlSeconds = 1800L;
+            given(redisTemplate.opsForValue()).willReturn(valueOperations);
 
-        // when
-        tokenBlacklistService.blacklist(userId, accessToken, ttlSeconds);
+            // when
+            tokenBlacklistService.blacklistByJti(jti, ttlSeconds);
 
-        // then
-        verify(valueOperations).set(
-                eq("token-blacklist:1"),
-                eq(accessToken),
-                eq(Duration.ofSeconds(1800))
-        );
+            // then
+            verify(valueOperations).set(
+                    eq("token-blacklist:jti:abc-123-def"),
+                    eq("revoked"),
+                    eq(Duration.ofSeconds(1800))
+            );
+        }
+
+        @Test
+        @DisplayName("should skip when ttlSeconds is zero or negative")
+        void blacklistByJti_shouldSkipWhenExpired() {
+            // when
+            tokenBlacklistService.blacklistByJti("some-jti", 0);
+            tokenBlacklistService.blacklistByJti("some-jti", -10);
+
+            // then
+            verify(redisTemplate, never()).opsForValue();
+        }
+
+        @Test
+        @DisplayName("should skip when jti is null")
+        void blacklistByJti_shouldSkipWhenJtiIsNull() {
+            // when
+            tokenBlacklistService.blacklistByJti(null, 1800);
+
+            // then
+            verify(redisTemplate, never()).opsForValue();
+        }
     }
 
-    @Test
-    @DisplayName("blacklist() should set TTL matching the token's remaining validity period")
-    void blacklist_shouldSetCorrectTtl() {
-        // given
-        Long userId = 42L;
-        String accessToken = "some-token";
-        long ttlSeconds = 600L; // 10 minutes remaining
+    // ==================== blacklistByUserId tests ====================
 
-        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+    @Nested
+    @DisplayName("blacklistByUserId")
+    class BlacklistByUserId {
 
-        // when
-        tokenBlacklistService.blacklist(userId, accessToken, ttlSeconds);
+        @Test
+        @DisplayName("should store userId in Redis with key token-blacklist:{userId}")
+        void blacklistByUserId_shouldStoreWithCorrectKey() {
+            // given
+            Long userId = 42L;
+            long ttlSeconds = 600L;
+            given(redisTemplate.opsForValue()).willReturn(valueOperations);
 
-        // then
-        ArgumentCaptor<Duration> durationCaptor = ArgumentCaptor.forClass(Duration.class);
-        verify(valueOperations).set(eq("token-blacklist:42"), eq("some-token"), durationCaptor.capture());
-        assertThat(durationCaptor.getValue()).isEqualTo(Duration.ofSeconds(600));
+            // when
+            tokenBlacklistService.blacklistByUserId(userId, ttlSeconds);
+
+            // then
+            verify(valueOperations).set(
+                    eq("token-blacklist:42"),
+                    eq("revoked"),
+                    eq(Duration.ofSeconds(600))
+            );
+        }
+
+        @Test
+        @DisplayName("should skip when ttlSeconds is zero or negative")
+        void blacklistByUserId_shouldSkipWhenExpired() {
+            // when
+            tokenBlacklistService.blacklistByUserId(1L, 0);
+            tokenBlacklistService.blacklistByUserId(1L, -5);
+
+            // then
+            verify(redisTemplate, never()).opsForValue();
+        }
     }
 
-    @Test
-    @DisplayName("blacklist() should skip when ttlSeconds is zero or negative (already expired)")
-    void blacklist_shouldSkipWhenTokenAlreadyExpired() {
-        // given
-        Long userId = 1L;
-        String accessToken = "expired-token";
+    // ==================== isBlacklistedByJti tests ====================
 
-        // when
-        tokenBlacklistService.blacklist(userId, accessToken, 0);
-        tokenBlacklistService.blacklist(userId, accessToken, -10);
+    @Nested
+    @DisplayName("isBlacklistedByJti")
+    class IsBlacklistedByJti {
 
-        // then
-        verify(redisTemplate, never()).opsForValue();
+        @Test
+        @DisplayName("should return true when jti is blacklisted")
+        void isBlacklistedByJti_shouldReturnTrueWhenExists() {
+            // given
+            given(redisTemplate.hasKey("token-blacklist:jti:abc-123")).willReturn(Boolean.TRUE);
+
+            // when
+            boolean result = tokenBlacklistService.isBlacklistedByJti("abc-123");
+
+            // then
+            assertThat(result).isTrue();
+        }
+
+        @Test
+        @DisplayName("should return false when jti is not blacklisted")
+        void isBlacklistedByJti_shouldReturnFalseWhenNotExists() {
+            // given
+            given(redisTemplate.hasKey("token-blacklist:jti:xyz-999")).willReturn(Boolean.FALSE);
+
+            // when
+            boolean result = tokenBlacklistService.isBlacklistedByJti("xyz-999");
+
+            // then
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("should return false when jti is null")
+        void isBlacklistedByJti_shouldReturnFalseWhenJtiIsNull() {
+            // when
+            boolean result = tokenBlacklistService.isBlacklistedByJti(null);
+
+            // then
+            assertThat(result).isFalse();
+        }
     }
 
-    // ==================== isBlacklisted tests ====================
+    // ==================== isBlacklistedByUserId tests ====================
 
-    @Test
-    @DisplayName("isBlacklisted() should return true when blacklisted token exists")
-    void isBlacklisted_shouldReturnTrueWhenKeyExists() {
-        // given
-        Long userId = 1L;
-        given(redisTemplate.hasKey("token-blacklist:1")).willReturn(Boolean.TRUE);
+    @Nested
+    @DisplayName("isBlacklistedByUserId")
+    class IsBlacklistedByUserId {
 
-        // when
-        boolean result = tokenBlacklistService.isBlacklisted(userId);
+        @Test
+        @DisplayName("should return true when userId is blacklisted")
+        void isBlacklistedByUserId_shouldReturnTrueWhenExists() {
+            // given
+            given(redisTemplate.hasKey("token-blacklist:1")).willReturn(Boolean.TRUE);
 
-        // then
-        assertThat(result).isTrue();
-    }
+            // when
+            boolean result = tokenBlacklistService.isBlacklistedByUserId(1L);
 
-    @Test
-    @DisplayName("isBlacklisted() should return false when no blacklisted token exists")
-    void isBlacklisted_shouldReturnFalseWhenKeyNotExists() {
-        // given
-        Long userId = 99L;
-        given(redisTemplate.hasKey("token-blacklist:99")).willReturn(Boolean.FALSE);
+            // then
+            assertThat(result).isTrue();
+        }
 
-        // when
-        boolean result = tokenBlacklistService.isBlacklisted(userId);
+        @Test
+        @DisplayName("should return false when userId is not blacklisted")
+        void isBlacklistedByUserId_shouldReturnFalseWhenNotExists() {
+            // given
+            given(redisTemplate.hasKey("token-blacklist:99")).willReturn(Boolean.FALSE);
 
-        // then
-        assertThat(result).isFalse();
-    }
+            // when
+            boolean result = tokenBlacklistService.isBlacklistedByUserId(99L);
 
-    @Test
-    @DisplayName("isBlacklisted() should return false when hasKey returns null")
-    void isBlacklisted_shouldReturnFalseWhenHasKeyReturnsNull() {
-        // given
-        Long userId = 7L;
-        given(redisTemplate.hasKey("token-blacklist:7")).willReturn(null);
+            // then
+            assertThat(result).isFalse();
+        }
 
-        // when
-        boolean result = tokenBlacklistService.isBlacklisted(userId);
+        @Test
+        @DisplayName("should return false when hasKey returns null")
+        void isBlacklistedByUserId_shouldReturnFalseWhenNull() {
+            // given
+            given(redisTemplate.hasKey("token-blacklist:7")).willReturn(null);
 
-        // then
-        assertThat(result).isFalse();
+            // when
+            boolean result = tokenBlacklistService.isBlacklistedByUserId(7L);
+
+            // then
+            assertThat(result).isFalse();
+        }
     }
 }

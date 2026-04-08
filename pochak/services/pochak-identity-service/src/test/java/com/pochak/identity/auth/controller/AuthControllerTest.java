@@ -214,8 +214,8 @@ class AuthControllerTest {
     class LogoutTests {
 
         @Test
-        @DisplayName("Logout with valid userId and Authorization header returns 200")
-        void logout_validUser_returns200() throws Exception {
+        @DisplayName("Logout with valid userId and Authorization header passes extracted token")
+        void logout_withAuthorizationHeader_passesExtractedToken() throws Exception {
             doNothing().when(authService).logout(eq(1L), anyString());
 
             mockMvc.perform(post("/auth/logout")
@@ -228,8 +228,8 @@ class AuthControllerTest {
         }
 
         @Test
-        @DisplayName("Logout without Authorization header still works (accessToken is null)")
-        void logout_noAuthHeader_returns200() throws Exception {
+        @DisplayName("Logout without Authorization header passes null as accessToken")
+        void logout_withoutAuthorizationHeader_passesNull() throws Exception {
             doNothing().when(authService).logout(eq(1L), isNull());
 
             mockMvc.perform(post("/auth/logout")

@@ -19,6 +19,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -26,7 +27,8 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for JwtValidationFilter.
- * Covers SEC-004 (admin path protection) and public path bypass logic.
+ * Covers SEC-004 (admin path protection), public path bypass logic,
+ * and JWT security hardening (iss, aud, typ, jti claims).
  */
 class JwtValidationFilterTest {
 
@@ -51,8 +53,12 @@ class JwtValidationFilterTest {
 
     private String generateToken(String userId, String role) {
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .issuer("pochak-identity")
+                .audience().add("pochak-api").and()
                 .subject(userId)
                 .claim("role", role)
+                .claim("typ", "access")
                 .issuedAt(Date.from(Instant.now()))
                 .expiration(Date.from(Instant.now().plusSeconds(3600)))
                 .signWith(SECRET_KEY)
@@ -277,6 +283,120 @@ class JwtValidationFilterTest {
             // The filter should have stripped these; verify no error status
             assertThat(exchange.getResponse().getStatusCode()).isNotEqualTo(HttpStatus.UNAUTHORIZED);
             assertThat(exchange.getResponse().getStatusCode()).isNotEqualTo(HttpStatus.FORBIDDEN);
+        }
+    }
+
+    // ======================================================================
+    // JWT Security Hardening: token type and claim validation
+    // ======================================================================
+
+    @Nested
+    @DisplayName("JWT security hardening: typ, iss, aud validation")
+    class JwtSecurityHardening {
+
+        @Test
+        @DisplayName("Refresh token used as access token returns 401")
+        void refreshTokenUsedAsAccessToken_returns401() {
+            // Build a refresh token (typ=refresh)
+            String refreshToken = Jwts.builder()
+                    .id(UUID.randomUUID().toString())
+                    .issuer("pochak-identity")
+                    .audience().add("pochak-api").and()
+                    .subject("user-1")
+                    .claim("role", "USER")
+                    .claim("typ", "refresh")
+                    .issuedAt(Date.from(Instant.now()))
+                    .expiration(Date.from(Instant.now().plusSeconds(3600)))
+                    .signWith(SECRET_KEY)
+                    .compact();
+
+            MockServerHttpRequest request = MockServerHttpRequest
+                    .get("/api/v1/mypage")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + refreshToken)
+                    .build();
+            MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+            filter.filter(exchange, chain).block();
+
+            assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        }
+
+        @Test
+        @DisplayName("Token without issuer returns 401")
+        void tokenWithoutIssuer_returns401() {
+            // Build a token without issuer claim
+            String tokenNoIssuer = Jwts.builder()
+                    .id(UUID.randomUUID().toString())
+                    .audience().add("pochak-api").and()
+                    .subject("user-1")
+                    .claim("role", "USER")
+                    .claim("typ", "access")
+                    .issuedAt(Date.from(Instant.now()))
+                    .expiration(Date.from(Instant.now().plusSeconds(3600)))
+                    .signWith(SECRET_KEY)
+                    .compact();
+
+            MockServerHttpRequest request = MockServerHttpRequest
+                    .get("/api/v1/mypage")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenNoIssuer)
+                    .build();
+            MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+            filter.filter(exchange, chain).block();
+
+            assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        }
+
+        @Test
+        @DisplayName("Token without audience returns 401")
+        void tokenWithoutAudience_returns401() {
+            // Build a token without audience claim
+            String tokenNoAud = Jwts.builder()
+                    .id(UUID.randomUUID().toString())
+                    .issuer("pochak-identity")
+                    .subject("user-1")
+                    .claim("role", "USER")
+                    .claim("typ", "access")
+                    .issuedAt(Date.from(Instant.now()))
+                    .expiration(Date.from(Instant.now().plusSeconds(3600)))
+                    .signWith(SECRET_KEY)
+                    .compact();
+
+            MockServerHttpRequest request = MockServerHttpRequest
+                    .get("/api/v1/mypage")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenNoAud)
+                    .build();
+            MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+            filter.filter(exchange, chain).block();
+
+            assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        }
+
+        @Test
+        @DisplayName("Token with wrong issuer returns 401")
+        void tokenWithWrongIssuer_returns401() {
+            String tokenWrongIss = Jwts.builder()
+                    .id(UUID.randomUUID().toString())
+                    .issuer("wrong-issuer")
+                    .audience().add("pochak-api").and()
+                    .subject("user-1")
+                    .claim("role", "USER")
+                    .claim("typ", "access")
+                    .issuedAt(Date.from(Instant.now()))
+                    .expiration(Date.from(Instant.now().plusSeconds(3600)))
+                    .signWith(SECRET_KEY)
+                    .compact();
+
+            MockServerHttpRequest request = MockServerHttpRequest
+                    .get("/api/v1/mypage")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenWrongIss)
+                    .build();
+            MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+            filter.filter(exchange, chain).block();
+
+            assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         }
     }
 }

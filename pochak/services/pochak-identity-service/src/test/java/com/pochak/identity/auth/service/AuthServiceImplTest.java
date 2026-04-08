@@ -1,5 +1,6 @@
 package com.pochak.identity.auth.service;
 
+import com.pochak.common.event.EventPublisher;
 import com.pochak.common.exception.BusinessException;
 import com.pochak.common.exception.ErrorCode;
 import com.pochak.identity.auth.dto.SignInRequest;
@@ -10,8 +11,11 @@ import com.pochak.identity.user.entity.UserRefreshToken;
 import com.pochak.identity.user.repository.UserAuthAccountRepository;
 import com.pochak.identity.user.repository.UserRefreshTokenRepository;
 import com.pochak.identity.user.repository.UserRepository;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.impl.DefaultClaims;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,6 +23,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,9 +32,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {
@@ -47,6 +53,12 @@ class AuthServiceImplTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private EventPublisher eventPublisher;
+
+    @Mock
+    private TokenBlacklistService tokenBlacklistService;
 
     @InjectMocks
     private AuthServiceImpl authService;
@@ -97,305 +109,412 @@ class AuthServiceImplTest {
 
     // ==================== signUp tests ====================
 
-    @Test
-    @DisplayName("Should sign up successfully with valid request")
-    void testSignup_success() {
-        // given
-        SignUpRequest request = SignUpRequest.builder()
-                .email("new@pochak.com")
-                .password("password123")
-                .nickname("newuser")
-                .build();
+    @Nested
+    @DisplayName("signUp")
+    class SignUpTests {
 
-        given(userRepository.existsByNickname(anyString())).willReturn(false);
-        given(userRepository.existsByEmail(anyString())).willReturn(false);
-        given(passwordEncoder.encode(anyString())).willReturn("encoded");
-        given(userRepository.save(any(User.class))).willReturn(activeUser);
-        given(authAccountRepository.save(any())).willReturn(null);
-        given(jwtTokenProvider.generateAccessToken(any(), any())).willReturn("access-token");
-        given(jwtTokenProvider.generateRefreshToken(any())).willReturn("refresh-token");
-        given(jwtTokenProvider.getAccessTokenExpiration()).willReturn(1800000L);
-        given(refreshTokenRepository.findByUserId(any())).willReturn(Optional.empty());
-        given(refreshTokenRepository.save(any())).willReturn(null);
+        @Test
+        @DisplayName("Should sign up successfully with valid request")
+        void testSignup_success() {
+            // given
+            SignUpRequest request = SignUpRequest.builder()
+                    .email("new@pochak.com")
+                    .password("password123")
+                    .nickname("newuser")
+                    .build();
 
-        // when
-        TokenResponse response = authService.signUp(request);
+            given(userRepository.existsByNickname(anyString())).willReturn(false);
+            given(userRepository.existsByEmail(anyString())).willReturn(false);
+            given(passwordEncoder.encode(anyString())).willReturn("encoded");
+            given(userRepository.save(any(User.class))).willReturn(activeUser);
+            given(authAccountRepository.save(any())).willReturn(null);
+            given(jwtTokenProvider.generateAccessToken(any(), any())).willReturn("access-token");
+            given(jwtTokenProvider.generateRefreshToken(any())).willReturn("refresh-token");
+            given(jwtTokenProvider.getAccessTokenExpiration()).willReturn(1800000L);
+            given(refreshTokenRepository.findByUserId(any())).willReturn(Optional.empty());
+            given(refreshTokenRepository.save(any())).willReturn(null);
 
-        // then
-        assertThat(response).isNotNull();
-        assertThat(response.getAccessToken()).isEqualTo("access-token");
-        assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
-        assertThat(response.getTokenType()).isEqualTo("Bearer");
-        assertThat(response.getExpiresIn()).isEqualTo(1800L);
+            // when
+            TokenResponse response = authService.signUp(request);
 
-        verify(userRepository).save(any(User.class));
-        verify(authAccountRepository).save(any());
-    }
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.getAccessToken()).isEqualTo("access-token");
+            assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
+            assertThat(response.getTokenType()).isEqualTo("Bearer");
+            assertThat(response.getExpiresIn()).isEqualTo(1800L);
 
-    @Test
-    @DisplayName("Should throw exception when signing up with duplicate nickname (username)")
-    void testSignup_duplicateUsername_throwsException() {
-        // given
-        SignUpRequest request = SignUpRequest.builder()
-                .email("new@pochak.com")
-                .password("password123")
-                .nickname("testuser")
-                .build();
+            verify(userRepository).save(any(User.class));
+            verify(authAccountRepository).save(any());
+        }
 
-        given(userRepository.existsByNickname("testuser")).willReturn(true);
+        @Test
+        @DisplayName("Should throw exception when signing up with duplicate nickname (username)")
+        void testSignup_duplicateUsername_throwsException() {
+            // given
+            SignUpRequest request = SignUpRequest.builder()
+                    .email("new@pochak.com")
+                    .password("password123")
+                    .nickname("testuser")
+                    .build();
 
-        // when & then
-        assertThatThrownBy(() -> authService.signUp(request))
-                .isInstanceOf(BusinessException.class)
-                .satisfies(ex -> {
-                    BusinessException bex = (BusinessException) ex;
-                    assertThat(bex.getErrorCode()).isEqualTo(ErrorCode.DUPLICATE);
-                    assertThat(bex.getMessage()).contains("Nickname already exists");
-                });
+            given(userRepository.existsByNickname("testuser")).willReturn(true);
 
-        verify(userRepository, never()).save(any());
-    }
+            // when & then
+            assertThatThrownBy(() -> authService.signUp(request))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException bex = (BusinessException) ex;
+                        assertThat(bex.getErrorCode()).isEqualTo(ErrorCode.DUPLICATE);
+                        assertThat(bex.getMessage()).contains("Nickname already exists");
+                    });
 
-    @Test
-    @DisplayName("Should throw exception when signing up with duplicate email")
-    void testSignup_duplicateEmail_throwsException() {
-        // given
-        SignUpRequest request = SignUpRequest.builder()
-                .email("test@pochak.com")
-                .password("password123")
-                .nickname("uniqueuser")
-                .build();
+            verify(userRepository, never()).save(any());
+        }
 
-        given(userRepository.existsByNickname(anyString())).willReturn(false);
-        given(userRepository.existsByEmail("test@pochak.com")).willReturn(true);
+        @Test
+        @DisplayName("Should throw exception when signing up with duplicate email")
+        void testSignup_duplicateEmail_throwsException() {
+            // given
+            SignUpRequest request = SignUpRequest.builder()
+                    .email("test@pochak.com")
+                    .password("password123")
+                    .nickname("uniqueuser")
+                    .build();
 
-        // when & then
-        assertThatThrownBy(() -> authService.signUp(request))
-                .isInstanceOf(BusinessException.class)
-                .satisfies(ex -> {
-                    BusinessException bex = (BusinessException) ex;
-                    assertThat(bex.getErrorCode()).isEqualTo(ErrorCode.DUPLICATE);
-                    assertThat(bex.getMessage()).contains("Email already exists");
-                });
+            given(userRepository.existsByNickname(anyString())).willReturn(false);
+            given(userRepository.existsByEmail("test@pochak.com")).willReturn(true);
 
-        verify(userRepository, never()).save(any());
+            // when & then
+            assertThatThrownBy(() -> authService.signUp(request))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException bex = (BusinessException) ex;
+                        assertThat(bex.getErrorCode()).isEqualTo(ErrorCode.DUPLICATE);
+                        assertThat(bex.getMessage()).contains("Email already exists");
+                    });
+
+            verify(userRepository, never()).save(any());
+        }
     }
 
     // ==================== signIn tests ====================
 
-    @Test
-    @DisplayName("Should sign in successfully with valid credentials")
-    void testLogin_success() {
-        // given
-        SignInRequest request = SignInRequest.builder()
-                .email("test@pochak.com")
-                .password("password123")
-                .build();
+    @Nested
+    @DisplayName("signIn")
+    class SignInTests {
 
-        given(userRepository.findByEmail("test@pochak.com")).willReturn(Optional.of(activeUser));
-        given(passwordEncoder.matches("password123", "encoded_password")).willReturn(true);
-        given(jwtTokenProvider.generateAccessToken(1L, "USER")).willReturn("access-token");
-        given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("refresh-token");
-        given(jwtTokenProvider.getAccessTokenExpiration()).willReturn(1800000L);
-        given(refreshTokenRepository.findByUserId(1L)).willReturn(Optional.empty());
-        given(refreshTokenRepository.save(any())).willReturn(null);
+        @Test
+        @DisplayName("Should sign in successfully with valid credentials")
+        void testLogin_success() {
+            // given
+            SignInRequest request = SignInRequest.builder()
+                    .email("test@pochak.com")
+                    .password("password123")
+                    .build();
 
-        // when
-        TokenResponse response = authService.signIn(request);
+            given(userRepository.findByEmail("test@pochak.com")).willReturn(Optional.of(activeUser));
+            given(passwordEncoder.matches("password123", "encoded_password")).willReturn(true);
+            given(jwtTokenProvider.generateAccessToken(1L, "USER")).willReturn("access-token");
+            given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("refresh-token");
+            given(jwtTokenProvider.getAccessTokenExpiration()).willReturn(1800000L);
+            given(refreshTokenRepository.findByUserId(1L)).willReturn(Optional.empty());
+            given(refreshTokenRepository.save(any())).willReturn(null);
 
-        // then
-        assertThat(response).isNotNull();
-        assertThat(response.getAccessToken()).isEqualTo("access-token");
-        assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
-    }
+            // when
+            TokenResponse response = authService.signIn(request);
 
-    @Test
-    @DisplayName("Should throw exception when signing in with wrong password")
-    void testLogin_wrongPassword_throwsException() {
-        // given
-        SignInRequest request = SignInRequest.builder()
-                .email("test@pochak.com")
-                .password("wrong_password")
-                .build();
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.getAccessToken()).isEqualTo("access-token");
+            assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
+        }
 
-        given(userRepository.findByEmail("test@pochak.com")).willReturn(Optional.of(activeUser));
-        given(passwordEncoder.matches("wrong_password", "encoded_password")).willReturn(false);
+        @Test
+        @DisplayName("Should throw exception when signing in with wrong password")
+        void testLogin_wrongPassword_throwsException() {
+            // given
+            SignInRequest request = SignInRequest.builder()
+                    .email("test@pochak.com")
+                    .password("wrong_password")
+                    .build();
 
-        // when & then
-        assertThatThrownBy(() -> authService.signIn(request))
-                .isInstanceOf(BusinessException.class)
-                .satisfies(ex -> {
-                    BusinessException bex = (BusinessException) ex;
-                    assertThat(bex.getErrorCode()).isEqualTo(ErrorCode.UNAUTHORIZED);
-                });
+            given(userRepository.findByEmail("test@pochak.com")).willReturn(Optional.of(activeUser));
+            given(passwordEncoder.matches("wrong_password", "encoded_password")).willReturn(false);
 
-        verify(jwtTokenProvider, never()).generateAccessToken(any(), any());
-    }
+            // when & then
+            assertThatThrownBy(() -> authService.signIn(request))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException bex = (BusinessException) ex;
+                        assertThat(bex.getErrorCode()).isEqualTo(ErrorCode.UNAUTHORIZED);
+                    });
 
-    @Test
-    @DisplayName("Should throw exception when signing in with non-existent email")
-    void testLogin_userNotFound_throwsException() {
-        // given
-        SignInRequest request = SignInRequest.builder()
-                .email("nonexistent@pochak.com")
-                .password("password123")
-                .build();
+            verify(jwtTokenProvider, never()).generateAccessToken(any(), any());
+        }
 
-        given(userRepository.findByEmail("nonexistent@pochak.com")).willReturn(Optional.empty());
+        @Test
+        @DisplayName("Should throw exception when signing in with non-existent email")
+        void testLogin_userNotFound_throwsException() {
+            // given
+            SignInRequest request = SignInRequest.builder()
+                    .email("nonexistent@pochak.com")
+                    .password("password123")
+                    .build();
 
-        // when & then
-        assertThatThrownBy(() -> authService.signIn(request))
-                .isInstanceOf(BusinessException.class)
-                .satisfies(ex -> {
-                    BusinessException bex = (BusinessException) ex;
-                    assertThat(bex.getErrorCode()).isEqualTo(ErrorCode.UNAUTHORIZED);
-                });
-    }
+            given(userRepository.findByEmail("nonexistent@pochak.com")).willReturn(Optional.empty());
 
-    @Test
-    @DisplayName("Should throw exception when blocked (suspended) user tries to sign in")
-    void testLogin_blockedUser_throwsException() {
-        // given
-        SignInRequest request = SignInRequest.builder()
-                .email("suspended@pochak.com")
-                .password("password123")
-                .build();
+            // when & then
+            assertThatThrownBy(() -> authService.signIn(request))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException bex = (BusinessException) ex;
+                        assertThat(bex.getErrorCode()).isEqualTo(ErrorCode.UNAUTHORIZED);
+                    });
+        }
 
-        given(userRepository.findByEmail("suspended@pochak.com")).willReturn(Optional.of(suspendedUser));
-        given(passwordEncoder.matches("password123", "encoded_password")).willReturn(true);
+        @Test
+        @DisplayName("Should throw exception when blocked (suspended) user tries to sign in")
+        void testLogin_blockedUser_throwsException() {
+            // given
+            SignInRequest request = SignInRequest.builder()
+                    .email("suspended@pochak.com")
+                    .password("password123")
+                    .build();
 
-        // when & then
-        assertThatThrownBy(() -> authService.signIn(request))
-                .isInstanceOf(BusinessException.class)
-                .satisfies(ex -> {
-                    BusinessException bex = (BusinessException) ex;
-                    assertThat(bex.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN);
-                    assertThat(bex.getMessage()).contains("suspended");
-                });
+            given(userRepository.findByEmail("suspended@pochak.com")).willReturn(Optional.of(suspendedUser));
+            given(passwordEncoder.matches("password123", "encoded_password")).willReturn(true);
 
-        verify(jwtTokenProvider, never()).generateAccessToken(any(), any());
-    }
+            // when & then
+            assertThatThrownBy(() -> authService.signIn(request))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException bex = (BusinessException) ex;
+                        assertThat(bex.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN);
+                        assertThat(bex.getMessage()).contains("suspended");
+                    });
 
-    @Test
-    @DisplayName("Should throw exception when withdrawn user tries to sign in")
-    void testLogin_withdrawnUser_throwsException() {
-        // given
-        SignInRequest request = SignInRequest.builder()
-                .email("withdrawn@pochak.com")
-                .password("password123")
-                .build();
+            verify(jwtTokenProvider, never()).generateAccessToken(any(), any());
+        }
 
-        given(userRepository.findByEmail("withdrawn@pochak.com")).willReturn(Optional.of(withdrawnUser));
-        given(passwordEncoder.matches("password123", "encoded_password")).willReturn(true);
+        @Test
+        @DisplayName("Should throw exception when withdrawn user tries to sign in")
+        void testLogin_withdrawnUser_throwsException() {
+            // given
+            SignInRequest request = SignInRequest.builder()
+                    .email("withdrawn@pochak.com")
+                    .password("password123")
+                    .build();
 
-        // when & then
-        assertThatThrownBy(() -> authService.signIn(request))
-                .isInstanceOf(BusinessException.class)
-                .satisfies(ex -> {
-                    BusinessException bex = (BusinessException) ex;
-                    assertThat(bex.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN);
-                    assertThat(bex.getMessage()).contains("withdrawn");
-                });
-    }
+            given(userRepository.findByEmail("withdrawn@pochak.com")).willReturn(Optional.of(withdrawnUser));
+            given(passwordEncoder.matches("password123", "encoded_password")).willReturn(true);
 
-    @Test
-    @DisplayName("Should allow inactive (dormant) user to sign in")
-    void testLogin_inactiveUser_allowsLogin() {
-        // given
-        SignInRequest request = SignInRequest.builder()
-                .email("inactive@pochak.com")
-                .password("password123")
-                .build();
+            // when & then
+            assertThatThrownBy(() -> authService.signIn(request))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException bex = (BusinessException) ex;
+                        assertThat(bex.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN);
+                        assertThat(bex.getMessage()).contains("withdrawn");
+                    });
+        }
 
-        given(userRepository.findByEmail("inactive@pochak.com")).willReturn(Optional.of(inactiveUser));
-        given(passwordEncoder.matches("password123", "encoded_password")).willReturn(true);
-        given(jwtTokenProvider.generateAccessToken(4L, "USER")).willReturn("access-token");
-        given(jwtTokenProvider.generateRefreshToken(4L)).willReturn("refresh-token");
-        given(jwtTokenProvider.getAccessTokenExpiration()).willReturn(1800000L);
-        given(refreshTokenRepository.findByUserId(4L)).willReturn(Optional.empty());
-        given(refreshTokenRepository.save(any())).willReturn(null);
+        @Test
+        @DisplayName("Should allow inactive (dormant) user to sign in")
+        void testLogin_inactiveUser_allowsLogin() {
+            // given
+            SignInRequest request = SignInRequest.builder()
+                    .email("inactive@pochak.com")
+                    .password("password123")
+                    .build();
 
-        // when
-        TokenResponse response = authService.signIn(request);
+            given(userRepository.findByEmail("inactive@pochak.com")).willReturn(Optional.of(inactiveUser));
+            given(passwordEncoder.matches("password123", "encoded_password")).willReturn(true);
+            given(jwtTokenProvider.generateAccessToken(4L, "USER")).willReturn("access-token");
+            given(jwtTokenProvider.generateRefreshToken(4L)).willReturn("refresh-token");
+            given(jwtTokenProvider.getAccessTokenExpiration()).willReturn(1800000L);
+            given(refreshTokenRepository.findByUserId(4L)).willReturn(Optional.empty());
+            given(refreshTokenRepository.save(any())).willReturn(null);
 
-        // then
-        assertThat(response).isNotNull();
-        assertThat(response.getAccessToken()).isEqualTo("access-token");
+            // when
+            TokenResponse response = authService.signIn(request);
+
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.getAccessToken()).isEqualTo("access-token");
+        }
     }
 
     // ==================== refresh tests ====================
 
-    @Test
-    @DisplayName("Should refresh token successfully with valid refresh token")
-    void testRefreshToken_success() {
-        // given
-        String validRefreshToken = "valid-refresh-token";
-        UserRefreshToken storedToken = UserRefreshToken.builder()
-                .id(1L)
-                .userId(1L)
-                .token(validRefreshToken)
-                .build();
+    @Nested
+    @DisplayName("refresh")
+    class RefreshTests {
 
-        given(jwtTokenProvider.validateToken(validRefreshToken)).willReturn(true);
-        given(jwtTokenProvider.getUserIdFromToken(validRefreshToken)).willReturn(1L);
-        given(refreshTokenRepository.findByUserId(1L)).willReturn(Optional.of(storedToken));
-        given(userRepository.findById(1L)).willReturn(Optional.of(activeUser));
-        given(jwtTokenProvider.generateAccessToken(1L, "USER")).willReturn("new-access-token");
-        given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("new-refresh-token");
-        given(jwtTokenProvider.getAccessTokenExpiration()).willReturn(1800000L);
-        given(refreshTokenRepository.save(any())).willReturn(null);
+        @Test
+        @DisplayName("Should refresh token successfully with valid refresh token")
+        void testRefreshToken_success() {
+            // given
+            String validRefreshToken = "valid-refresh-token";
+            String tokenHash = UserRefreshToken.hashToken(validRefreshToken);
+            String tokenFamily = "family-uuid-1";
 
-        // when
-        TokenResponse response = authService.refresh(validRefreshToken);
+            UserRefreshToken storedToken = UserRefreshToken.builder()
+                    .id(1L)
+                    .userId(1L)
+                    .tokenHash(tokenHash)
+                    .tokenFamily(tokenFamily)
+                    .build();
 
-        // then
-        assertThat(response).isNotNull();
-        assertThat(response.getAccessToken()).isEqualTo("new-access-token");
-        assertThat(response.getRefreshToken()).isEqualTo("new-refresh-token");
+            Claims refreshClaims = new DefaultClaims(Map.of(
+                    "sub", "1",
+                    "typ", "refresh"
+            ));
+
+            given(jwtTokenProvider.parseRefreshToken(validRefreshToken)).willReturn(refreshClaims);
+            given(refreshTokenRepository.findByUserId(1L)).willReturn(Optional.of(storedToken));
+            given(userRepository.findById(1L)).willReturn(Optional.of(activeUser));
+            given(jwtTokenProvider.generateAccessToken(1L, "USER")).willReturn("new-access-token");
+            given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("new-refresh-token");
+            given(jwtTokenProvider.getAccessTokenExpiration()).willReturn(1800000L);
+            given(refreshTokenRepository.save(any())).willReturn(null);
+
+            // when
+            TokenResponse response = authService.refresh(validRefreshToken);
+
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.getAccessToken()).isEqualTo("new-access-token");
+            assertThat(response.getRefreshToken()).isEqualTo("new-refresh-token");
+        }
+
+        @Test
+        @DisplayName("Should throw exception when refresh token is expired/invalid (parseRefreshToken fails)")
+        void testRefreshToken_expired_throwsException() {
+            // given
+            String expiredToken = "expired-refresh-token";
+            given(jwtTokenProvider.parseRefreshToken(expiredToken))
+                    .willThrow(new RuntimeException("Invalid or expired token"));
+
+            // when & then
+            assertThatThrownBy(() -> authService.refresh(expiredToken))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException bex = (BusinessException) ex;
+                        assertThat(bex.getErrorCode()).isEqualTo(ErrorCode.UNAUTHORIZED);
+                    });
+
+            verify(refreshTokenRepository, never()).findByUserId(anyLong());
+        }
+
+        @Test
+        @DisplayName("Should detect reuse and revoke all sessions when token does not match stored hash")
+        void testRefreshToken_reuseDetection_revokesAllSessions() {
+            // given
+            String reusedToken = "reused-refresh-token";
+            String differentHash = UserRefreshToken.hashToken("different-token");
+            String tokenFamily = "family-uuid-1";
+
+            UserRefreshToken storedToken = UserRefreshToken.builder()
+                    .id(1L)
+                    .userId(1L)
+                    .tokenHash(differentHash)
+                    .tokenFamily(tokenFamily)
+                    .build();
+
+            Claims refreshClaims = new DefaultClaims(Map.of(
+                    "sub", "1",
+                    "typ", "refresh"
+            ));
+
+            given(jwtTokenProvider.parseRefreshToken(reusedToken)).willReturn(refreshClaims);
+            given(refreshTokenRepository.findByUserId(1L)).willReturn(Optional.of(storedToken));
+            given(jwtTokenProvider.getAccessTokenExpiration()).willReturn(1800000L);
+
+            // when & then
+            assertThatThrownBy(() -> authService.refresh(reusedToken))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException bex = (BusinessException) ex;
+                        assertThat(bex.getErrorCode()).isEqualTo(ErrorCode.UNAUTHORIZED);
+                        assertThat(bex.getMessage()).contains("reuse detected");
+                    });
+
+            // verify reuse detection side effects
+            verify(refreshTokenRepository).save(storedToken);
+            verify(tokenBlacklistService).blacklistByUserId(eq(1L), eq(1800L));
+            verify(refreshTokenRepository).deleteByUserId(1L);
+            verify(userRepository, never()).findById(anyLong());
+        }
     }
 
-    @Test
-    @DisplayName("Should throw exception when refresh token is expired/invalid")
-    void testRefreshToken_expired_throwsException() {
-        // given
-        String expiredToken = "expired-refresh-token";
+    // ==================== logout tests ====================
 
-        given(jwtTokenProvider.validateToken(expiredToken)).willReturn(false);
+    @Nested
+    @DisplayName("logout")
+    class LogoutTests {
 
-        // when & then
-        assertThatThrownBy(() -> authService.refresh(expiredToken))
-                .isInstanceOf(BusinessException.class)
-                .satisfies(ex -> {
-                    BusinessException bex = (BusinessException) ex;
-                    assertThat(bex.getErrorCode()).isEqualTo(ErrorCode.UNAUTHORIZED);
-                });
+        @Test
+        @DisplayName("Should blacklist access token jti and delete refresh token on logout")
+        void testLogout_withAccessToken_blacklistsJti() {
+            // given
+            String accessToken = "valid-access-token";
+            long futureExpiry = System.currentTimeMillis() + 900_000; // 15 min from now
 
-        verify(refreshTokenRepository, never()).findByUserId(anyLong());
-    }
+            Claims accessClaims = new DefaultClaims(Map.of(
+                    "sub", "1",
+                    "jti", "token-jti-123",
+                    "typ", "access"
+            ));
+            accessClaims.setExpiration(new Date(futureExpiry));
 
-    @Test
-    @DisplayName("Should throw exception when refresh token does not match stored token")
-    void testRefreshToken_mismatch_throwsException() {
-        // given
-        String refreshToken = "mismatched-token";
-        UserRefreshToken storedToken = UserRefreshToken.builder()
-                .id(1L)
-                .userId(1L)
-                .token("different-stored-token")
-                .build();
+            given(jwtTokenProvider.parseAccessToken(accessToken)).willReturn(accessClaims);
+            given(refreshTokenRepository.findByUserId(1L)).willReturn(Optional.empty());
 
-        given(jwtTokenProvider.validateToken(refreshToken)).willReturn(true);
-        given(jwtTokenProvider.getUserIdFromToken(refreshToken)).willReturn(1L);
-        given(refreshTokenRepository.findByUserId(1L)).willReturn(Optional.of(storedToken));
+            // when
+            authService.logout(1L, accessToken);
 
-        // when & then
-        assertThatThrownBy(() -> authService.refresh(refreshToken))
-                .isInstanceOf(BusinessException.class)
-                .satisfies(ex -> {
-                    BusinessException bex = (BusinessException) ex;
-                    assertThat(bex.getErrorCode()).isEqualTo(ErrorCode.UNAUTHORIZED);
-                });
+            // then
+            verify(jwtTokenProvider).parseAccessToken(accessToken);
+            verify(tokenBlacklistService).blacklistByJti(eq("token-jti-123"), anyLong());
+        }
 
-        verify(userRepository, never()).findById(anyLong());
+        @Test
+        @DisplayName("Should still delete refresh token when accessToken is null")
+        void testLogout_withoutAccessToken_deletesRefreshToken() {
+            // given
+            UserRefreshToken storedToken = UserRefreshToken.builder()
+                    .id(1L)
+                    .userId(1L)
+                    .tokenHash("some-hash")
+                    .tokenFamily("some-family")
+                    .build();
+
+            given(refreshTokenRepository.findByUserId(1L)).willReturn(Optional.of(storedToken));
+
+            // when
+            authService.logout(1L, null);
+
+            // then
+            verify(jwtTokenProvider, never()).parseAccessToken(any());
+            verify(tokenBlacklistService, never()).blacklistByJti(any(), anyLong());
+            verify(refreshTokenRepository).delete(storedToken);
+        }
+
+        @Test
+        @DisplayName("Should not throw when parseAccessToken fails (e.g. expired token)")
+        void testLogout_parseAccessTokenFails_shouldNotThrow() {
+            // given
+            String badToken = "bad-access-token";
+            given(jwtTokenProvider.parseAccessToken(badToken))
+                    .willThrow(new RuntimeException("Token expired"));
+            given(refreshTokenRepository.findByUserId(1L)).willReturn(Optional.empty());
+
+            // when - should not throw
+            authService.logout(1L, badToken);
+
+            // then
+            verify(tokenBlacklistService, never()).blacklistByJti(any(), anyLong());
+        }
     }
 }
