@@ -35,11 +35,11 @@ public class Banner {
     @Builder.Default
     private Integer sortOrder = 0;
 
-    @Column(name = "starts_at")
-    private LocalDateTime startsAt;
+    @Column(name = "start_date", nullable = false)
+    private LocalDateTime startDate;
 
-    @Column(name = "ends_at")
-    private LocalDateTime endsAt;
+    @Column(name = "end_date", nullable = false)
+    private LocalDateTime endDate;
 
     @Builder.Default
     @Column(name = "is_active", nullable = false)
