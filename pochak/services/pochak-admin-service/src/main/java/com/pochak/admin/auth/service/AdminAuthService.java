@@ -1,5 +1,6 @@
 package com.pochak.admin.auth.service;
 
+import com.pochak.admin.auth.dto.Admin2faRequiredResponse;
 import com.pochak.admin.auth.dto.AdminLoginRequest;
 import com.pochak.admin.auth.dto.AdminLoginResponse;
 import com.pochak.admin.rbac.entity.*;
@@ -45,6 +46,7 @@ public class AdminAuthService {
     private final AdminGroupRoleRepository adminGroupRoleRepository;
     private final AdminRoleMenuRepository adminRoleMenuRepository;
     private final AdminRoleFunctionRepository adminRoleFunctionRepository;
+    private final AdminSms2faService adminSms2faService;
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -55,8 +57,11 @@ public class AdminAuthService {
     @Value("${jwt.refresh-token-expiry:86400000}")
     private long refreshTokenExpiry;
 
+    /**
+     * Phase 1: Validate credentials, create 2FA session, return timeKey + masked phone.
+     */
     @Transactional
-    public AdminLoginResponse login(AdminLoginRequest request) {
+    public Admin2faRequiredResponse loginPhase1(AdminLoginRequest request) {
         AdminUser adminUser = adminUserRepository.findByLoginId(request.getLoginId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid login credentials"));
 
@@ -76,6 +81,25 @@ public class AdminAuthService {
             }
             throw new IllegalArgumentException("Invalid login credentials");
         }
+
+        // Credentials valid — create 2FA session
+        String timeKey = adminSms2faService.createSession(adminUser.getId(), adminUser.getPhone());
+        String maskedPhone = AdminSms2faService.maskPhone(adminUser.getPhone());
+
+        return Admin2faRequiredResponse.builder()
+                .timeKey(timeKey)
+                .maskedPhone(maskedPhone)
+                .message("SMS verification code sent")
+                .build();
+    }
+
+    /**
+     * Phase 2: After 2FA verification, generate JWT tokens.
+     */
+    @Transactional
+    public AdminLoginResponse loginPhase2Complete(Long adminUserId) {
+        AdminUser adminUser = adminUserRepository.findById(adminUserId)
+                .orElseThrow(() -> new IllegalArgumentException("Admin user not found"));
 
         adminUser.recordLoginSuccess();
         adminUserRepository.save(adminUser);
