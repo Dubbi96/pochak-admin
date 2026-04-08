@@ -466,9 +466,10 @@ public class OAuth2Service {
         String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getRole().name());
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
 
+        String tokenFamily = java.util.UUID.randomUUID().toString();
         UserRefreshToken tokenEntity = refreshTokenRepository.findByUserId(user.getId())
                 .orElse(UserRefreshToken.builder().userId(user.getId()).build());
-        tokenEntity.updateToken(refreshToken);
+        tokenEntity.updateToken(refreshToken, tokenFamily);
         refreshTokenRepository.save(tokenEntity);
 
         log.info("[OAuth] JWT issued for userId={}", user.getId());
