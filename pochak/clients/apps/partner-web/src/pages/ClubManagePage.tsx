@@ -91,7 +91,7 @@ export default function ClubManagePage() {
           {filtered.map((club, i) => (
             <button
               key={club.teamId}
-              onClick={() => navigate(`/clubs/${club.teamId}`)}
+              onClick={() => navigate(`/clubs/${club.teamId}/edit`)}
               className="w-full flex items-center gap-4 text-left transition-colors hover:bg-black/5"
               style={{
                 padding: '16px 20px',

@@ -46,3 +46,13 @@ export async function post<T>(path: string, body?: unknown): Promise<T | null> {
     return null
   }
 }
+
+export async function put<T>(path: string, body?: unknown): Promise<T | null> {
+  try {
+    const res = await api.put<{ data: T }>(path, body)
+    const payload = res.data
+    return payload && typeof payload === 'object' && 'data' in payload ? payload.data : (res.data as unknown as T)
+  } catch {
+    return null
+  }
+}

@@ -8,6 +8,7 @@ import ReservationsPage from '@/pages/ReservationsPage'
 import AnalyticsPage from '@/pages/AnalyticsPage'
 import SettingsPage from '@/pages/SettingsPage'
 import ClubManagePage from '@/pages/ClubManagePage'
+import ClubEditPage from '@/pages/ClubEditPage'
 import ClubCustomizePage from '@/pages/ClubCustomizePage'
 
 export default function App() {
@@ -23,7 +24,7 @@ export default function App() {
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/clubs" element={<ClubManagePage />} />
-        <Route path="/clubs/:id" element={<ClubManagePage />} />
+        <Route path="/clubs/:id/edit" element={<ClubEditPage />} />
         <Route path="/clubs/:id/customize" element={<ClubCustomizePage />} />
       </Route>
 
