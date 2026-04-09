@@ -41,6 +41,15 @@ public class ClubService {
 
     private static final BigDecimal DEFAULT_RADIUS_DEGREE = new BigDecimal("0.05"); // ~5km
 
+    public Page<ClubListResponse> getClubs(Long sportId, String keyword, Pageable pageable) {
+        String kw = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
+        Page<Team> teams = teamRepository.findClubs(sportId, kw, pageable);
+        return teams.map(team -> {
+            long count = getApprovedMemberCount(team.getId());
+            return ClubListResponse.from(team, count);
+        });
+    }
+
     public Page<ClubListResponse> getNearbyClubs(Long sportId, String siGunGuCode,
                                                   BigDecimal lat, BigDecimal lng,
                                                   Pageable pageable) {
