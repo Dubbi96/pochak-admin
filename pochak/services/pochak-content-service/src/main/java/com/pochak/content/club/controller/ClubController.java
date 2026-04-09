@@ -92,4 +92,18 @@ public class ClubController {
     public ApiResponse<List<ClubMemberResponse>> getClubMembers(@PathVariable Long teamId) {
         return ApiResponse.success(clubService.getClubMembers(teamId));
     }
+
+    @GetMapping("/{clubId}/customization")
+    public ApiResponse<ClubCustomizationResponse> getClubCustomization(
+            @PathVariable Long clubId,
+            @RequestParam Long partnerId) {
+        return ApiResponse.success(clubService.getClubCustomization(clubId, partnerId));
+    }
+
+    @PutMapping("/{clubId}/customization")
+    public ApiResponse<ClubCustomizationResponse> upsertClubCustomization(
+            @PathVariable Long clubId,
+            @Valid @RequestBody UpdateClubCustomizationRequest request) {
+        return ApiResponse.success(clubService.upsertClubCustomization(clubId, request));
+    }
 }
