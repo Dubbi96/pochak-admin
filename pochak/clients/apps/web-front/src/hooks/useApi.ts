@@ -243,6 +243,26 @@ export function useClubDetail(teamId: string | number) {
   )
 }
 
+// ── Club Members ──────────────────────────────────────────
+
+export interface ClubMember {
+  membershipId: number;
+  userId: number;
+  nickname?: string;
+  role: string;
+  joinType: string;
+  approvalStatus: string;
+  joinedAt?: string;
+}
+
+export function useClubMembers(teamId: string | number) {
+  return useFetch<ClubMember[]>(
+    () => pochakApi.get<ClubMember[]>(`/api/v1/clubs/${teamId}/members`),
+    [],
+    [teamId],
+  )
+}
+
 // ── Clubs ─────────────────────────────────────────────────
 
 export interface ClubItem {
