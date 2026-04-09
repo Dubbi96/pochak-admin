@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,76 +13,86 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Search } from "lucide-react";
+import type { PageResponse } from "@/types/common";
+import { adminApi } from "@/lib/api-client";
 
 // ── Types ────────────────────────────────────────────────────────────
 
-type PublishStatus = "ACTIVE" | "INACTIVE";
-type ProgressStatus = "IN_PROGRESS" | "UPCOMING" | "ENDED";
-
 interface EventEntry {
   id: number;
-  progressStatus: ProgressStatus;
   title: string;
-  viewCount: number;
-  progressStart: string;
-  progressEnd: string;
+  content: string;
+  imageUrl: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  isActive: boolean;
   createdAt: string;
-  publishStatus: PublishStatus;
 }
 
-// ── Mock Data ────────────────────────────────────────────────────────
+// ── Utils ─────────────────────────────────────────────────────────────
 
-const MOCK_EVENTS: EventEntry[] = [
-  { id: 1, progressStatus: "IN_PROGRESS", title: "포착 시즌 오픈 이벤트", viewCount: 1234, progressStart: "2026-03-01", progressEnd: "2026-03-31", createdAt: "2026-02-25", publishStatus: "ACTIVE" },
-  { id: 2, progressStatus: "IN_PROGRESS", title: "친구 초대 이벤트", viewCount: 856, progressStart: "2026-03-10", progressEnd: "2026-04-10", createdAt: "2026-03-05", publishStatus: "ACTIVE" },
-  { id: 3, progressStatus: "UPCOMING", title: "여름 시즌 사전 예약 이벤트", viewCount: 0, progressStart: "2026-06-01", progressEnd: "2026-06-30", createdAt: "2026-03-20", publishStatus: "ACTIVE" },
-  { id: 4, progressStatus: "ENDED", title: "겨울 시즌 종료 이벤트", viewCount: 3421, progressStart: "2025-12-01", progressEnd: "2026-01-31", createdAt: "2025-11-25", publishStatus: "INACTIVE" },
-  { id: 5, progressStatus: "ENDED", title: "포착 런칭 기념 이벤트", viewCount: 5678, progressStart: "2025-09-01", progressEnd: "2025-10-31", createdAt: "2025-08-28", publishStatus: "INACTIVE" },
-];
+function getProgressStatus(startDate: string, endDate: string): "IN_PROGRESS" | "UPCOMING" | "ENDED" {
+  const now = new Date();
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  if (now < start) return "UPCOMING";
+  if (now > end) return "ENDED";
+  return "IN_PROGRESS";
+}
 
-const PROGRESS_LABELS: Record<ProgressStatus, string> = {
+const PROGRESS_LABELS: Record<string, string> = {
   IN_PROGRESS: "진행중",
   UPCOMING: "예정",
   ENDED: "종료",
 };
 
-const PROGRESS_BADGE_VARIANT: Record<ProgressStatus, "success" | "default" | "secondary"> = {
+const PROGRESS_BADGE_VARIANT: Record<string, "success" | "default" | "secondary"> = {
   IN_PROGRESS: "success",
   UPCOMING: "default",
   ENDED: "secondary",
 };
 
-const PUBLISH_LABELS: Record<PublishStatus, string> = {
-  ACTIVE: "활성화",
-  INACTIVE: "비활성화",
-};
-
 // ── Page ─────────────────────────────────────────────────────────────
 
 export default function EventsPage() {
+  const [data, setData] = useState<EventEntry[]>([]);
+  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const pageSize = 20;
 
   // Filters
-  const [dateMode, setDateMode] = useState("ALL");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
   const [publishFilter, setPublishFilter] = useState("ALL");
   const [progressFilter, setProgressFilter] = useState("ALL");
   const [keyword, setKeyword] = useState("");
 
-  // Filtered data
-  const filtered = MOCK_EVENTS.filter((e) => {
-    if (publishFilter !== "ALL" && e.publishStatus !== publishFilter) return false;
-    if (progressFilter !== "ALL" && e.progressStatus !== progressFilter) return false;
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const result = await adminApi.get<PageResponse<EventEntry>>(
+        "/admin/api/v1/site/events",
+        { page: String(page), size: String(pageSize) }
+      );
+      const items = (result as unknown as { content?: EventEntry[] })?.content ?? (Array.isArray(result) ? result as unknown as EventEntry[] : []);
+      setData(items);
+    } catch (e) {
+      console.error("Failed to fetch events", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [page]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const filtered = data.filter((e) => {
+    const progress = getProgressStatus(e.startDate, e.endDate);
+    if (publishFilter !== "ALL" && ((publishFilter === "ACTIVE") !== e.isActive)) return false;
+    if (progressFilter !== "ALL" && progress !== progressFilter) return false;
     if (keyword && !e.title.toLowerCase().includes(keyword.toLowerCase())) return false;
-    if (dateMode === "RANGE" && dateFrom && e.createdAt < dateFrom) return false;
-    if (dateMode === "RANGE" && dateTo && e.createdAt > dateTo) return false;
     return true;
   });
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const pageData = filtered.slice(page * pageSize, (page + 1) * pageSize);
 
   const handleSearch = () => {
     setPage(0);
@@ -101,28 +111,6 @@ export default function EventsPage() {
 
       {/* Filter Bar */}
       <div className="flex flex-wrap items-end gap-4 rounded-lg border border-gray-200 bg-white p-4">
-        <div className="space-y-1.5">
-          <Label className="text-xs text-gray-500">등록일자</Label>
-          <div className="flex items-center gap-2">
-            <Select value={dateMode} onValueChange={setDateMode}>
-              <SelectTrigger className="w-[110px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">전체</SelectItem>
-                <SelectItem value="RANGE">기간검색</SelectItem>
-              </SelectContent>
-            </Select>
-            {dateMode === "RANGE" && (
-              <>
-                <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-[140px]" />
-                <span className="text-gray-400">~</span>
-                <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-[140px]" />
-              </>
-            )}
-          </div>
-        </div>
-
         <div className="space-y-1.5">
           <Label className="text-xs text-gray-500">게시 상태</Label>
           <Select value={publishFilter} onValueChange={setPublishFilter}>
@@ -175,77 +163,61 @@ export default function EventsPage() {
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 text-xs font-medium uppercase tracking-wider text-gray-500">
               <th className="px-4 py-3 text-center w-[60px]">NO</th>
-              <th className="px-4 py-3 text-center w-[90px]">진행상태</th>
               <th className="px-4 py-3">제목</th>
-              <th className="px-4 py-3 text-center w-[80px]">조회수</th>
-              <th className="px-4 py-3 text-center">진행일자</th>
-              <th className="px-4 py-3 text-center w-[100px]">등록일</th>
-              <th className="px-4 py-3 text-center w-[90px]">게시상태</th>
-              <th className="px-4 py-3 text-center w-[80px]">관리</th>
+              <th className="px-4 py-3 text-center">진행기간</th>
+              <th className="px-4 py-3 text-center">진행상태</th>
+              <th className="px-4 py-3 text-center">등록일</th>
+              <th className="px-4 py-3 text-center">게시상태</th>
             </tr>
           </thead>
           <tbody>
-            {pageData.length === 0 ? (
+            {loading ? (
               <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
+                  로딩 중...
+                </td>
+              </tr>
+            ) : filtered.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
                   데이터가 없습니다.
                 </td>
               </tr>
             ) : (
-              pageData.map((event, idx) => (
-                <tr
-                  key={event.id}
-                  className={`border-b border-gray-100 transition-colors hover:bg-gray-50 ${idx % 2 === 1 ? "bg-gray-50/50" : ""}`}
-                >
-                  <td className="px-4 py-3 text-center text-gray-500">
-                    {page * pageSize + idx + 1}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <Badge variant={PROGRESS_BADGE_VARIANT[event.progressStatus]}>
-                      {PROGRESS_LABELS[event.progressStatus]}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 font-medium text-gray-900">{event.title}</td>
-                  <td className="px-4 py-3 text-center text-gray-600">
-                    {event.viewCount.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-center text-gray-500 whitespace-nowrap text-xs">
-                    {event.progressStart} ~ {event.progressEnd}
-                  </td>
-                  <td className="px-4 py-3 text-center text-gray-500 text-xs">
-                    {event.createdAt}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <Badge variant={event.publishStatus === "ACTIVE" ? "success" : "secondary"}>
-                      {PUBLISH_LABELS[event.publishStatus]}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <Button variant="outline" size="sm" className="h-7 text-xs">
-                      상세
-                    </Button>
-                  </td>
-                </tr>
-              ))
+              filtered.map((event, idx) => {
+                const progress = getProgressStatus(event.startDate, event.endDate);
+                return (
+                  <tr
+                    key={event.id}
+                    className={`border-b border-gray-100 transition-colors hover:bg-gray-50 ${idx % 2 === 1 ? "bg-gray-50/50" : ""}`}
+                  >
+                    <td className="px-4 py-3 text-center text-gray-500">
+                      {idx + 1}
+                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-900">{event.title}</td>
+                    <td className="px-4 py-3 text-center text-gray-500 whitespace-nowrap text-xs">
+                      {event.startDate?.slice(0, 10)} ~ {event.endDate?.slice(0, 10)}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <Badge variant={PROGRESS_BADGE_VARIANT[progress]}>
+                        {PROGRESS_LABELS[progress]}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-center text-gray-500 text-xs">
+                      {event.createdAt?.slice(0, 10)}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <Badge variant={event.isActive ? "success" : "secondary"}>
+                        {event.isActive ? "활성화" : "비활성화"}
+                      </Badge>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
       </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>
-            이전
-          </Button>
-          <span className="text-sm text-gray-600">
-            {page + 1} / {totalPages}
-          </span>
-          <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
-            다음
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

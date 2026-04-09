@@ -36,6 +36,9 @@ spring:
     show-sql: false
     open-in-view: false
 
+services:
+  content-url: ${SERVICES_CONTENT_URL:http://localhost:8082}
+
 jwt:
   secret: ${JWT_SECRET:pochak-admin-secret-key-minimum-256-bits-long-for-hmac-sha256}
   access-token-expiry: 3600000

@@ -1,5 +1,6 @@
 package com.pochak.admin.site.controller;
 
+import com.pochak.admin.site.client.ContentSyncService;
 import com.pochak.admin.site.entity.Banner;
 import com.pochak.admin.site.repository.BannerRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import java.util.List;
 public class BannerController {
 
     private final BannerRepository bannerRepository;
+    private final ContentSyncService contentSyncService;
 
     @GetMapping
     public ResponseEntity<List<Banner>> getBanners() {
@@ -31,6 +33,10 @@ public class BannerController {
     @PostMapping
     public ResponseEntity<Banner> createBanner(@RequestBody Banner banner) {
         Banner saved = bannerRepository.save(banner);
+        // Sync to content service so home page reflects new banner
+        if (Boolean.TRUE.equals(saved.getIsActive())) {
+            contentSyncService.syncBannerToContent(saved);
+        }
         return ResponseEntity.created(URI.create("/admin/api/v1/site/banners/" + saved.getId())).body(saved);
     }
 

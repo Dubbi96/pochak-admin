@@ -24,9 +24,20 @@ public class RouteConfig {
     @Value("${services.admin-url:http://localhost:8085}")
     private String adminUrl;
 
+    @Value("${services.web-bff-url:http://localhost:9080}")
+    private String webBffUrl;
+
+    @Value("${services.bo-bff-url:http://localhost:9081}")
+    private String boBffUrl;
+
     @Bean
     public RouteLocator pochakRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
+                // 0. web-bff routes (FIRST - /api/v1/web/** → web-bff, stripPrefix(3))
+                .route("web-bff-service", r -> r
+                        .path("/api/v1/web/**")
+                        .filters(f -> f.stripPrefix(3))
+                        .uri(webBffUrl))
                 // 1. content-user-routes (FIRST - resolves ISSUE-004 /users/** path conflict)
                 .route("content-user-routes", r -> r
                         .path("/api/v1/users/me/watch-history/**",
