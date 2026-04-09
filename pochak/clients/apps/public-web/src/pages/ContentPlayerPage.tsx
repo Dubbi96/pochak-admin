@@ -19,6 +19,7 @@ import VClipCard from '@/components/VClipCard';
 import RecommendedVideoItem from '@/components/RecommendedVideoItem';
 import { setOgMeta } from '@/utils/ogMeta';
 import { fetchApi, postApi } from '@/services/apiClient';
+import { useToast } from '@/hooks/useToast';
 import { Heart, Share2, MoreHorizontal, Sparkles, PanelRight, Goal, AlertTriangle, ArrowLeftRight, Star, Clock, Zap } from 'lucide-react';
 
 // ── Highlight API ─────────────────────────────────────────────────
@@ -106,6 +107,7 @@ export default function ContentPlayerPage() {
   const [seekToTime, setSeekToTime] = useState<number | undefined>(undefined);
   const [reelIndex, setReelIndex] = useState<number | null>(null);
   const reelRef = useRef<number | null>(null);
+  const toast = useToast();
 
   const highlights: TimelineEvent[] = highlightItems.map((h) => ({
     id: String(h.id),
@@ -156,11 +158,15 @@ export default function ContentPlayerPage() {
         const sorted = [...result.highlights].sort((a, b) => a.startTimeSeconds - b.startTimeSeconds);
         setHighlightItems(sorted);
         setHighlightPanelOpen(true);
+      } else {
+        toast.show('감지된 하이라이트가 없습니다');
       }
+    } catch {
+      toast.show('하이라이트 감지에 실패했습니다');
     } finally {
       setDetectingHighlights(false);
     }
-  }, [type, id, detectingHighlights]);
+  }, [type, id, detectingHighlights, toast]);
 
   const handleLike = useCallback(() => {
     setIsLiked((prev) => {
@@ -252,7 +258,8 @@ export default function ContentPlayerPage() {
             detectingHighlights ? 'text-[#606060] cursor-not-allowed' : 'text-[#A6A6A6] hover:text-[#00CC33]'
           }`}
         >
-          <Sparkles className={`w-4.5 h-4.5 ${detectingHighlights ? 'animate-pulse' : ''}`} />
+          <Sparkles className={`w-4.5 h-4.5 ${detectingHighlights ? 'animate-spin' : ''}`} />
+          {detectingHighlights && <span className="text-xs">감지 중...</span>}
         </button>
       )}
       {!isClipView && highlightItems.length > 0 && (
