@@ -17,9 +17,13 @@ const navItems = [
 ]
 
 export default function DashboardLayout() {
-  const { partner, logout, isAuthenticated } = useAuthStore()
+  const { partner, logout, isAuthenticated, _hasHydrated } = useAuthStore()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(true)
+
+  if (!_hasHydrated) {
+    return null
+  }
 
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />

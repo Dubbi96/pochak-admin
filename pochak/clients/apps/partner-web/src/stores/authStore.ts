@@ -11,6 +11,8 @@ interface AuthState {
   token: string | null
   refreshToken: string | null
   partner: { id: string; name: string; email: string } | null
+  _hasHydrated: boolean
+  setHasHydrated: (value: boolean) => void
   login: (email: string, password: string) => Promise<boolean>
   setAuth: (token: string, refreshToken: string, partner: { id: string; name: string; email: string }) => void
   logout: () => void
@@ -23,6 +25,8 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       refreshToken: null,
       partner: null,
+      _hasHydrated: false,
+      setHasHydrated: (value) => set({ _hasHydrated: value }),
       login: async (email: string, password: string) => {
         const result = await post<LoginResponse>('/api/v1/auth/login', { email, password })
         if (!result?.accessToken) return false
@@ -37,6 +41,11 @@ export const useAuthStore = create<AuthState>()(
       logout: () => set({ token: null, refreshToken: null, partner: null }),
       isAuthenticated: () => !!get().token,
     }),
-    { name: 'pochak-partner-auth' },
+    {
+      name: 'pochak-partner-auth',
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true)
+      },
+    },
   ),
 )
