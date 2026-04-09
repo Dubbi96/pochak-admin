@@ -59,6 +59,11 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'pochak-partner-auth',
+      partialize: (state) => ({
+        token: state.token,
+        refreshToken: state.refreshToken,
+        partner: state.partner,
+      }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true)
       },
