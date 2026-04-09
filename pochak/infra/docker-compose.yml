@@ -81,7 +81,7 @@ services:
       JWT_SECRET: pochak-jwt-secret-key-for-development-only-minimum-256-bits-long-enough
       REDIS_HOST: pochak-redis
       REDIS_PORT: 6379
-      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3300,http://localhost:8097
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3200,http://localhost:3300,http://localhost:8097
     depends_on:
       pochak-postgres:
         condition: service_healthy
@@ -202,6 +202,7 @@ services:
     environment:
       <<: *service-env
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: admin
+      JWT_SECRET: pochak-jwt-secret-key-for-development-only-minimum-256-bits-long-enough
     depends_on:
       pochak-postgres:
         condition: service_healthy
@@ -217,12 +218,12 @@ services:
   pochak-bo-web:
     build:
       context: ../clients/apps/bo-web
+      args:
+        NEXT_PUBLIC_GATEWAY_URL: http://localhost:8080
+        NEXT_PUBLIC_API_URL: http://localhost:8080/admin/api/v1
     container_name: pochak-bo-web
     ports:
       - "3000:3000"
-    environment:
-      NEXT_PUBLIC_GATEWAY_URL: http://pochak-gateway:8080
-      NEXT_PUBLIC_API_URL: http://pochak-gateway:8080/admin/api/v1
     depends_on:
       - pochak-gateway
     develop:
@@ -246,23 +247,22 @@ services:
           path: ../clients/apps/public-web/src
           target: /app
 
-  # pochak-partner-web:
-  #   build:
-  #     context: ..
-  #     dockerfile: clients/apps/partner-web/Dockerfile
-  #   container_name: pochak-partner-web
-  #   ports:
-  #     - "3200:3200"
-  #   environment:
-  #     VITE_GATEWAY_URL: http://pochak-gateway:8080
-  #   depends_on:
-  #     - pochak-gateway
-  #   develop:
-  #     watch:
-  #       - action: rebuild
-  #         path: ../clients/apps/partner-web/src
-  #         target: /app
-  # TODO: partner-web Dockerfile context 수정 후 활성화
+  pochak-partner-web:
+    build:
+      context: ..
+      dockerfile: clients/apps/partner-web/Dockerfile
+    container_name: pochak-partner-web
+    ports:
+      - "3200:3200"
+    environment:
+      VITE_GATEWAY_URL: http://localhost:8080
+    depends_on:
+      - pochak-gateway
+    develop:
+      watch:
+        - action: rebuild
+          path: ../clients/apps/partner-web/src
+          target: /app
 
 volumes:
   pochak-pg-data:
