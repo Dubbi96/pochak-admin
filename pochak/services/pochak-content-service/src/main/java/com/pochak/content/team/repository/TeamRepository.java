@@ -49,4 +49,13 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
             " AND LOWER(CAST(t.name AS string)) LIKE LOWER(CAST(CONCAT('%', :keyword, '%') AS string))" +
             " ORDER BY t.name ASC")
     List<Team> searchByName(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT t FROM Team t WHERE t.active = true" +
+            " AND (:sportId IS NULL OR t.sport.id = :sportId)" +
+            " AND (:keyword IS NULL OR LOWER(CAST(t.name AS string)) LIKE LOWER(CAST(CONCAT('%', :keyword, '%') AS string)))" +
+            " ORDER BY t.createdAt DESC")
+    Page<Team> findClubs(
+            @Param("sportId") Long sportId,
+            @Param("keyword") String keyword,
+            Pageable pageable);
 }

@@ -23,6 +23,24 @@ public class ClubController {
 
     private final ClubService clubService;
 
+    @GetMapping
+    public ApiResponse<List<ClubListResponse>> getClubs(
+            @RequestParam(required = false) Long sportId,
+            @RequestParam(required = false) String keyword,
+            @PageableDefault(size = 20) Pageable pageable) {
+
+        Page<ClubListResponse> page = clubService.getClubs(sportId, keyword, pageable);
+
+        PageMeta meta = PageMeta.builder()
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalCount(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .build();
+
+        return ApiResponse.success(page.getContent(), meta);
+    }
+
     @GetMapping("/nearby")
     public ApiResponse<List<ClubListResponse>> getNearbyClubs(
             @RequestParam(required = false) Long sportId,
