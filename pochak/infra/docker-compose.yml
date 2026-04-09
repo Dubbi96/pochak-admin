@@ -78,6 +78,7 @@ services:
       SERVICES_COMMERCE_URL: http://pochak-commerce:8083
       SERVICES_OPERATION_URL: http://pochak-operation:8084
       SERVICES_ADMIN_URL: http://pochak-admin:8085
+      SERVICES_WEB_BFF_URL: http://pochak-web-bff:9080
       SERVICES_PARTNER_BFF_URL: http://pochak-partner-bff:9091
       JWT_SECRET: pochak-jwt-secret-key-for-development-only-minimum-256-bits-long-enough
       REDIS_HOST: pochak-redis
@@ -90,6 +91,8 @@ services:
         condition: service_healthy
       pochak-rabbitmq:
         condition: service_healthy
+      pochak-web-bff:
+        condition: service_started
       pochak-partner-bff:
         condition: service_started
     develop:
@@ -215,6 +218,31 @@ services:
       watch:
         - action: rebuild
           path: ../services/pochak-admin-service/src
+          target: /app
+
+  pochak-web-bff:
+    build:
+      context: ../services
+      dockerfile: pochak-web-bff/Dockerfile
+    container_name: pochak-web-bff
+    ports:
+      - "9080:9080"
+    environment:
+      SERVICES_IDENTITY_URL: http://pochak-identity:8081
+      SERVICES_CONTENT_URL: http://pochak-content:8082
+      SERVICES_COMMERCE_URL: http://pochak-commerce:8083
+      SERVICES_ADMIN_URL: http://pochak-admin:8085
+    depends_on:
+      pochak-postgres:
+        condition: service_healthy
+      pochak-redis:
+        condition: service_healthy
+      pochak-rabbitmq:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ../services/pochak-web-bff/src
           target: /app
 
   pochak-partner-bff:
