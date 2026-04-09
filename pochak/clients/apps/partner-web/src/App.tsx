@@ -7,6 +7,7 @@ import ProductsPage from '@/pages/ProductsPage'
 import ReservationsPage from '@/pages/ReservationsPage'
 import AnalyticsPage from '@/pages/AnalyticsPage'
 import SettingsPage from '@/pages/SettingsPage'
+import ClubManagePage from '@/pages/ClubManagePage'
 
 export default function App() {
   return (
@@ -20,6 +21,8 @@ export default function App() {
         <Route path="/reservations" element={<ReservationsPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/clubs" element={<ClubManagePage />} />
+        <Route path="/clubs/:id" element={<ClubManagePage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
