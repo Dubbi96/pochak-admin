@@ -22,6 +22,7 @@ export interface TimelineEvent {
   label: string;
   type: 'GOAL' | 'FOUL' | 'SUBSTITUTION' | 'HIGHLIGHT' | 'PERIOD' | 'CUSTOM';
   teamName?: string;
+  confidence?: number; // 0–1
 }
 
 export interface Chapter {
@@ -58,6 +59,15 @@ const EVENT_COLORS: Record<TimelineEvent['type'], string> = {
   HIGHLIGHT: '#FFFFFF',
   PERIOD: '#FF9800',
   CUSTOM: '#CE93D8',
+};
+
+const EVENT_ICONS: Record<TimelineEvent['type'], string> = {
+  GOAL: '⚽',
+  FOUL: '🟨',
+  SUBSTITUTION: '🔄',
+  HIGHLIGHT: '⭐',
+  PERIOD: '🔔',
+  CUSTOM: '📌',
 };
 
 const CHAPTER_BADGE_COLORS: Record<Chapter['type'], string> = {
@@ -170,6 +180,11 @@ export default function VideoPlayer({
   const [showTimelinePanel, setShowTimelinePanel] = useState(false);
   const [isNetworkError, setIsNetworkError] = useState(false);
 
+  // Highlight reel
+  const [isHighlightReel, setIsHighlightReel] = useState(false);
+  const [reelIdx, setReelIdx] = useState(0);
+  const reelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const activeChapter = chapters.find(
     (ch) => ch.startTime <= currentTime && currentTime < ch.endTime,
   );
@@ -183,6 +198,26 @@ export default function VideoPlayer({
       setCurrentTime(time);
     }
   }, []);
+
+  // Highlight reel: seek through events with 5-second preview each
+  useEffect(() => {
+    const sortedEvents = [...events].sort((a, b) => a.time - b.time);
+    if (!isHighlightReel || sortedEvents.length === 0) return;
+    if (reelIdx >= sortedEvents.length) {
+      setIsHighlightReel(false);
+      setReelIdx(0);
+      return;
+    }
+    seekTo(sortedEvents[reelIdx].time);
+    const video = videoRef.current;
+    if (video && video.paused) video.play().catch(() => {});
+    reelTimerRef.current = setTimeout(() => {
+      setReelIdx((i) => i + 1);
+    }, 5000);
+    return () => {
+      if (reelTimerRef.current) clearTimeout(reelTimerRef.current);
+    };
+  }, [isHighlightReel, reelIdx, events, seekTo]);
 
   // ── Auto-hide controls ─────────────────────────────────────
 
@@ -735,8 +770,11 @@ export default function VideoPlayer({
 
   // ── Render ─────────────────────────────────────────────────
 
+  const sortedEvents = [...events].sort((a, b) => a.time - b.time);
+
   return (
-    <div>
+    <div style={{ display: 'flex', gap: showTimelinePanel && events.length > 0 ? '12px' : 0, alignItems: 'flex-start' }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
       <div
         ref={containerRef}
         style={{
@@ -1293,119 +1331,130 @@ export default function VideoPlayer({
         </div>
       </div>
 
-      {/* Timeline Panel (below video) */}
+      </div>{/* end flex:1 video column */}
+
+      {/* Side Panel */}
       {showTimelinePanel && (events.length > 0 || chapters.length > 0) && (
         <div
           style={{
-            backgroundColor: '#262626',
-            border: '1px solid #4D4D4D',
-            borderTop: 'none',
-            borderRadius: '0 0 8px 8px',
-            padding: '16px',
+            width: '280px',
+            flexShrink: 0,
+            backgroundColor: '#1A1A1A',
+            border: '1px solid #333',
+            borderRadius: '8px',
+            display: 'flex',
+            flexDirection: 'column',
+            maxHeight: '500px',
+            overflow: 'hidden',
           }}
         >
-          {/* Chapters */}
-          {chapters.length > 0 && (
-            <div style={{ marginBottom: events.length > 0 ? '20px' : 0 }}>
-              <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'white', marginBottom: '12px' }}>
-                경기 구간
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {/* Panel header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderBottom: '1px solid #333', flexShrink: 0 }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: 'white' }}>하이라이트</span>
+            {events.length > 0 && (
+              <button
+                onClick={() => {
+                  if (isHighlightReel) {
+                    setIsHighlightReel(false);
+                    setReelIdx(0);
+                  } else {
+                    setReelIdx(0);
+                    setIsHighlightReel(true);
+                  }
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: isHighlightReel ? '#000' : '#00CC33',
+                  backgroundColor: isHighlightReel ? '#00CC33' : 'rgba(0,204,51,0.15)',
+                }}
+              >
+                {isHighlightReel ? '■ 중지' : '▶ 릴 재생'}
+              </button>
+            )}
+          </div>
+
+          {/* Panel body: scrollable */}
+          <div style={{ overflowY: 'auto', flex: 1 }}>
+            {/* Chapters */}
+            {chapters.length > 0 && (
+              <div style={{ padding: '10px 0', borderBottom: events.length > 0 ? '1px solid #2A2A2A' : 'none' }}>
+                <p style={{ fontSize: '10px', fontWeight: 700, color: '#606060', padding: '0 14px 6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>경기 구간</p>
                 {chapters.map((ch) => {
                   const isActive = activeChapter?.id === ch.id;
-                  const chDuration = ch.endTime - ch.startTime;
                   return (
                     <button
                       key={ch.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        backgroundColor: isActive ? 'rgba(0,204,51,0.1)' : 'transparent',
-                      }}
                       onClick={() => seekTo(ch.startTime)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        width: '100%', textAlign: 'left', padding: '6px 14px',
+                        border: 'none', cursor: 'pointer',
+                        backgroundColor: isActive ? 'rgba(0,204,51,0.08)' : 'transparent',
+                      }}
                     >
-                      <span
-                        style={{
-                          display: 'inline-block',
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          fontSize: '10px',
-                          fontWeight: 700,
-                          color: 'white',
-                          flexShrink: 0,
-                          backgroundColor: CHAPTER_BADGE_COLORS[ch.type],
-                        }}
-                      >
+                      <span style={{ display: 'inline-block', padding: '1px 6px', borderRadius: '3px', fontSize: '9px', fontWeight: 700, color: 'white', flexShrink: 0, backgroundColor: CHAPTER_BADGE_COLORS[ch.type] }}>
                         {CHAPTER_LABELS[ch.type]}
                       </span>
-                      <span style={{ fontSize: '12px', color: '#A6A6A6', fontFamily: 'monospace', flexShrink: 0, width: '48px' }}>
-                        {formatTime(ch.startTime)}
-                      </span>
-                      <span style={{ fontSize: '14px', flex: 1, color: isActive ? '#00CC33' : '#A6A6A6', fontWeight: isActive ? 500 : 400 }}>
-                        {ch.title}
-                      </span>
-                      <span style={{ fontSize: '12px', color: '#606060', flexShrink: 0 }}>
-                        {formatDurationShort(chDuration)}
-                      </span>
+                      <span style={{ fontSize: '11px', color: '#808080', fontFamily: 'monospace', flexShrink: 0 }}>{formatTime(ch.startTime)}</span>
+                      <span style={{ fontSize: '13px', flex: 1, color: isActive ? '#00CC33' : '#A0A0A0', fontWeight: isActive ? 600 : 400, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{ch.title}</span>
                     </button>
                   );
                 })}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Events */}
-          {events.length > 0 && (
-            <div>
-              <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'white', marginBottom: '12px' }}>
-                이벤트
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {events.map((evt) => (
-                  <button
-                    key={evt.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      width: '100%',
-                      textAlign: 'left',
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      cursor: 'pointer',
-                      backgroundColor: 'transparent',
-                    }}
-                    onClick={() => seekTo(evt.time)}
-                  >
-                    <span
-                      style={{
-                        width: '10px',
-                        height: '10px',
-                        borderRadius: '50%',
-                        flexShrink: 0,
-                        backgroundColor: EVENT_COLORS[evt.type],
+            {/* Events */}
+            {events.length > 0 && (
+              <div style={{ padding: '10px 0' }}>
+                <p style={{ fontSize: '10px', fontWeight: 700, color: '#606060', padding: '0 14px 6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>이벤트</p>
+                {sortedEvents.map((evt, i) => {
+                  const isActive = isHighlightReel && reelIdx === i;
+                  return (
+                    <button
+                      key={evt.id}
+                      onClick={() => {
+                        if (isHighlightReel) { setIsHighlightReel(false); setReelIdx(0); }
+                        seekTo(evt.time);
                       }}
-                    />
-                    <span style={{ fontSize: '12px', color: '#A6A6A6', fontFamily: 'monospace', flexShrink: 0, width: '48px' }}>
-                      {formatTime(evt.time)}
-                    </span>
-                    <span style={{ fontSize: '14px', color: '#A6A6A6', flex: 1 }}>{evt.label}</span>
-                    {evt.teamName && (
-                      <span style={{ fontSize: '12px', color: '#606060', flexShrink: 0 }}>{evt.teamName}</span>
-                    )}
-                  </button>
-                ))}
+                      style={{
+                        display: 'flex', alignItems: 'flex-start', gap: '8px',
+                        width: '100%', textAlign: 'left', padding: '8px 14px',
+                        border: 'none', cursor: 'pointer',
+                        backgroundColor: isActive ? 'rgba(0,204,51,0.08)' : 'transparent',
+                      }}
+                    >
+                      <span style={{ fontSize: '16px', flexShrink: 0, lineHeight: 1.2 }}>{EVENT_ICONS[evt.type]}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                          <span style={{ fontSize: '11px', color: '#808080', fontFamily: 'monospace', flexShrink: 0 }}>{formatTime(evt.time)}</span>
+                          {evt.teamName && (
+                            <span style={{ fontSize: '10px', color: '#606060', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{evt.teamName}</span>
+                          )}
+                        </div>
+                        <p style={{ fontSize: '12px', color: isActive ? '#00CC33' : '#C0C0C0', fontWeight: isActive ? 600 : 400, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', margin: 0 }}>{evt.label}</p>
+                        {evt.confidence != null && (
+                          <div style={{ marginTop: '5px' }}>
+                            <div style={{ height: '3px', borderRadius: '2px', backgroundColor: '#333', overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: `${Math.round(evt.confidence * 100)}%`, backgroundColor: EVENT_COLORS[evt.type], borderRadius: '2px', transition: 'width 0.3s' }} />
+                            </div>
+                            <span style={{ fontSize: '9px', color: '#606060', marginTop: '2px', display: 'block' }}>{Math.round(evt.confidence * 100)}%</span>
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
