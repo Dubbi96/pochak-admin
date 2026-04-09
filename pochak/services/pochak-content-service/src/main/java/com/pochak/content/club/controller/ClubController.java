@@ -107,8 +107,35 @@ public class ClubController {
     }
 
     @GetMapping("/{teamId}/members")
-    public ApiResponse<List<ClubMemberResponse>> getClubMembers(@PathVariable Long teamId) {
-        return ApiResponse.success(clubService.getClubMembers(teamId));
+    public ApiResponse<List<ClubMemberResponse>> getClubMembers(
+            @PathVariable Long teamId,
+            @RequestParam(required = false) String status) {
+        return ApiResponse.success(clubService.getClubMembers(teamId, status));
+    }
+
+    @PatchMapping("/{teamId}/members/{membershipId}/role")
+    public ApiResponse<ClubMemberResponse> updateMemberRole(
+            @PathVariable Long teamId,
+            @PathVariable Long membershipId,
+            @Valid @RequestBody UpdateMemberRoleRequest request) {
+        return ApiResponse.success(clubService.updateMemberRole(teamId, membershipId, request));
+    }
+
+    @DeleteMapping("/{teamId}/members/{membershipId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeMember(
+            @PathVariable Long teamId,
+            @PathVariable Long membershipId) {
+        clubService.removeMember(teamId, membershipId);
+    }
+
+    @PatchMapping("/{teamId}/members/{membershipId}/approve")
+    public ApiResponse<ClubMemberResponse> approveMember(
+            @PathVariable Long teamId,
+            @PathVariable Long membershipId,
+            @RequestBody(required = false) ApproveMemberRequest request) {
+        return ApiResponse.success(clubService.approveMember(teamId, membershipId,
+                request != null ? request : new ApproveMemberRequest()));
     }
 
     @GetMapping("/{clubId}/customization")
