@@ -90,6 +90,8 @@ services:
         condition: service_healthy
       pochak-rabbitmq:
         condition: service_healthy
+      pochak-partner-bff:
+        condition: service_started
     develop:
       watch:
         - action: rebuild
@@ -213,6 +215,31 @@ services:
       watch:
         - action: rebuild
           path: ../services/pochak-admin-service/src
+          target: /app
+
+  pochak-partner-bff:
+    build:
+      context: ../services
+      dockerfile: pochak-partner-bff/Dockerfile
+    container_name: pochak-partner-bff
+    ports:
+      - "9091:9091"
+    environment:
+      SERVICES_IDENTITY_URL: http://pochak-identity:8081
+      SERVICES_CONTENT_URL: http://pochak-content:8082
+      SERVICES_COMMERCE_URL: http://pochak-commerce:8083
+      SERVICES_OPERATION_URL: http://pochak-operation:8084
+    depends_on:
+      pochak-postgres:
+        condition: service_healthy
+      pochak-redis:
+        condition: service_healthy
+      pochak-rabbitmq:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ../services/pochak-partner-bff/src
           target: /app
 
   # ── Frontend Services ─────────────────────────────────────────
