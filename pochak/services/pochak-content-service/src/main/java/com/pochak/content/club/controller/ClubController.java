@@ -138,6 +138,49 @@ public class ClubController {
                 request != null ? request : new ApproveMemberRequest()));
     }
 
+    @GetMapping("/{clubId}/posts")
+    public ApiResponse<List<ClubPostResponse>> getClubPosts(
+            @PathVariable Long clubId,
+            @PageableDefault(size = 20) Pageable pageable) {
+        Page<ClubPostResponse> page = clubService.getClubPosts(clubId, pageable);
+        PageMeta meta = PageMeta.builder()
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalCount(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .build();
+        return ApiResponse.success(page.getContent(), meta);
+    }
+
+    @PostMapping("/{clubId}/posts")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<ClubPostResponse> createClubPost(
+            @PathVariable Long clubId,
+            @Valid @RequestBody CreateClubPostRequest request) {
+        return ApiResponse.success(clubService.createClubPost(clubId, request));
+    }
+
+    @PutMapping("/{clubId}/posts/{postId}")
+    public ApiResponse<ClubPostResponse> updateClubPost(
+            @PathVariable Long clubId,
+            @PathVariable Long postId,
+            @RequestBody UpdateClubPostRequest request) {
+        return ApiResponse.success(clubService.updateClubPost(clubId, postId, request));
+    }
+
+    @DeleteMapping("/{clubId}/posts/{postId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteClubPost(
+            @PathVariable Long clubId,
+            @PathVariable Long postId) {
+        clubService.deleteClubPost(clubId, postId);
+    }
+
+    @GetMapping("/{clubId}/stats")
+    public ApiResponse<ClubStatsResponse> getClubStats(@PathVariable Long clubId) {
+        return ApiResponse.success(clubService.getClubStats(clubId));
+    }
+
     @GetMapping("/{clubId}/customization")
     public ApiResponse<ClubCustomizationResponse> getClubCustomization(
             @PathVariable Long clubId,

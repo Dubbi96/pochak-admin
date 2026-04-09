@@ -8,7 +8,9 @@ import com.pochak.content.asset.repository.ClipAssetRepository;
 import com.pochak.content.asset.repository.VodAssetRepository;
 import com.pochak.content.club.dto.*;
 import com.pochak.content.club.entity.ClubCustomization;
+import com.pochak.content.club.entity.ClubPost;
 import com.pochak.content.club.repository.ClubCustomizationRepository;
+import com.pochak.content.club.repository.ClubPostRepository;
 import org.springframework.util.StringUtils;
 import com.pochak.content.membership.dto.MembershipResponse;
 import com.pochak.content.membership.entity.Membership;
@@ -39,6 +41,7 @@ public class ClubService {
     private final ClipAssetRepository clipAssetRepository;
     private final VodAssetRepository vodAssetRepository;
     private final ClubCustomizationRepository clubCustomizationRepository;
+    private final ClubPostRepository clubPostRepository;
 
     private static final BigDecimal DEFAULT_RADIUS_DEGREE = new BigDecimal("0.05"); // ~5km
 
@@ -280,6 +283,87 @@ public class ClubService {
         }
 
         return ClubMemberResponse.from(membership);
+    }
+
+    // ---- Club Posts ----
+
+    public Page<ClubPostResponse> getClubPosts(Long clubId, Pageable pageable) {
+        teamRepository.findByIdAndActiveTrue(clubId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Club not found: " + clubId));
+        return clubPostRepository.findByClubId(clubId, pageable).map(ClubPostResponse::from);
+    }
+
+    @Transactional
+    public ClubPostResponse createClubPost(Long clubId, CreateClubPostRequest request) {
+        teamRepository.findByIdAndActiveTrue(clubId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Club not found: " + clubId));
+
+        ClubPost.PostType postType = ClubPost.PostType.FREE;
+        if (StringUtils.hasText(request.getPostType())) {
+            try {
+                postType = ClubPost.PostType.valueOf(request.getPostType().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "Invalid postType: " + request.getPostType());
+            }
+        }
+
+        ClubPost post = ClubPost.builder()
+                .clubId(clubId)
+                .authorUserId(request.getAuthorUserId())
+                .postType(postType)
+                .title(request.getTitle())
+                .content(request.getContent())
+                .imageUrls(request.getImageUrls())
+                .build();
+
+        return ClubPostResponse.from(clubPostRepository.save(post));
+    }
+
+    @Transactional
+    public ClubPostResponse updateClubPost(Long clubId, Long postId, UpdateClubPostRequest request) {
+        teamRepository.findByIdAndActiveTrue(clubId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Club not found: " + clubId));
+
+        ClubPost post = clubPostRepository.findById(postId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Post not found: " + postId));
+
+        if (!clubId.equals(post.getClubId()) || post.isDeleted()) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "Post not found in this club");
+        }
+
+        post.update(request.getTitle(), request.getContent(), request.getImageUrls());
+        return ClubPostResponse.from(post);
+    }
+
+    @Transactional
+    public void deleteClubPost(Long clubId, Long postId) {
+        teamRepository.findByIdAndActiveTrue(clubId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Club not found: " + clubId));
+
+        ClubPost post = clubPostRepository.findById(postId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Post not found: " + postId));
+
+        if (!clubId.equals(post.getClubId()) || post.isDeleted()) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "Post not found in this club");
+        }
+
+        post.softDelete();
+    }
+
+    // ---- Club Stats ----
+
+    public ClubStatsResponse getClubStats(Long clubId) {
+        teamRepository.findByIdAndActiveTrue(clubId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Club not found: " + clubId));
+
+        long totalMembers = getApprovedMemberCount(clubId);
+        long totalPosts = clubPostRepository.countByClubIdAndDeletedAtIsNull(clubId);
+
+        return ClubStatsResponse.builder()
+                .clubId(clubId)
+                .totalMembers(totalMembers)
+                .totalPosts(totalPosts)
+                .build();
     }
 
     private long getApprovedMemberCount(Long teamId) {
