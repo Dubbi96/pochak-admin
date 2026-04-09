@@ -40,7 +40,7 @@ services:
   content-url: ${SERVICES_CONTENT_URL:http://localhost:8082}
 
 jwt:
-  secret: ${JWT_SECRET:pochak-admin-secret-key-minimum-256-bits-long-for-hmac-sha256}
+  secret: ${JWT_SECRET:pochak-jwt-secret-key-for-development-only-minimum-256-bits-long-enough}
   access-token-expiry: 3600000
   refresh-token-expiry: 86400000
 
