@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { LuArrowLeft, LuSave, LuLoader, LuUsers, LuPalette } from 'react-icons/lu'
+import { LuArrowLeft, LuSave, LuLoader, LuUsers, LuPalette, LuFileText } from 'react-icons/lu'
 import { get, put } from '@/lib/api'
 
 interface ClubDetail {
@@ -135,6 +135,14 @@ export default function ClubEditPage() {
           >
             <LuPalette className="w-4 h-4" />
             페이지 커스터마이징
+          </button>
+          <button
+            onClick={() => navigate(`/clubs/${id}/posts`)}
+            className="flex items-center gap-2 rounded-lg border text-[13px] font-medium px-4 py-2 transition-colors hover:bg-black/5"
+            style={{ borderColor: 'var(--color-border-default)' }}
+          >
+            <LuFileText className="w-4 h-4" />
+            공지사항/게시글
           </button>
         </div>
       )}
