@@ -56,4 +56,11 @@ public interface ClipAssetRepository extends JpaRepository<ClipAsset, Long> {
             " AND LOWER(CAST(ca.title AS string)) LIKE LOWER(CAST(CONCAT('%', :keyword, '%') AS string))" +
             " ORDER BY ca.createdAt DESC")
     List<ClipAsset> searchByTitle(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT ca FROM ClipAsset ca WHERE ca.deletedAt IS NULL" +
+            " AND ca.sourceType = :sourceType AND ca.sourceId = :sourceId" +
+            " ORDER BY ca.startTimeSec ASC")
+    List<ClipAsset> findBySourceTypeAndSourceId(
+            @Param("sourceType") ClipAsset.SourceType sourceType,
+            @Param("sourceId") Long sourceId);
 }
