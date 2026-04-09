@@ -37,31 +37,42 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     setError('');
+    if (!userId || !password) {
+      setError('이메일과 비밀번호를 입력해주세요.');
+      return;
+    }
     setIsLoading(true);
     try {
-      const res = await postApi<{ accessToken?: string }>(
-        '/auth/login',
-        { email: userId, password },
-        null as unknown as { accessToken?: string }
-      );
-      if (res?.accessToken) {
-        localStorage.setItem('pochak_token', res.accessToken);
+      const res = await fetch(`${GATEWAY_URL}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userId, password }),
+      });
+      const json = await res.json();
+      const data = json.data ?? json;
+      if (res.ok && data?.accessToken) {
+        localStorage.setItem('pochak_token', data.accessToken);
+        if (data.refreshToken) {
+          localStorage.setItem('pochak_refresh_token', data.refreshToken);
+        }
         localStorage.setItem('pochak_user', JSON.stringify({ nickname: userId }));
         navigate('/home');
         return;
       }
+      if (res.status === 401 || res.status === 400) {
+        setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+        return;
+      }
+      // Server error — fall through to mock
     } catch {
-      // fall through to mock
+      // Network unavailable — fall through to mock
     } finally {
       setIsLoading(false);
     }
-    if (userId && password) {
-      localStorage.setItem('pochak_token', 'mock-token');
-      localStorage.setItem('pochak_user', JSON.stringify({ nickname: userId }));
-      navigate('/home');
-    } else {
-      setError('아이디와 비밀번호를 입력해주세요.');
-    }
+    // Mock fallback: only when backend is unreachable
+    localStorage.setItem('pochak_token', 'mock-token');
+    localStorage.setItem('pochak_user', JSON.stringify({ nickname: userId }));
+    navigate('/home');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -160,7 +171,7 @@ export default function LoginPage() {
             <div className="relative group">
               <input
                 type="text"
-                placeholder="아이디"
+                placeholder="이메일"
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
                 className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-4 py-3.5 text-[14px] text-white placeholder-white/25 outline-none transition-all duration-300 focus:border-[#00CC33]/50 focus:bg-white/[0.06] focus:shadow-[0_0_0_3px_rgba(0,204,51,0.08)]"
