@@ -9,6 +9,7 @@ import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
@@ -80,6 +81,11 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
                 })
                 .build();
         ServerWebExchange cleanedExchange = exchange.mutate().request(cleanedRequest).build();
+
+        // CORS preflight: pass through without JWT validation
+        if (HttpMethod.OPTIONS.equals(request.getMethod())) {
+            return chain.filter(cleanedExchange);
+        }
 
         String authHeader = cleanedRequest.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         boolean hasValidAuth = authHeader != null && authHeader.startsWith(BEARER_PREFIX);

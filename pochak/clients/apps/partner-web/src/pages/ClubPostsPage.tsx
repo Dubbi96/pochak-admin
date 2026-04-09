@@ -17,8 +17,8 @@ interface ClubPost {
 
 const POST_TYPE_LABELS: Record<string, string> = {
   NOTICE: '공지',
-  POST: '게시글',
-  EVENT: '이벤트',
+  FREE: '게시글',
+  RECRUIT: '모집',
 }
 
 function formatDate(iso: string) {
@@ -128,7 +128,7 @@ export default function ClubPostsPage() {
   const navigate = useNavigate()
   const [posts, setPosts] = useState<ClubPost[]>([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'NOTICE' | 'POST'>('NOTICE')
+  const [tab, setTab] = useState<'NOTICE' | 'FREE' | 'RECRUIT'>('NOTICE')
   const [showForm, setShowForm] = useState(false)
   const [editTarget, setEditTarget] = useState<ClubPost | null>(null)
   const [deleting, setDeleting] = useState<number | null>(null)
@@ -193,7 +193,7 @@ export default function ClubPostsPage() {
 
       {/* Tabs */}
       <div className="flex border-b" style={{ marginBottom: 16, borderColor: 'var(--color-border-subtle)' }}>
-        {(['NOTICE', 'POST'] as const).map((t) => (
+        {(['NOTICE', 'FREE', 'RECRUIT'] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}

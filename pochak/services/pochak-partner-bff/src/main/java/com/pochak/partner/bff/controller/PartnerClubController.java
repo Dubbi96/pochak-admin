@@ -12,6 +12,14 @@ public class PartnerClubController {
 
     private final RestClient contentClient;
 
+    @GetMapping
+    public String getPartnerClubs(@PathVariable Long partnerId) {
+        return contentClient.get()
+                .uri("/clubs/by-partner?partnerId={partnerId}", partnerId)
+                .retrieve()
+                .body(String.class);
+    }
+
     @GetMapping("/{clubId}/customization")
     public String getClubCustomization(
             @PathVariable Long partnerId,

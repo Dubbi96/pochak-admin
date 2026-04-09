@@ -188,6 +188,12 @@ public class ClubController {
         return ApiResponse.success(clubService.getClubStats(clubId));
     }
 
+    @GetMapping("/by-partner")
+    public ApiResponse<List<ClubCustomizationResponse>> getClubsByPartner(
+            @RequestParam Long partnerId) {
+        return ApiResponse.success(clubService.getClubsByPartnerId(partnerId));
+    }
+
     @GetMapping("/{clubId}/customization")
     public ApiResponse<ClubCustomizationResponse> getClubCustomization(
             @PathVariable Long clubId,
