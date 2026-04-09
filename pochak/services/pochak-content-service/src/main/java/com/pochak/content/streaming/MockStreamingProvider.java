@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Mock implementation of StreamingProvider.
@@ -32,20 +33,33 @@ public class MockStreamingProvider implements StreamingProvider {
     }
 
     /**
-     * Public test HLS streams that actually work in any player.
-     * Rotated based on contentId hash so different content shows different streams.
+     * Sport-specific public test HLS streams, keyed by sport code.
+     * These are freely available streams used for development and QA only.
+     *
+     * Sport codes match content.sports.code in the database (see V100 seed).
      */
-    private static final String[] TEST_HLS_URLS = {
-            "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
-            "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8",
-            "https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/master.m3u8"
-    };
+    private static final Map<String, String> SPORT_HLS_URLS = Map.of(
+            "SOCCER",     "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+            "BASKETBALL", "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8",
+            "BASEBALL",   "https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/master.m3u8",
+            "VOLLEYBALL", "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8",
+            "FUTSAL",     "https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8"
+    );
+
+    /** Ordered fallback list when contentType is live/vod/clip (no sport info). */
+    private static final List<String> FALLBACK_HLS_URLS = List.copyOf(SPORT_HLS_URLS.values());
 
     @Override
     public StreamInfo getStreamUrl(Long contentId, String contentType) {
-        int index = Math.abs(Long.hashCode(contentId)) % TEST_HLS_URLS.length;
+        // If contentType is a sport code, return the sport-specific stream.
+        String url = SPORT_HLS_URLS.get(contentType == null ? null : contentType.toUpperCase());
+        if (url == null) {
+            // Fallback: rotate by contentId hash (covers live / vod / clip paths).
+            int index = Math.abs(Long.hashCode(contentId)) % FALLBACK_HLS_URLS.size();
+            url = FALLBACK_HLS_URLS.get(index);
+        }
         return StreamInfo.builder()
-                .url(TEST_HLS_URLS[index])
+                .url(url)
                 .protocol("HLS")
                 .drmConfig(DrmConfig.builder()
                         .type("NONE")
@@ -55,31 +69,30 @@ public class MockStreamingProvider implements StreamingProvider {
 
     @Override
     public List<CameraView> getAvailableCameras(Long matchId) {
-        // Use the first test URL as base for camera views
-        String baseUrl = TEST_HLS_URLS[0];
+        int baseIndex = Math.abs(Long.hashCode(matchId)) % FALLBACK_HLS_URLS.size();
         return List.of(
                 CameraView.builder()
                         .id(1L)
                         .label("AI")
-                        .streamUrl(baseUrl)
+                        .streamUrl(FALLBACK_HLS_URLS.get(baseIndex))
                         .isDefault(true)
                         .build(),
                 CameraView.builder()
                         .id(2L)
                         .label("PANO")
-                        .streamUrl(TEST_HLS_URLS[1 % TEST_HLS_URLS.length])
+                        .streamUrl(FALLBACK_HLS_URLS.get((baseIndex + 1) % FALLBACK_HLS_URLS.size()))
                         .isDefault(false)
                         .build(),
                 CameraView.builder()
                         .id(3L)
                         .label("SIDE_A")
-                        .streamUrl(TEST_HLS_URLS[2 % TEST_HLS_URLS.length])
+                        .streamUrl(FALLBACK_HLS_URLS.get((baseIndex + 2) % FALLBACK_HLS_URLS.size()))
                         .isDefault(false)
                         .build(),
                 CameraView.builder()
                         .id(4L)
                         .label("CAM")
-                        .streamUrl(TEST_HLS_URLS[0])
+                        .streamUrl(FALLBACK_HLS_URLS.get((baseIndex + 3) % FALLBACK_HLS_URLS.size()))
                         .isDefault(false)
                         .build()
         );
