@@ -14,14 +14,15 @@ import HScrollRow from '@/components/HScrollRow';
 import SectionHeader from '@/components/SectionHeader';
 import FilterChip from '@/components/FilterChip';
 import { VideoCard, ClipCard, TeamLogoCard } from '@/components/Card';
-import { useTeamDetail } from '@/hooks/useApi';
+import { useClubDetail } from '@/hooks/useApi';
 import { useContents, useTeams, useCompetitions } from '@/hooks/useApi';
+import { pochakApi } from '@/services/api-client';
 
 const tabs = ['홈', '영상', '클립', '라이브', '일정', '커뮤니티', '정보'] as const;
 
 export default function TeamDetailPage() {
   const { id = '' } = useParams<{ id: string }>();
-  const { data: team } = useTeamDetail(id);
+  const { data: club, loading: clubLoading } = useClubDetail(id);
   const { data: liveContents } = useContents('LIVE');
   const { data: vodContents } = useContents('VOD');
   const { data: clipContents } = useContents('CLIP');
@@ -32,15 +33,33 @@ export default function TeamDetailPage() {
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [notifSetting, setNotifSetting] = useState<'all' | 'custom' | 'none'>('custom');
 
-  const teamData = team ?? { id: '', name: '', color: '#888', initial: '', subtitle: '', followers: 0 };
+  const handleJoin = async () => {
+    if (!id) return;
+    await pochakApi.post(`/api/v1/clubs/${id}/join`, { role: 'PLAYER' });
+    setIsJoined(true);
+    setShowNotifMenu(false);
+  };
+
+  const teamData = club
+    ? {
+        id: String(club.teamId),
+        name: club.name,
+        color: club.customization?.themeColor ?? '#888',
+        initial: club.shortName?.charAt(0) ?? club.name.charAt(0),
+        subtitle: club.sportName ?? '',
+        followers: club.memberCount,
+        imageUrl: club.customization?.logoUrl ?? club.logoUrl,
+        description: club.description,
+      }
+    : { id: '', name: clubLoading ? '로딩 중...' : '', color: '#888', initial: '', subtitle: '', followers: 0 };
 
   return (
     <div>
       {/* ── YouTube-style Channel Banner ── */}
       <div className="-mx-6 lg:-mx-8">
         <div className="h-[160px] lg:h-[200px] w-full overflow-hidden" style={{ background: `linear-gradient(135deg, ${teamData.color}40, ${teamData.color}10, #0f0f0f)` }}>
-          {teamData.imageUrl && (
-            <img src={teamData.imageUrl} alt="" className="w-full h-full object-cover opacity-40" />
+          {(club?.customization?.bannerUrl ?? teamData.imageUrl) && (
+            <img src={club?.customization?.bannerUrl ?? teamData.imageUrl} alt="" className="w-full h-full object-cover opacity-40" />
           )}
         </div>
       </div>
@@ -80,7 +99,7 @@ export default function TeamDetailPage() {
           <div className="mt-5 relative">
             {!isJoined ? (
               <button
-                onClick={() => { setIsJoined(true); setShowNotifMenu(false); }}
+                onClick={handleJoin}
                 style={{ paddingLeft: 24, paddingRight: 24, paddingTop: 10, paddingBottom: 10 }}
                 className="rounded-full bg-white text-primary-foreground hover:bg-white/85 text-[14px] font-medium transition-all"
               >
@@ -122,6 +141,7 @@ export default function TeamDetailPage() {
                       <button
                         onClick={() => { setIsJoined(false); setShowNotifMenu(false); }}
                         className="flex items-center gap-4 w-full px-5 py-3.5 text-[14px] text-pochak-text hover:bg-pochak-surface-hover transition-colors"
+                        aria-label="가입 취소"
                       >
                         <LuUserMinus className="w-5 h-5 text-pochak-text-secondary" />
                         <span>가입 취소</span>
@@ -338,21 +358,22 @@ export default function TeamDetailPage() {
         {/* 정보 탭 */}
         <TabsContent value="정보">
           <div className="max-w-[600px] flex flex-col gap-6">
-            <div>
-              <h3 className="text-[15px] font-semibold text-pochak-text mb-2">설명</h3>
-              <p className="text-[14px] text-pochak-text-secondary leading-relaxed">
-                스포츠는 정해진 규칙과 공정성을 바탕으로 신체 능력, 기술, 전략, 정신력을 겨루는 인간 활동이다.
-                개인과 팀은 반복된 훈련과 경쟁을 통해 한계를 극복하고 성장하며, 그 과정에서 협력과 존중, 책임을 배운다.
-              </p>
-            </div>
+            {(club?.description ?? club?.customization?.introText) && (
+              <div>
+                <h3 className="text-[15px] font-semibold text-pochak-text mb-2">설명</h3>
+                <p className="text-[14px] text-pochak-text-secondary leading-relaxed">
+                  {club?.customization?.introText ?? club?.description}
+                </p>
+              </div>
+            )}
             <div>
               <h3 className="text-[15px] font-semibold text-pochak-text mb-2">세부정보</h3>
               <div className="flex flex-col gap-2">
                 {[
-                  { label: '종목', value: teamData.subtitle.split(' | ')[0] || '야구' },
-                  { label: '위치', value: '서울특별시' },
-                  { label: '가입일', value: '2025.01.01' },
-                  { label: '멤버', value: `${teamData.followers ?? 150}명` },
+                  { label: '종목', value: club?.sportName ?? '-' },
+                  { label: '홈구장', value: club?.homeStadium ?? '-' },
+                  { label: '가입일', value: club?.createdAt ? new Date(club.createdAt).toLocaleDateString('ko-KR') : '-' },
+                  { label: '멤버', value: `${club?.memberCount ?? 0}명` },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center py-2 border-b border-pochak-border">
                     <span className="text-[14px] text-pochak-text-tertiary w-20">{row.label}</span>

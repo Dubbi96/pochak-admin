@@ -205,6 +205,44 @@ export function useVenues(keyword?: string, sportId?: string) {
   )
 }
 
+// ── Club Detail ───────────────────────────────────────────
+
+export interface ClubDetail {
+  teamId: number;
+  name: string;
+  nameEn?: string;
+  shortName?: string;
+  logoUrl?: string;
+  description?: string;
+  homeStadium?: string;
+  sportId?: number;
+  sportName?: string;
+  memberCount: number;
+  recentContent?: Array<{
+    id: number;
+    type: string;
+    title: string;
+    thumbnailUrl?: string;
+    createdAt?: string;
+  }>;
+  customization?: {
+    bannerUrl?: string;
+    logoUrl?: string;
+    themeColor?: string;
+    introText?: string;
+    socialLinksJson?: Record<string, string>;
+  };
+  createdAt?: string;
+}
+
+export function useClubDetail(teamId: string | number) {
+  return useFetch<ClubDetail | null>(
+    () => pochakApi.get<ClubDetail>(`/api/v1/clubs/${teamId}`),
+    null,
+    [teamId],
+  )
+}
+
 // ── Clubs ─────────────────────────────────────────────────
 
 export interface ClubItem {
