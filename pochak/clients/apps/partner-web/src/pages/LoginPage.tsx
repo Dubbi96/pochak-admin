@@ -19,12 +19,17 @@ export default function LoginPage() {
     setError(null)
     setLoading(true)
 
-    const success = await login(email, password)
+    const result = await login(email, password)
 
-    if (success) {
+    if (result.ok) {
       navigate('/dashboard')
     } else {
-      setError('이메일 또는 비밀번호가 올바르지 않습니다.')
+      const messages: Record<string, string> = {
+        invalid_credentials: '이메일 또는 비밀번호가 올바르지 않습니다.',
+        network_error: '네트워크 오류가 발생했습니다. 연결 상태를 확인해 주세요.',
+        server_error: '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+      }
+      setError(messages[result.errorCode] ?? '로그인에 실패했습니다.')
     }
     setLoading(false)
   }
