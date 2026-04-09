@@ -6,7 +6,6 @@ import { post } from '@/lib/api'
 interface LoginResponse {
   accessToken: string
   refreshToken: string
-  partner: { id: string; name: string; email: string }
 }
 
 export default function LoginPage() {
@@ -27,10 +26,10 @@ export default function LoginPage() {
     setError(null)
     setLoading(true)
 
-    const result = await post<LoginResponse>('/api/v1/auth/partner/login', { email, password })
+    const result = await post<LoginResponse>('/api/v1/auth/login', { email, password })
 
-    if (result) {
-      setAuth(result.accessToken, result.refreshToken, result.partner)
+    if (result?.accessToken) {
+      setAuth(result.accessToken, result.refreshToken ?? '', { id: '', name: email, email })
       navigate('/dashboard')
     } else {
       setError('이메일 또는 비밀번호가 올바르지 않습니다.')
