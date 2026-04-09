@@ -9,6 +9,7 @@ import com.pochak.content.asset.repository.VodAssetRepository;
 import com.pochak.content.club.dto.*;
 import com.pochak.content.club.entity.ClubCustomization;
 import com.pochak.content.club.repository.ClubCustomizationRepository;
+import org.springframework.util.StringUtils;
 import com.pochak.content.membership.dto.MembershipResponse;
 import com.pochak.content.membership.entity.Membership;
 import com.pochak.content.membership.repository.MembershipRepository;
@@ -196,15 +197,89 @@ public class ClubService {
         return MembershipResponse.from(saved);
     }
 
-    public List<ClubMemberResponse> getClubMembers(Long teamId) {
+    public List<ClubMemberResponse> getClubMembers(Long teamId, String status) {
         teamRepository.findByIdAndActiveTrue(teamId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Team not found: " + teamId));
 
+        Membership.ApprovalStatus approvalStatus = Membership.ApprovalStatus.APPROVED;
+        if (StringUtils.hasText(status)) {
+            try {
+                approvalStatus = Membership.ApprovalStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "Invalid status: " + status);
+            }
+        }
+
         List<Membership> members = membershipRepository
                 .findByTargetTypeAndTargetIdAndActiveTrueAndApprovalStatus(
-                        Membership.TargetType.TEAM, teamId, Membership.ApprovalStatus.APPROVED);
+                        Membership.TargetType.TEAM, teamId, approvalStatus);
 
         return members.stream().map(ClubMemberResponse::from).toList();
+    }
+
+    @Transactional
+    public ClubMemberResponse updateMemberRole(Long teamId, Long membershipId, UpdateMemberRoleRequest request) {
+        teamRepository.findByIdAndActiveTrue(teamId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Team not found: " + teamId));
+
+        Membership membership = membershipRepository.findById(membershipId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Membership not found: " + membershipId));
+
+        if (!Membership.TargetType.TEAM.equals(membership.getTargetType())
+                || !teamId.equals(membership.getTargetId())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "Membership does not belong to this club");
+        }
+
+        try {
+            membership.updateRole(Membership.MembershipRole.valueOf(request.getRole()));
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "Invalid role: " + request.getRole());
+        }
+
+        return ClubMemberResponse.from(membership);
+    }
+
+    @Transactional
+    public void removeMember(Long teamId, Long membershipId) {
+        teamRepository.findByIdAndActiveTrue(teamId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Team not found: " + teamId));
+
+        Membership membership = membershipRepository.findById(membershipId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Membership not found: " + membershipId));
+
+        if (!Membership.TargetType.TEAM.equals(membership.getTargetType())
+                || !teamId.equals(membership.getTargetId())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "Membership does not belong to this club");
+        }
+
+        membership.deactivate();
+    }
+
+    @Transactional
+    public ClubMemberResponse approveMember(Long teamId, Long membershipId, ApproveMemberRequest request) {
+        teamRepository.findByIdAndActiveTrue(teamId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Team not found: " + teamId));
+
+        Membership membership = membershipRepository.findById(membershipId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Membership not found: " + membershipId));
+
+        if (!Membership.TargetType.TEAM.equals(membership.getTargetType())
+                || !teamId.equals(membership.getTargetId())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "Membership does not belong to this club");
+        }
+
+        if (!Membership.ApprovalStatus.PENDING.equals(membership.getApprovalStatus())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "Membership is not in PENDING state");
+        }
+
+        Long managerId = request.getManagerId() != null ? request.getManagerId() : 0L;
+        if (StringUtils.hasText(request.getRejectionReason())) {
+            membership.reject(managerId, request.getRejectionReason());
+        } else {
+            membership.approve(managerId);
+        }
+
+        return ClubMemberResponse.from(membership);
     }
 
     private long getApprovedMemberCount(Long teamId) {
