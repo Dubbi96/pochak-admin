@@ -30,10 +30,19 @@ public class RouteConfig {
     @Value("${services.bo-bff-url:http://localhost:9081}")
     private String boBffUrl;
 
+    @Value("${services.partner-bff-url:http://localhost:9091}")
+    private String partnerBffUrl;
+
     @Bean
     public RouteLocator pochakRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
-                // 0. web-bff routes (FIRST - /api/v1/web/** → web-bff, stripPrefix(3))
+                // 0. partner-bff routes (/api/v1/partners/**, /api/v1/partner/** → partner-bff)
+                .route("partner-bff-service", r -> r
+                        .path("/api/v1/partners/**",
+                              "/api/v1/partner/**")
+                        .filters(f -> f.stripPrefix(2))
+                        .uri(partnerBffUrl))
+                // 0a. web-bff routes (FIRST - /api/v1/web/** → web-bff, stripPrefix(3))
                 .route("web-bff-service", r -> r
                         .path("/api/v1/web/**")
                         .filters(f -> f.stripPrefix(3))

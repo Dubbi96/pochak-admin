@@ -78,6 +78,7 @@ services:
       SERVICES_COMMERCE_URL: http://pochak-commerce:8083
       SERVICES_OPERATION_URL: http://pochak-operation:8084
       SERVICES_ADMIN_URL: http://pochak-admin:8085
+      SERVICES_PARTNER_BFF_URL: http://pochak-partner-bff:9091
       JWT_SECRET: pochak-jwt-secret-key-for-development-only-minimum-256-bits-long-enough
       REDIS_HOST: pochak-redis
       REDIS_PORT: 6379
