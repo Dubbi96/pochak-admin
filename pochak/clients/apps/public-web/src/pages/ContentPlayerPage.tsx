@@ -6,11 +6,11 @@ import {
   pochakVodContents,
   pochakClips,
   formatViewCount,
-  mockTimelineEvents,
   mockChapters,
 } from '@/services/webApi';
 import type { PlayerData } from '@/services/webApi';
 import WebVideoPlayer from '@/components/WebVideoPlayer';
+import type { TimelineEvent } from '@/components/WebVideoPlayer';
 import CommentSection from '@/components/CommentSection';
 import CollapsibleSection from '@/components/CollapsibleSection';
 import HScrollRow from '@/components/HScrollRow';
@@ -18,7 +18,37 @@ import HVideoCard from '@/components/HVideoCard';
 import VClipCard from '@/components/VClipCard';
 import RecommendedVideoItem from '@/components/RecommendedVideoItem';
 import { setOgMeta } from '@/utils/ogMeta';
-import { Heart, Share2, MoreHorizontal } from 'lucide-react';
+import { fetchApi, postApi } from '@/services/apiClient';
+import { Heart, Share2, MoreHorizontal, Sparkles } from 'lucide-react';
+
+// ── Highlight API ─────────────────────────────────────────────────
+
+interface HighlightItem {
+  id: number;
+  startTimeSeconds: number;
+  endTimeSeconds: number;
+  highlightType: string;
+  confidenceScore: number;
+  description: string;
+}
+
+const HIGHLIGHT_TYPE_MAP: Record<string, TimelineEvent['type']> = {
+  GOAL: 'GOAL',
+  FOUL: 'FOUL',
+  SUBSTITUTION: 'SUBSTITUTION',
+  HIGHLIGHT: 'HIGHLIGHT',
+  PERIOD: 'PERIOD',
+  CUSTOM: 'CUSTOM',
+};
+
+function mapHighlightsToEvents(highlights: HighlightItem[]): TimelineEvent[] {
+  return highlights.map((h) => ({
+    id: String(h.id),
+    time: h.startTimeSeconds,
+    label: h.description || h.highlightType,
+    type: HIGHLIGHT_TYPE_MAP[h.highlightType] ?? 'HIGHLIGHT',
+  }));
+}
 
 /* ── Sidebar tag filter pills ── */
 const SIDEBAR_TAGS = ['#야구', '#유료', '#해설', '#MLB', '#동대문구리'] as const;
@@ -61,6 +91,8 @@ export default function ContentPlayerPage() {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [showMore, setShowMore] = useState(false);
+  const [highlights, setHighlights] = useState<TimelineEvent[]>([]);
+  const [detectingHighlights, setDetectingHighlights] = useState(false);
 
   const isClipView = type === 'clip';
 
@@ -79,6 +111,30 @@ export default function ContentPlayerPage() {
       })
       .catch(() => {});
   }, [type, id]);
+
+  useEffect(() => {
+    if (!id || type === 'clip') return;
+    fetchApi<HighlightItem[]>(`/contents/${type}/${id}/highlights`, []).then((items) => {
+      if (items.length > 0) setHighlights(mapHighlightsToEvents(items));
+    });
+  }, [type, id]);
+
+  const handleDetectHighlights = useCallback(async () => {
+    if (detectingHighlights) return;
+    setDetectingHighlights(true);
+    try {
+      const result = await postApi<{ highlights: HighlightItem[] }>(
+        `/contents/${type}/${id}/highlights/detect`,
+        {},
+        { highlights: [] }
+      );
+      if (result?.highlights?.length > 0) {
+        setHighlights(mapHighlightsToEvents(result.highlights));
+      }
+    } finally {
+      setDetectingHighlights(false);
+    }
+  }, [type, id, detectingHighlights]);
 
   const handleLike = useCallback(() => {
     setIsLiked((prev) => {
@@ -130,6 +186,18 @@ export default function ContentPlayerPage() {
       >
         <Share2 className="w-4.5 h-4.5" />
       </button>
+      {!isClipView && (
+        <button
+          title="하이라이트 자동 감지"
+          disabled={detectingHighlights}
+          onClick={handleDetectHighlights}
+          className={`flex items-center gap-1.5 text-sm transition-colors ${
+            detectingHighlights ? 'text-[#606060] cursor-not-allowed' : 'text-[#A6A6A6] hover:text-[#00CC33]'
+          }`}
+        >
+          <Sparkles className={`w-4.5 h-4.5 ${detectingHighlights ? 'animate-pulse' : ''}`} />
+        </button>
+      )}
       <button
         className="flex items-center gap-1.5 text-sm text-[#A6A6A6] hover:text-white transition-colors"
         onClick={() => setShowMore((prev) => !prev)}
@@ -147,7 +215,7 @@ export default function ContentPlayerPage() {
           {/* Left: vertical video */}
           <div className="lg:w-[400px] flex-shrink-0">
             <div className="aspect-[9/16] bg-[#1A1A1A] rounded-lg overflow-hidden flex items-center justify-center">
-              <WebVideoPlayer src={player.streamUrl} isLive={false} autoPlay events={mockTimelineEvents} chapters={mockChapters} />
+              <WebVideoPlayer src={player.streamUrl} isLive={false} autoPlay events={highlights} chapters={mockChapters} />
             </div>
           </div>
 
@@ -201,7 +269,7 @@ export default function ContentPlayerPage() {
         {/* ── Left column: player + info (~65%) ────────── */}
         <div className="flex-1 min-w-0">
           {/* Video Player */}
-          <WebVideoPlayer src={player.streamUrl} isLive={isLive} autoPlay events={mockTimelineEvents} chapters={mockChapters} />
+          <WebVideoPlayer src={player.streamUrl} isLive={isLive} autoPlay events={highlights} chapters={mockChapters} />
 
           {/* Match Info */}
           <div className="mt-6 space-y-3">
