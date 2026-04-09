@@ -10,6 +10,7 @@ import SettingsPage from '@/pages/SettingsPage'
 import ClubManagePage from '@/pages/ClubManagePage'
 import ClubEditPage from '@/pages/ClubEditPage'
 import ClubCustomizePage from '@/pages/ClubCustomizePage'
+import ClubMembersPage from '@/pages/ClubMembersPage'
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/clubs" element={<ClubManagePage />} />
         <Route path="/clubs/:id/edit" element={<ClubEditPage />} />
         <Route path="/clubs/:id/customize" element={<ClubCustomizePage />} />
+        <Route path="/clubs/:id/members" element={<ClubMembersPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
