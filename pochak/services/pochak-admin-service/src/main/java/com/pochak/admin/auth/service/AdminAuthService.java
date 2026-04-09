@@ -28,7 +28,7 @@ public class AdminAuthService {
     private final AdminRoleMenuRepository adminRoleMenuRepository;
     private final AdminRoleFunctionRepository adminRoleFunctionRepository;
 
-    @Value("${jwt.secret:default-secret-key-for-pochak-admin-service-minimum-256-bits-long}")
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
     @Value("${jwt.access-token-expiry:3600000}")
