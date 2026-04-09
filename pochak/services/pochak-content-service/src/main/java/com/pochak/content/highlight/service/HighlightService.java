@@ -5,7 +5,9 @@ import com.pochak.content.highlight.dto.HighlightResponse;
 import com.pochak.content.highlight.entity.Highlight;
 import com.pochak.content.highlight.entity.Highlight.HighlightType;
 import com.pochak.content.highlight.repository.HighlightRepository;
+import com.pochak.content.asset.entity.LiveAsset;
 import com.pochak.content.asset.entity.VodAsset;
+import com.pochak.content.asset.repository.LiveAssetRepository;
 import com.pochak.content.asset.repository.VodAssetRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,7 @@ public class HighlightService {
 
     private final HighlightRepository highlightRepository;
     private final VodAssetRepository vodAssetRepository;
+    private final LiveAssetRepository liveAssetRepository;
 
     private static final Random RANDOM = new Random();
 
@@ -41,16 +44,59 @@ public class HighlightService {
         // Determine content duration; fall back to a default if not found.
         int durationSeconds = resolveContentDuration(contentId, contentType);
 
-        // Generate 4-8 mock highlights distributed across the duration
-        HighlightType[] candidateTypes = {
-                HighlightType.GOAL, HighlightType.SAVE, HighlightType.FOUL,
-                HighlightType.RALLY, HighlightType.DUNK, HighlightType.ACE
-        };
-        String[] descriptions = {
-                "결정적 순간 - 골 장면", "수비 하이라이트 - 슈퍼 세이브",
-                "파울 장면", "랠리 하이라이트", "덩크슛 장면",
-                "에이스 포인트", "역전 골", "놀라운 세이브"
-        };
+        // Resolve sport code and select sport-specific highlight types/descriptions
+        String sportCode = resolveSportCode(contentId, contentType);
+        HighlightType[] candidateTypes;
+        String[] descriptions;
+
+        switch (sportCode) {
+            case "SOCCER" -> {
+                candidateTypes = new HighlightType[]{
+                        HighlightType.GOAL, HighlightType.SAVE, HighlightType.FOUL, HighlightType.FREE_KICK
+                };
+                descriptions = new String[]{
+                        "골 장면 - 결정적 순간", "슈퍼 세이브 - 수비 하이라이트",
+                        "파울 장면", "프리킥 득점 장면", "역전 골", "헤더 골"
+                };
+            }
+            case "BASKETBALL" -> {
+                candidateTypes = new HighlightType[]{
+                        HighlightType.DUNK, HighlightType.THREE_POINTER, HighlightType.BLOCK
+                };
+                descriptions = new String[]{
+                        "덩크슛 장면", "3점슛 성공", "블록슛 - 수비 하이라이트",
+                        "역전 3점슛", "앨리웁 덩크"
+                };
+            }
+            case "BASEBALL" -> {
+                candidateTypes = new HighlightType[]{
+                        HighlightType.HOME_RUN, HighlightType.STRIKEOUT, HighlightType.DOUBLE_PLAY
+                };
+                descriptions = new String[]{
+                        "홈런 장면", "삼진 아웃", "병살타 - 수비 하이라이트",
+                        "만루 홈런", "끝내기 홈런"
+                };
+            }
+            case "VOLLEYBALL" -> {
+                candidateTypes = new HighlightType[]{
+                        HighlightType.ACE, HighlightType.RALLY, HighlightType.BLOCK
+                };
+                descriptions = new String[]{
+                        "에이스 서브 득점", "장기 랠리 하이라이트", "블로킹 성공",
+                        "다이빙 리시브", "강스파이크 득점"
+                };
+            }
+            default -> {
+                candidateTypes = new HighlightType[]{
+                        HighlightType.GOAL, HighlightType.SAVE, HighlightType.FOUL,
+                        HighlightType.RALLY, HighlightType.DUNK, HighlightType.ACE
+                };
+                descriptions = new String[]{
+                        "결정적 순간", "수비 하이라이트", "파울 장면",
+                        "랠리 하이라이트", "덩크슛 장면", "에이스 포인트"
+                };
+            }
+        }
 
         int highlightCount = 4 + RANDOM.nextInt(5); // 4-8
         int interval = Math.max(durationSeconds / (highlightCount + 1), 30);
@@ -136,5 +182,26 @@ public class HighlightService {
         }
         // For LIVE or CLIP, use reasonable defaults
         return 3600;
+    }
+
+    private String resolveSportCode(Long contentId, String contentType) {
+        try {
+            if ("VOD".equalsIgnoreCase(contentType)) {
+                return vodAssetRepository.findByIdAndDeletedAtIsNull(contentId)
+                        .map(VodAsset::getMatch)
+                        .filter(m -> m != null && m.getSport() != null)
+                        .map(m -> m.getSport().getCode())
+                        .orElse("UNKNOWN");
+            } else if ("LIVE".equalsIgnoreCase(contentType)) {
+                return liveAssetRepository.findByIdAndDeletedAtIsNull(contentId)
+                        .map(LiveAsset::getMatch)
+                        .filter(m -> m != null && m.getSport() != null)
+                        .map(m -> m.getSport().getCode())
+                        .orElse("UNKNOWN");
+            }
+        } catch (Exception e) {
+            log.warn("Failed to resolve sport code for content {} ({}): {}", contentId, contentType, e.getMessage());
+        }
+        return "UNKNOWN";
     }
 }
