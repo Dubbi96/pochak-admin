@@ -59,6 +59,11 @@ public class Team {
     @Builder.Default
     private Boolean active = true;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "club_status", length = 20)
+    @Builder.Default
+    private ClubStatus clubStatus = ClubStatus.ACTIVE;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -66,4 +71,17 @@ public class Team {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    public enum ClubStatus {
+        ACTIVE, SUSPENDED, DISSOLVED
+    }
+
+    public void updateClubStatus(ClubStatus newStatus) {
+        this.clubStatus = newStatus;
+        if (newStatus == ClubStatus.DISSOLVED) {
+            this.active = false;
+        } else if (newStatus == ClubStatus.ACTIVE) {
+            this.active = true;
+        }
+    }
 }

@@ -176,6 +176,13 @@ public class ClubController {
         clubService.deleteClubPost(clubId, postId);
     }
 
+    @PostMapping("/{clubId}/status")
+    public ApiResponse<ClubDetailResponse> updateClubStatus(
+            @PathVariable Long clubId,
+            @RequestBody UpdateClubStatusRequest request) {
+        return ApiResponse.success(clubService.updateClubStatus(clubId, request));
+    }
+
     @GetMapping("/{clubId}/stats")
     public ApiResponse<ClubStatsResponse> getClubStats(@PathVariable Long clubId) {
         return ApiResponse.success(clubService.getClubStats(clubId));

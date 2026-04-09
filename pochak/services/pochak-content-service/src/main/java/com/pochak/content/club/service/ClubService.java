@@ -285,6 +285,23 @@ public class ClubService {
         return ClubMemberResponse.from(membership);
     }
 
+    // ---- Club Status (admin) ----
+
+    @Transactional
+    public ClubDetailResponse updateClubStatus(Long clubId, UpdateClubStatusRequest request) {
+        Team team = teamRepository.findByIdAndActiveTrue(clubId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Club not found: " + clubId));
+
+        try {
+            Team.ClubStatus newStatus = Team.ClubStatus.valueOf(request.getStatus().toUpperCase());
+            team.updateClubStatus(newStatus);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "Invalid status: " + request.getStatus());
+        }
+
+        return getClubDetail(clubId);
+    }
+
     // ---- Club Posts ----
 
     public Page<ClubPostResponse> getClubPosts(Long clubId, Pageable pageable) {
