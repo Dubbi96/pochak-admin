@@ -1,24 +1,17 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
-import { post } from '@/lib/api'
-
-interface LoginResponse {
-  accessToken: string
-  refreshToken: string
-}
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const { setAuth, isAuthenticated } = useAuthStore()
+  const { login, isAuthenticated } = useAuthStore()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   if (isAuthenticated()) {
-    navigate('/dashboard', { replace: true })
-    return null
+    return <Navigate to="/dashboard" replace />
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,10 +19,9 @@ export default function LoginPage() {
     setError(null)
     setLoading(true)
 
-    const result = await post<LoginResponse>('/api/v1/auth/login', { email, password })
+    const success = await login(email, password)
 
-    if (result?.accessToken) {
-      setAuth(result.accessToken, result.refreshToken ?? '', { id: '', name: email, email })
+    if (success) {
       navigate('/dashboard')
     } else {
       setError('이메일 또는 비밀번호가 올바르지 않습니다.')
