@@ -21,6 +21,7 @@ import {
   pochakPosts,
   formatViewCount,
 } from '@/services/webApi';
+import { postApi } from '@/services/apiClient';
 
 type TabKey = 'home' | 'videos' | 'schedule' | 'posts' | 'info';
 const tabItems: { key: TabKey; label: string }[] = [
@@ -222,15 +223,18 @@ function getContentVisibility(index: number): ContentVisibility {
   return index % 2 === 0 ? 'PUBLIC' : 'MEMBERS_ONLY';
 }
 
+type JoinStatus = 'none' | 'pending' | 'joined';
+
 export default function ClubPage() {
-  const { clubId: _clubId } = useParams<{ clubId: string }>();
+  const { clubId } = useParams<{ clubId: string }>();
   const [activeTab, setActiveTab] = useState<TabKey>('home');
   const [year, setYear] = useState(2025);
   const [month, setMonth] = useState(10);
   const [videoSubTab, setVideoSubTab] = useState<VideoSubTab>('vod');
+  const [joinStatus, setJoinStatus] = useState<JoinStatus>('none');
+  const [joinLoading, setJoinLoading] = useState(false);
 
-  // Mock member status — in production, fetched from API based on auth state
-  const isMember = false;
+  const isMember = joinStatus === 'joined';
 
   // Use a club-oriented channel from mock data (index 4 = 인천남동FC)
   const club = pochakChannels[4];
@@ -254,15 +258,33 @@ export default function ClubPage() {
     });
   }, [year, month]);
 
-  const handleJoin = () => {
-    // In production this would trigger a join flow or deep-link to the app
-    window.alert('앱에서 클럽 가입을 진행해 주세요.');
+  const handleJoin = async () => {
+    if (!clubId || joinLoading || joinStatus !== 'none') return;
+    setJoinLoading(true);
+    try {
+      await postApi(`/api/v1/clubs/${clubId}/join`, { role: 'PLAYER' }, null);
+      setJoinStatus('pending');
+    } catch {
+      // join request submitted — show pending state
+      setJoinStatus('pending');
+    } finally {
+      setJoinLoading(false);
+    }
   };
 
   return (
     <div className="px-6 py-6 lg:px-8 max-w-[1200px] mx-auto">
       {/* Banner */}
-      <CompetitionBanner data={bannerData} onPurchase={handleJoin} ctaLabel="가입하기" />
+      <CompetitionBanner
+        data={bannerData}
+        onPurchase={joinStatus === 'none' && !joinLoading ? handleJoin : () => {}}
+        ctaLabel={
+          joinLoading ? '처리 중...' :
+          joinStatus === 'joined' ? '가입됨' :
+          joinStatus === 'pending' ? '가입 대기 중' :
+          '가입하기'
+        }
+      />
 
       {/* Tabs */}
       <div className="mt-6">
@@ -369,7 +391,7 @@ export default function ClubPage() {
                   const isLocked = visibility === 'MEMBERS_ONLY' && !isMember;
                   return (
                     <div key={v.id} className="relative">
-                      {isLocked && <MembersOnlyOverlay onJoin={handleJoin} />}
+                      {isLocked && <MembersOnlyOverlay onJoin={joinStatus === 'none' ? handleJoin : () => {}} />}
                       <HVideoCard
                         title={v.title}
                         sub={`조회수 ${formatViewCount(v.viewCount)} · ${v.date.slice(0, 10)}`}
