@@ -7,6 +7,8 @@ import com.pochak.content.asset.entity.VodAsset;
 import com.pochak.content.asset.repository.ClipAssetRepository;
 import com.pochak.content.asset.repository.VodAssetRepository;
 import com.pochak.content.club.dto.*;
+import com.pochak.content.club.entity.ClubCustomization;
+import com.pochak.content.club.repository.ClubCustomizationRepository;
 import com.pochak.content.membership.dto.MembershipResponse;
 import com.pochak.content.membership.entity.Membership;
 import com.pochak.content.membership.repository.MembershipRepository;
@@ -35,6 +37,7 @@ public class ClubService {
     private final OrganizationRepository organizationRepository;
     private final ClipAssetRepository clipAssetRepository;
     private final VodAssetRepository vodAssetRepository;
+    private final ClubCustomizationRepository clubCustomizationRepository;
 
     private static final BigDecimal DEFAULT_RADIUS_DEGREE = new BigDecimal("0.05"); // ~5km
 
@@ -94,10 +97,61 @@ public class ClubService {
         }
 
         long memberCount = getApprovedMemberCount(teamId);
-
         List<ClubDetailResponse.RecentContentItem> recentContent = getRecentContent(teamId);
+        ClubCustomization customization = clubCustomizationRepository.findByClubId(teamId).orElse(null);
 
-        return ClubDetailResponse.from(team, org, memberCount, recentContent);
+        return ClubDetailResponse.from(team, org, memberCount, recentContent, customization);
+    }
+
+    public ClubCustomizationResponse getClubCustomization(Long clubId, Long partnerId) {
+        teamRepository.findByIdAndActiveTrue(clubId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Club not found: " + clubId));
+
+        ClubCustomization customization = clubCustomizationRepository
+                .findByClubIdAndPartnerId(clubId, partnerId)
+                .orElse(null);
+
+        if (customization == null) {
+            return ClubCustomizationResponse.builder()
+                    .clubId(clubId)
+                    .partnerId(partnerId)
+                    .build();
+        }
+        return ClubCustomizationResponse.from(customization);
+    }
+
+    @Transactional
+    public ClubCustomizationResponse upsertClubCustomization(Long clubId, UpdateClubCustomizationRequest request) {
+        teamRepository.findByIdAndActiveTrue(clubId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Club not found: " + clubId));
+
+        ClubCustomization customization = clubCustomizationRepository
+                .findByClubIdAndPartnerId(clubId, request.getPartnerId())
+                .orElse(null);
+
+        if (customization == null) {
+            customization = ClubCustomization.builder()
+                    .clubId(clubId)
+                    .partnerId(request.getPartnerId())
+                    .bannerUrl(request.getBannerUrl())
+                    .logoUrl(request.getLogoUrl())
+                    .themeColor(request.getThemeColor())
+                    .introText(request.getIntroText())
+                    .sectionsJson(request.getSectionsJson())
+                    .socialLinksJson(request.getSocialLinksJson())
+                    .build();
+        } else {
+            customization.update(
+                    request.getBannerUrl(),
+                    request.getLogoUrl(),
+                    request.getThemeColor(),
+                    request.getIntroText(),
+                    request.getSectionsJson(),
+                    request.getSocialLinksJson()
+            );
+        }
+
+        return ClubCustomizationResponse.from(clubCustomizationRepository.save(customization));
     }
 
     @Transactional
