@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { LuArrowLeft, LuSave, LuLoader } from 'react-icons/lu'
+import { LuArrowLeft, LuSave, LuLoader, LuUsers, LuPalette } from 'react-icons/lu'
 import { get, put } from '@/lib/api'
 
 interface ClubDetail {
@@ -116,6 +116,28 @@ export default function ClubEditPage() {
           )}
         </div>
       </div>
+
+      {/* Quick links */}
+      {id && id !== 'new' && (
+        <div className="flex gap-3" style={{ marginBottom: 20 }}>
+          <button
+            onClick={() => navigate(`/clubs/${id}/members`)}
+            className="flex items-center gap-2 rounded-lg border text-[13px] font-medium px-4 py-2 transition-colors hover:bg-black/5"
+            style={{ borderColor: 'var(--color-border-default)' }}
+          >
+            <LuUsers className="w-4 h-4" />
+            멤버 관리
+          </button>
+          <button
+            onClick={() => navigate(`/clubs/${id}/customize`)}
+            className="flex items-center gap-2 rounded-lg border text-[13px] font-medium px-4 py-2 transition-colors hover:bg-black/5"
+            style={{ borderColor: 'var(--color-border-default)' }}
+          >
+            <LuPalette className="w-4 h-4" />
+            페이지 커스터마이징
+          </button>
+        </div>
+      )}
 
       <div
         className="rounded-xl border"
