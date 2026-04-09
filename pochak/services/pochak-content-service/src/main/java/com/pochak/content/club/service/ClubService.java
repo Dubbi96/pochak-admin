@@ -116,6 +116,12 @@ public class ClubService {
         return ClubDetailResponse.from(team, org, memberCount, recentContent, customization);
     }
 
+    public List<ClubCustomizationResponse> getClubsByPartnerId(Long partnerId) {
+        return clubCustomizationRepository.findAllByPartnerId(partnerId).stream()
+                .map(ClubCustomizationResponse::from)
+                .toList();
+    }
+
     public ClubCustomizationResponse getClubCustomization(Long clubId, Long partnerId) {
         teamRepository.findByIdAndActiveTrue(clubId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Club not found: " + clubId));
