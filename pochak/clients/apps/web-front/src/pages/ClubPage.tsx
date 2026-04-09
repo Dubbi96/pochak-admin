@@ -8,8 +8,7 @@ import {
 } from 'react-icons/lu';
 import FilterChip from '@/components/FilterChip';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useClubs } from '@/hooks/useApi';
-import { useTeams } from '@/hooks/useApi';
+import { usePopularClubs, useRecentClubs, type ClubItem } from '@/hooks/useApi';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import HScrollRow from '@/components/HScrollRow';
@@ -22,23 +21,27 @@ const clubSpotlights = [
   { title: '지역 추천', desc: '시설 정보와 연동된 지역 클럽을 같이 묶습니다.' },
 ];
 
+function clubInitial(club: ClubItem): string {
+  return club.shortName?.charAt(0) || club.name.charAt(0);
+}
+
 /* ── Featured Club Card (이미지 배경 + 뱃지) ─────────── */
 function ClubFeatureCard({
   club,
   tone,
 }: {
-  club: import('@/types/content').Channel;
+  club: ClubItem;
   tone: string;
 }) {
   return (
     <Link
-      to={`/team/${club.id}`}
+      to={`/team/${club.teamId}`}
       className="block rounded-xl overflow-hidden border border-white/[0.13] transition-all duration-200 hover:border-white/[0.26] hover:shadow-[0_14px_36px_rgba(0,0,0,0.55)] group"
     >
       {/* Image header */}
       <div className="relative h-[120px] overflow-hidden">
-        {club.imageUrl ? (
-          <img src={club.imageUrl} alt={club.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-300" loading="lazy" />
+        {club.logoUrl ? (
+          <img src={club.logoUrl} alt={club.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-300" loading="lazy" />
         ) : (
           <div className="absolute inset-0" style={{ background: `linear-gradient(160deg, ${tone}, #101010 72%)` }} />
         )}
@@ -47,23 +50,22 @@ function ClubFeatureCard({
         {/* Badge — bottom-left */}
         <div className="absolute bottom-3 left-3 flex items-center gap-2.5">
           <div
-            className="h-10 w-10 rounded-full flex items-center justify-center border-2 border-white/20 text-[14px] font-bold text-white"
-            style={{ backgroundColor: club.color }}
+            className="h-10 w-10 rounded-full flex items-center justify-center border-2 border-white/20 text-[14px] font-bold text-white bg-primary/60"
           >
-            {club.initial}
+            {clubInitial(club)}
           </div>
         </div>
 
         {/* Followers — top-right */}
         <span className="absolute top-2.5 right-2.5 inline-flex h-6 items-center gap-1 rounded-full border border-white/10 bg-black/50 px-2.5 text-[13px] text-white/70">
           <LuUsers className="h-3.5 w-3.5 text-white/50" />
-          {club.followers.toLocaleString()}
+          {club.memberCount.toLocaleString()}
         </span>
       </div>
 
       {/* Content */}
       <div className="bg-pochak-surface p-4">
-        <p className="text-[13px] font-medium text-white/45">{club.subtitle}</p>
+        <p className="text-[13px] font-medium text-white/45">{club.sportName ?? ''}</p>
         <h3 className="mt-1.5 text-[16px] font-semibold tracking-[-0.02em] text-white group-hover:text-primary transition-colors">
           {club.name}
         </h3>
@@ -76,35 +78,35 @@ function ClubFeatureCard({
 }
 
 /* ── Club List Card (이미지 + 정보 리스트형) ─────────── */
-function ClubListCard({ club }: { club: import('@/types/content').Channel }) {
+function ClubListCard({ club }: { club: ClubItem }) {
   return (
     <Link
-      to={`/team/${club.id}`}
+      to={`/team/${club.teamId}`}
       className="flex items-center gap-4 rounded-xl bg-pochak-surface px-4 py-4 shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-all duration-200 hover:border-white/[0.26] hover:shadow-[0_10px_28px_rgba(0,0,0,0.45)] group"
     >
       {/* Thumbnail */}
       <div className="relative h-12 w-12 rounded-lg overflow-hidden flex-shrink-0">
-        {club.imageUrl ? (
-          <img src={club.imageUrl} alt={club.name} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+        {club.logoUrl ? (
+          <img src={club.logoUrl} alt={club.name} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
         ) : (
-          <div className="absolute inset-0" style={{ backgroundColor: `${club.color}30` }} />
+          <div className="absolute inset-0 bg-primary/20" />
         )}
         {/* Badge overlay */}
         <div
           className="absolute inset-0 flex items-center justify-center bg-black/30 text-[13px] font-bold text-white"
           style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}
         >
-          {club.initial}
+          {clubInitial(club)}
         </div>
       </div>
 
       <div className="min-w-0 flex-1">
         <p className="text-[15px] font-medium text-white/85 group-hover:text-white transition-colors">{club.name}</p>
-        <p className="mt-0.5 text-[14px] text-white/40">{club.subtitle}</p>
+        <p className="mt-0.5 text-[14px] text-white/40">{club.sportName ?? ''}</p>
       </div>
       <div className="text-right flex-shrink-0">
-        <p className="text-[14px] font-medium text-white/65">{club.followers.toLocaleString()}</p>
-        <p className="mt-0.5 text-[12px] text-white/30">followers</p>
+        <p className="text-[14px] font-medium text-white/65">{club.memberCount.toLocaleString()}</p>
+        <p className="mt-0.5 text-[12px] text-white/30">members</p>
       </div>
       <LuChevronRight className="h-4 w-4 text-white/20 flex-shrink-0" />
     </Link>
@@ -112,26 +114,37 @@ function ClubListCard({ club }: { club: import('@/types/content').Channel }) {
 }
 
 export default function ClubPage() {
-  const { data: clubs, loading } = useClubs();
+  const { data: popularClubs, loading: popularLoading } = usePopularClubs();
+  const { data: recentClubs } = useRecentClubs();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('전체');
 
   const debouncedQuery = useDebounce(searchQuery, 300);
-  const { data: teams } = useTeams();
-  const displayClubs = Array.isArray(clubs) && clubs.length > 0 ? clubs : teams;
 
-  const filtered = useMemo(() => {
-    return displayClubs.filter((club) => {
+  const filteredPopular = useMemo(() => {
+    return popularClubs.filter((club) => {
       const matchQuery =
         !debouncedQuery ||
         club.name.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
-        club.subtitle.toLowerCase().includes(debouncedQuery.toLowerCase());
-      const matchCategory = selectedCategory === '전체' || club.subtitle.includes(selectedCategory);
+        (club.sportName ?? '').toLowerCase().includes(debouncedQuery.toLowerCase());
+      const matchCategory = selectedCategory === '전체' || (club.sportName ?? '').includes(selectedCategory);
       return matchQuery && matchCategory;
     });
-  }, [displayClubs, debouncedQuery, selectedCategory]);
+  }, [popularClubs, debouncedQuery, selectedCategory]);
 
-  const featuredClubs = filtered.slice(0, 3);
+  const filteredRecent = useMemo(() => {
+    return recentClubs.filter((club) => {
+      const matchQuery =
+        !debouncedQuery ||
+        club.name.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+        (club.sportName ?? '').toLowerCase().includes(debouncedQuery.toLowerCase());
+      const matchCategory = selectedCategory === '전체' || (club.sportName ?? '').includes(selectedCategory);
+      return matchQuery && matchCategory;
+    });
+  }, [recentClubs, debouncedQuery, selectedCategory]);
+
+  const loading = popularLoading;
+  const featuredClubs = filteredPopular.slice(0, 3);
 
   return (
     <div className="md:px-6 lg:px-8 flex flex-col gap-8">
@@ -213,7 +226,7 @@ export default function ClubPage() {
             <h2 className="text-[19px] font-bold tracking-[-0.03em] text-white">주목할 클럽</h2>
             <p className="mt-1 text-[14px] text-white/46">첫 화면에서 바로 개성이 보이도록 카드 밀도를 높였습니다.</p>
           </div>
-          <span className="text-[14px] text-white/32">총 {filtered.length}개</span>
+          <span className="text-[14px] text-white/32">총 {filteredPopular.length}개</span>
         </div>
 
         {loading ? (
@@ -228,7 +241,7 @@ export default function ClubPage() {
           <div className="grid gap-4 lg:grid-cols-3">
             {featuredClubs.map((club, index) => (
               <ClubFeatureCard
-                key={club.id}
+                key={club.teamId}
                 club={club}
                 tone={['rgba(19,69,201,0.35)', 'rgba(16,185,92,0.24)', 'rgba(255,139,0,0.24)'][index % 3]}
               />
@@ -248,8 +261,8 @@ export default function ClubPage() {
         </div>
 
         <div className="grid gap-3 xl:grid-cols-2">
-          {filtered.slice(0, 8).map((club) => (
-            <ClubListCard key={club.id} club={club} />
+          {filteredPopular.slice(0, 8).map((club) => (
+            <ClubListCard key={club.teamId} club={club} />
           ))}
         </div>
       </section>
@@ -265,8 +278,8 @@ export default function ClubPage() {
         </div>
 
         <HScrollRow scrollAmount={320}>
-          {filtered.map((club) => (
-            <div key={club.id} className="w-[260px] flex-shrink-0">
+          {filteredRecent.map((club) => (
+            <div key={club.teamId} className="w-[260px] flex-shrink-0">
               <ClubFeatureCard club={club} tone="rgba(255,255,255,0.04)" />
             </div>
           ))}
