@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   fetchPlayerData,
@@ -19,7 +19,7 @@ import VClipCard from '@/components/VClipCard';
 import RecommendedVideoItem from '@/components/RecommendedVideoItem';
 import { setOgMeta } from '@/utils/ogMeta';
 import { fetchApi, postApi } from '@/services/apiClient';
-import { Heart, Share2, MoreHorizontal, Sparkles } from 'lucide-react';
+import { Heart, Share2, MoreHorizontal, Sparkles, PanelRight, Goal, AlertTriangle, ArrowLeftRight, Star, Clock, Zap } from 'lucide-react';
 
 // ── Highlight API ─────────────────────────────────────────────────
 
@@ -41,14 +41,23 @@ const HIGHLIGHT_TYPE_MAP: Record<string, TimelineEvent['type']> = {
   CUSTOM: 'CUSTOM',
 };
 
-function mapHighlightsToEvents(highlights: HighlightItem[]): TimelineEvent[] {
-  return highlights.map((h) => ({
-    id: String(h.id),
-    time: h.startTimeSeconds,
-    label: h.description || h.highlightType,
-    type: HIGHLIGHT_TYPE_MAP[h.highlightType] ?? 'HIGHLIGHT',
-  }));
-}
+const HIGHLIGHT_TYPE_COLORS: Record<string, string> = {
+  GOAL: '#4CAF50',
+  FOUL: '#FFD600',
+  SUBSTITUTION: '#2196F3',
+  HIGHLIGHT: '#FFFFFF',
+  PERIOD: '#FF9800',
+  CUSTOM: '#CE93D8',
+};
+
+const HIGHLIGHT_TYPE_ICON: Record<string, React.ElementType> = {
+  GOAL: Goal,
+  FOUL: AlertTriangle,
+  SUBSTITUTION: ArrowLeftRight,
+  HIGHLIGHT: Star,
+  PERIOD: Clock,
+  CUSTOM: Zap,
+};
 
 /* ── Sidebar tag filter pills ── */
 const SIDEBAR_TAGS = ['#야구', '#유료', '#해설', '#MLB', '#동대문구리'] as const;
@@ -91,8 +100,19 @@ export default function ContentPlayerPage() {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [showMore, setShowMore] = useState(false);
-  const [highlights, setHighlights] = useState<TimelineEvent[]>([]);
+  const [highlightItems, setHighlightItems] = useState<HighlightItem[]>([]);
   const [detectingHighlights, setDetectingHighlights] = useState(false);
+  const [highlightPanelOpen, setHighlightPanelOpen] = useState(false);
+  const [seekToTime, setSeekToTime] = useState<number | undefined>(undefined);
+  const [reelIndex, setReelIndex] = useState<number | null>(null);
+  const reelRef = useRef<number | null>(null);
+
+  const highlights: TimelineEvent[] = highlightItems.map((h) => ({
+    id: String(h.id),
+    time: h.startTimeSeconds,
+    label: h.description || h.highlightType,
+    type: HIGHLIGHT_TYPE_MAP[h.highlightType] ?? 'HIGHLIGHT',
+  }));
 
   const isClipView = type === 'clip';
 
@@ -115,7 +135,11 @@ export default function ContentPlayerPage() {
   useEffect(() => {
     if (!id || type === 'clip') return;
     fetchApi<HighlightItem[]>(`/contents/${type}/${id}/highlights`, []).then((items) => {
-      if (items.length > 0) setHighlights(mapHighlightsToEvents(items));
+      if (items.length > 0) {
+        const sorted = [...items].sort((a, b) => a.startTimeSeconds - b.startTimeSeconds);
+        setHighlightItems(sorted);
+        setHighlightPanelOpen(true);
+      }
     });
   }, [type, id]);
 
@@ -129,7 +153,9 @@ export default function ContentPlayerPage() {
         { highlights: [] }
       );
       if (result?.highlights?.length > 0) {
-        setHighlights(mapHighlightsToEvents(result.highlights));
+        const sorted = [...result.highlights].sort((a, b) => a.startTimeSeconds - b.startTimeSeconds);
+        setHighlightItems(sorted);
+        setHighlightPanelOpen(true);
       }
     } finally {
       setDetectingHighlights(false);
@@ -155,6 +181,37 @@ export default function ContentPlayerPage() {
       await navigator.clipboard.writeText(url);
     }
   }, [type, id, player]);
+
+  const handleSeekToHighlight = useCallback((startTime: number) => {
+    setSeekToTime(startTime);
+    setReelIndex(null);
+    reelRef.current = null;
+  }, []);
+
+  const handleStartReel = useCallback(() => {
+    if (highlightItems.length === 0) return;
+    const idx = 0;
+    reelRef.current = idx;
+    setReelIndex(idx);
+    setSeekToTime(highlightItems[idx].startTimeSeconds);
+  }, [highlightItems]);
+
+  const handleTimeUpdate = useCallback((current: number) => {
+    if (reelRef.current === null) return;
+    const item = highlightItems[reelRef.current];
+    if (!item) return;
+    if (current >= item.endTimeSeconds) {
+      const next = reelRef.current + 1;
+      if (next < highlightItems.length) {
+        reelRef.current = next;
+        setReelIndex(next);
+        setSeekToTime(highlightItems[next].startTimeSeconds);
+      } else {
+        reelRef.current = null;
+        setReelIndex(null);
+      }
+    }
+  }, [highlightItems]);
 
   if (!player) {
     return (
@@ -196,6 +253,17 @@ export default function ContentPlayerPage() {
           }`}
         >
           <Sparkles className={`w-4.5 h-4.5 ${detectingHighlights ? 'animate-pulse' : ''}`} />
+        </button>
+      )}
+      {!isClipView && highlightItems.length > 0 && (
+        <button
+          title={highlightPanelOpen ? '하이라이트 패널 닫기' : '하이라이트 패널 열기'}
+          onClick={() => setHighlightPanelOpen((p) => !p)}
+          className={`flex items-center gap-1.5 text-sm transition-colors ${
+            highlightPanelOpen ? 'text-[#00CC33]' : 'text-[#A6A6A6] hover:text-white'
+          }`}
+        >
+          <PanelRight className="w-4.5 h-4.5" />
         </button>
       )}
       <button
@@ -268,8 +336,78 @@ export default function ContentPlayerPage() {
       <div className="flex gap-6">
         {/* ── Left column: player + info (~65%) ────────── */}
         <div className="flex-1 min-w-0">
-          {/* Video Player */}
-          <WebVideoPlayer src={player.streamUrl} isLive={isLive} autoPlay events={highlights} chapters={mockChapters} />
+          {/* Video Player + Highlight Panel */}
+          <div className={`flex gap-3 ${highlightPanelOpen && highlightItems.length > 0 ? 'items-start' : ''}`}>
+            <div className="flex-1 min-w-0">
+              <WebVideoPlayer
+                src={player.streamUrl}
+                isLive={isLive}
+                autoPlay
+                events={highlights}
+                chapters={mockChapters}
+                seekToTime={seekToTime}
+                onTimeUpdate={handleTimeUpdate}
+              />
+            </div>
+            {highlightPanelOpen && highlightItems.length > 0 && (
+              <div className="w-[260px] flex-shrink-0 bg-[#1A1A1A] rounded-xl overflow-hidden flex flex-col" style={{ maxHeight: 400 }}>
+                {/* Panel header */}
+                <div className="flex items-center justify-between px-3 py-2.5 border-b border-[#2A2A2A]">
+                  <span className="text-[13px] font-semibold text-white">하이라이트 ({highlightItems.length})</span>
+                  <button
+                    onClick={handleStartReel}
+                    className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-[#00CC33] text-black hover:bg-[#00AA29] transition-colors"
+                    title="하이라이트 릴 재생"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    릴 재생
+                  </button>
+                </div>
+                {/* Panel item list */}
+                <div className="overflow-y-auto flex-1 scrollbar-hide">
+                  {highlightItems.map((item, idx) => {
+                    const TypeIcon = HIGHLIGHT_TYPE_ICON[item.highlightType] ?? Zap;
+                    const color = HIGHLIGHT_TYPE_COLORS[item.highlightType] ?? '#FFFFFF';
+                    const isActive = reelIndex === idx;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => handleSeekToHighlight(item.startTimeSeconds)}
+                        className={`w-full text-left px-3 py-2.5 border-b border-[#2A2A2A] last:border-0 transition-colors ${
+                          isActive ? 'bg-[#00CC33]/10' : 'hover:bg-[#262626]'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <TypeIcon className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color }} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1 mb-0.5">
+                              <span className="text-[11px] font-mono text-[#A6A6A6]">
+                                {formatDuration(item.startTimeSeconds)}
+                              </span>
+                              <span className="text-[10px]" style={{ color }}>{item.highlightType}</span>
+                            </div>
+                            <p className="text-[12px] text-white truncate leading-tight">{item.description || item.highlightType}</p>
+                            {/* Confidence bar */}
+                            <div className="mt-1.5 flex items-center gap-1.5">
+                              <div className="flex-1 h-1 bg-[#333] rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all"
+                                  style={{ width: `${Math.round(item.confidenceScore * 100)}%`, backgroundColor: color }}
+                                />
+                              </div>
+                              <span className="text-[10px] text-[#606060] flex-shrink-0">
+                                {Math.round(item.confidenceScore * 100)}%
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Match Info */}
           <div className="mt-6 space-y-3">

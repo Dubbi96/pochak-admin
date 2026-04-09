@@ -41,6 +41,8 @@ export interface WebVideoPlayerProps {
   events?: TimelineEvent[];
   chapters?: Chapter[];
   onSeekTo?: (time: number) => void;
+  /** When this value changes, the player seeks to that time (seconds). */
+  seekToTime?: number;
 }
 
 interface QualityLevel {
@@ -100,6 +102,7 @@ export default function WebVideoPlayer({
   events = [],
   chapters = [],
   onSeekTo,
+  seekToTime,
 }: WebVideoPlayerProps) {
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -157,6 +160,12 @@ export default function WebVideoPlayer({
     },
     [onSeekTo],
   );
+
+  // ── External seek (from parent) ──────────────────────────────────
+  useEffect(() => {
+    if (seekToTime !== undefined) seekTo(seekToTime);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seekToTime]);
 
   // ── Auto-hide controls ─────────────────────────────────────────
 
