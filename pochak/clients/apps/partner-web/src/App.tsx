@@ -11,6 +11,7 @@ import ClubManagePage from '@/pages/ClubManagePage'
 import ClubEditPage from '@/pages/ClubEditPage'
 import ClubCustomizePage from '@/pages/ClubCustomizePage'
 import ClubMembersPage from '@/pages/ClubMembersPage'
+import ClubPostsPage from '@/pages/ClubPostsPage'
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/clubs/:id/edit" element={<ClubEditPage />} />
         <Route path="/clubs/:id/customize" element={<ClubCustomizePage />} />
         <Route path="/clubs/:id/members" element={<ClubMembersPage />} />
+        <Route path="/clubs/:id/posts" element={<ClubPostsPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
