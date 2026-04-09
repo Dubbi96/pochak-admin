@@ -1,6 +1,48 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
+
+/* ── Sport Filter ────────────────────────────────────────────── */
+type Sport = '전체' | '축구' | '야구' | '테니스' | '풋살';
+
+const SPORTS: Sport[] = ['전체', '축구', '야구', '테니스', '풋살'];
+
+const SPORT_ICON: Record<Sport, string> = {
+  전체: '🏟',
+  축구: '⚽',
+  야구: '⚾',
+  테니스: '🎾',
+  풋살: '🥅',
+};
+
+function SportFilter({ selected, onChange }: { selected: Sport; onChange: (s: Sport) => void }) {
+  return (
+    <div className="flex items-center gap-2 py-4 overflow-x-auto scrollbar-none">
+      {SPORTS.map((sport) => (
+        <button
+          key={sport}
+          onClick={() => onChange(sport)}
+          className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            selected === sport
+              ? 'bg-[#00CC33] text-[#1A1A1A]'
+              : 'bg-[#262626] text-[#A6A6A6] hover:bg-[#333] hover:text-white'
+          }`}
+        >
+          <span>{SPORT_ICON[sport]}</span>
+          <span>{sport}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function SportBadge({ sport }: { sport: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-[#1A3320] text-[#00CC33] font-medium">
+      {SPORT_ICON[sport as Sport] ?? '🏅'} {sport}
+    </span>
+  );
+}
 import {
   BannerSkeleton,
   CompetitionCardSkeleton,
@@ -207,12 +249,17 @@ function CompetitionCards({ items }: { items: CompetitionCardType[] }) {
 }
 
 /* ── 3. 공식 라이브 (HVideoCard style) ─────────────────────── */
-function OfficialLiveSection() {
+function OfficialLiveSection({ sport }: { sport: Sport }) {
+  const items = sport === '전체' ? pochakLiveContents : pochakLiveContents.filter((c) => c.sport === sport);
+  if (items.length === 0) return null;
   return (
     <section className="py-8">
-      <SectionHeader prefix="공식" highlight="라이브" />
+      <div className="flex items-center gap-2 mb-1">
+        <SectionHeader prefix="공식" highlight="라이브" />
+        {sport !== '전체' && <SportBadge sport={sport} />}
+      </div>
       <HScrollRow scrollAmount={300}>
-        {pochakLiveContents.map((c) => {
+        {items.map((c) => {
           const isLive = c.status === 'LIVE';
           const d = new Date(c.date);
           const dateBadgeText = isLive
@@ -224,7 +271,7 @@ function OfficialLiveSection() {
               key={c.id}
               title={`${c.homeTeam.name} vs ${c.awayTeam.name}`}
               sub={`${c.competition} | ${c.sport}`}
-              tags={c.tags.slice(0, 4)}
+              tags={[c.sport, ...c.tags.filter((t) => t !== c.sport)].slice(0, 4)}
               live={isLive}
               duration={durationText}
               dateBadge={dateBadgeText}
@@ -257,17 +304,22 @@ function PopularPochakSection({ items }: { items: PopularClipType[] }) {
 }
 
 /* ── 5. 최근 영상 (가로형) ────────────────────────────────── */
-function LatestVideosSection() {
+function LatestVideosSection({ sport }: { sport: Sport }) {
+  const items = sport === '전체' ? pochakVodContents : pochakVodContents.filter((v) => v.sport === sport);
+  if (items.length === 0) return null;
   return (
     <section className="py-8">
-      <SectionHeader prefix="최근" highlight="영상" />
+      <div className="flex items-center gap-2 mb-1">
+        <SectionHeader prefix="최근" highlight="영상" />
+        {sport !== '전체' && <SportBadge sport={sport} />}
+      </div>
       <HScrollRow scrollAmount={300}>
-        {pochakVodContents.map((v) => (
+        {items.map((v) => (
           <HVideoCard
             key={v.id}
             title={v.title}
             sub={`${v.competition} · ${v.date.slice(0, 10)}`}
-            tags={v.tags.slice(0, 3)}
+            tags={[v.sport, ...v.tags.filter((t) => t !== v.sport)].slice(0, 3)}
             duration={v.duration ? `${Math.floor(v.duration / 60)}:${String(v.duration % 60).padStart(2, '0')}` : undefined}
             thumbnailUrl={v.thumbnailUrl}
             linkTo={`/contents/vod/${v.id}`}
@@ -337,16 +389,21 @@ function BestClubSection() {
 }
 
 /* ── 7. 팀/클럽 라이브 (가로형) ────────────────────────────── */
-function ClubLiveSection() {
+function ClubLiveSection({ sport }: { sport: Sport }) {
+  const items = sport === '전체' ? pochakLiveContents : pochakLiveContents.filter((c) => c.sport === sport);
+  if (items.length === 0) return null;
   return (
     <section className="py-8">
-      <SectionHeader prefix="팀/클럽" highlight="라이브" />
+      <div className="flex items-center gap-2 mb-1">
+        <SectionHeader prefix="팀/클럽" highlight="라이브" />
+        {sport !== '전체' && <SportBadge sport={sport} />}
+      </div>
       <HScrollRow scrollAmount={300}>
-        {pochakLiveContents.map((c) => (
+        {items.map((c) => (
           <HVideoCard
             key={c.id}
             title={c.title}
-            sub={c.homeTeam.name}
+            sub={`${c.homeTeam.name} · ${c.sport}`}
             live={c.status === 'LIVE'}
             duration={c.status === 'LIVE' ? undefined : c.date.slice(5, 10).replace('-', '월 ') + '일'}
             thumbnailUrl={c.thumbnailUrl}
@@ -360,16 +417,21 @@ function ClubLiveSection() {
 }
 
 /* ── 8. 팀/클럽 클립 (가로형) ──────────────────────────── */
-function ClubLatestSection() {
+function ClubLatestSection({ sport }: { sport: Sport }) {
+  const items = sport === '전체' ? pochakVodContents : pochakVodContents.filter((v) => v.sport === sport);
+  if (items.length === 0) return null;
   return (
     <section className="py-8">
-      <SectionHeader prefix="팀/클럽" highlight="클립" />
+      <div className="flex items-center gap-2 mb-1">
+        <SectionHeader prefix="팀/클럽" highlight="클립" />
+        {sport !== '전체' && <SportBadge sport={sport} />}
+      </div>
       <HScrollRow scrollAmount={300}>
-        {pochakVodContents.map((v) => (
+        {items.map((v) => (
           <HVideoCard
             key={v.id}
             title={v.title}
-            sub={`${v.homeTeam.name} · ${v.date.slice(5, 10).replace('-', '월 ')}일`}
+            sub={`${v.homeTeam.name} · ${v.sport} · ${v.date.slice(5, 10).replace('-', '월 ')}일`}
             duration={v.duration ? `${Math.floor(v.duration / 3600)}:${String(Math.floor((v.duration % 3600) / 60)).padStart(2, '0')}:${String(v.duration % 60).padStart(2, '0')}` : undefined}
             thumbnailUrl={v.thumbnailUrl}
             linkTo={`/contents/vod/${v.id}`}
@@ -420,6 +482,7 @@ export default function HomePage() {
   const [competitionItems, setCompetitionItems] = useState<CompetitionCardType[]>(defaultCompetitions);
   const [clipItems, setClipItems] = useState<PopularClipType[]>(defaultPopularClips);
   const [loading, setLoading] = useState(true);
+  const [selectedSport, setSelectedSport] = useState<Sport>('전체');
 
   useEffect(() => {
     Promise.all([
@@ -466,12 +529,13 @@ export default function HomePage() {
     <div className="px-5 py-4">
       <BannerCarousel items={bannerItems} />
       <CompetitionCards items={competitionItems} />
-      <OfficialLiveSection />
+      <SportFilter selected={selectedSport} onChange={setSelectedSport} />
+      <OfficialLiveSection sport={selectedSport} />
       <PopularPochakSection items={clipItems} />
-      <LatestVideosSection />
+      <LatestVideosSection sport={selectedSport} />
       <div id="best-club-section"><BestClubSection /></div>
-      <ClubLiveSection />
-      <ClubLatestSection />
+      <ClubLiveSection sport={selectedSport} />
+      <ClubLatestSection sport={selectedSport} />
       <CompetitionVideosSection title="2025화랑대기 유소년축구" />
       <CompetitionVideosSection title="제5회 전국 리틀야구" />
       <CompetitionVideosSection title="2025 전국 대학핸드볼 선수권" />
