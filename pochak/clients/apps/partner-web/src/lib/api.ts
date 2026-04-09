@@ -3,6 +3,15 @@ import { useAuthStore } from '@/stores/authStore'
 
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'http://localhost:8080'
 
+let _navigate: ((path: string) => void) | null = null
+export function setNavigate(nav: (path: string) => void) {
+  _navigate = nav
+}
+function navigateToLogin() {
+  if (_navigate) _navigate('/login')
+  else window.location.href = '/login'
+}
+
 export const api = axios.create({
   baseURL: GATEWAY_URL,
   headers: { 'Content-Type': 'application/json' },
@@ -42,7 +51,7 @@ api.interceptors.response.use(
 
     if (!refreshToken) {
       logout()
-      window.location.href = '/login'
+      navigateToLogin()
       return Promise.reject(error)
     }
 
@@ -73,7 +82,7 @@ api.interceptors.response.use(
     } catch (err) {
       processQueue(err, null)
       logout()
-      window.location.href = '/login'
+      navigateToLogin()
       return Promise.reject(err)
     } finally {
       isRefreshing = false

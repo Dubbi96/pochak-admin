@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import DashboardLayout from '@/layouts/DashboardLayout'
 import LoginPage from '@/pages/LoginPage'
 import DashboardPage from '@/pages/DashboardPage'
@@ -12,10 +13,21 @@ import ClubEditPage from '@/pages/ClubEditPage'
 import ClubCustomizePage from '@/pages/ClubCustomizePage'
 import ClubMembersPage from '@/pages/ClubMembersPage'
 import ClubPostsPage from '@/pages/ClubPostsPage'
+import { setNavigate } from '@/lib/api'
+
+function NavigateRegistrar() {
+  const navigate = useNavigate()
+  useEffect(() => {
+    setNavigate(navigate)
+  }, [navigate])
+  return null
+}
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <NavigateRegistrar />
+      <Routes>
       <Route path="/login" element={<LoginPage />} />
 
       <Route element={<DashboardLayout />}>
@@ -34,5 +46,6 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
+    </>
   )
 }
