@@ -14,6 +14,7 @@ import MyPage from '@/pages/MyPage'
 import SignUpPage from '@/pages/SignUpPage'
 import CompetitionPage from '@/pages/CompetitionPage'
 import ClubPage from '@/pages/ClubPage'
+import ClubListPage from '@/pages/ClubListPage'
 import TeamPage from '@/pages/TeamPage'
 import StorePage from '@/pages/StorePage'
 import SettingsPage from '@/pages/SettingsPage'
@@ -96,6 +97,7 @@ export default function App() {
           {/* Other pages */}
           <Route path="/search" element={<SearchPage />} />
           <Route path="/team/:teamId" element={<TeamPage />} />
+          <Route path="/club" element={<ClubListPage />} />
           <Route path="/club/:clubId" element={<ClubPage />} />
 
           {/* Profile area — shared ProfileSidebar layout */}
