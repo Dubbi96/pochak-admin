@@ -20,14 +20,11 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  DateRangePicker,
-  type DateRange,
-} from "@/components/filter/date-range-picker";
 import { Plus, Search, GripVertical, Trash2 } from "lucide-react";
 import { FileUpload } from "@/components/common/file-upload";
 import type { PageResponse } from "@/types/common";
 import {
+  getBanners,
   createBanner,
   updateBanner,
   updateBannerOrders,
@@ -37,7 +34,6 @@ import {
   type BannerCreateRequest,
   type PublishStatus,
 } from "@/services/site-api";
-import { adminApi } from "@/lib/api-client";
 import { useToast } from "@/lib/use-toast";
 
 // ── Banner Modal ──────────────────────────────────────────────────
@@ -241,7 +237,6 @@ export default function BannersPage() {
   const [page, setPage] = useState(0);
 
   // Filters
-  const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [searchKeyword, setSearchKeyword] = useState("");
 
@@ -261,28 +256,16 @@ export default function BannersPage() {
     setLoading(true);
     try {
       const filters: BannerFilter = {
-        dateFrom: dateRange.from?.toISOString(),
-        dateTo: dateRange.to?.toISOString(),
         status: statusFilter === "ALL" ? "ALL" : (statusFilter as PublishStatus),
         searchKeyword: searchKeyword || undefined,
       };
-
-      const apiParams: Record<string, string> = { page: String(page) };
-      if (statusFilter !== "ALL") apiParams.status = statusFilter;
-      if (filters.dateFrom) apiParams.dateFrom = filters.dateFrom;
-      if (filters.dateTo) apiParams.dateTo = filters.dateTo;
-      if (filters.searchKeyword) apiParams.searchKeyword = filters.searchKeyword;
-
-      const apiResult = await adminApi.get<PageResponse<Banner>>(
-        "/admin/api/v1/site/banners",
-        apiParams
-      );
+      const apiResult = await getBanners(filters, page);
       setData(apiResult);
       setOrderEdits({});
     } finally {
       setLoading(false);
     }
-  }, [dateRange, statusFilter, searchKeyword, page]);
+  }, [statusFilter, searchKeyword, page]);
 
   useEffect(() => {
     fetchData();
@@ -294,7 +277,6 @@ export default function BannersPage() {
   };
 
   const handleReset = () => {
-    setDateRange({ from: undefined, to: undefined });
     setStatusFilter("ALL");
     setSearchKeyword("");
     setPage(0);
@@ -358,11 +340,6 @@ export default function BannersPage() {
 
       {/* Filter Bar */}
       <div className="flex flex-wrap items-end gap-4 rounded-lg border border-gray-200 bg-white p-4">
-        <div className="space-y-1.5">
-          <Label className="text-xs text-gray-500">등록일자</Label>
-          <DateRangePicker value={dateRange} onChange={setDateRange} />
-        </div>
-
         <div className="space-y-1.5">
           <Label className="text-xs text-gray-500">게시상태</Label>
           <Select value={statusFilter} onValueChange={setStatusFilter}>

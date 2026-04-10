@@ -31,8 +31,10 @@ public class ContentSyncService {
     public void syncBannerToContent(Banner banner) {
         try {
             Map<String, Object> body = new HashMap<>();
+            body.put("adminBannerId", banner.getId());
             body.put("title", banner.getTitle());
-            body.put("imageUrl", banner.getImageUrl() != null ? banner.getImageUrl() : "");
+            body.put("imageUrl", banner.getPcImageUrl() != null ? banner.getPcImageUrl() : "");
+            body.put("linkUrl", banner.getLinkUrl() != null ? banner.getLinkUrl() : "");
             body.put("sortOrder", banner.getSortOrder() != null ? banner.getSortOrder() : 0);
 
             restTemplate.postForObject(
@@ -43,6 +45,18 @@ public class ContentSyncService {
             log.info("Synced banner '{}' (id={}) to content service", banner.getTitle(), banner.getId());
         } catch (RestClientException e) {
             log.warn("Failed to sync banner '{}' to content service: {}", banner.getTitle(), e.getMessage());
+        }
+    }
+
+    public void removeBannerFromContent(Long adminBannerId) {
+        try {
+            restTemplate.delete(
+                    contentServiceUrl + "/internal/admin/display-sections/banner/{adminBannerId}",
+                    adminBannerId
+            );
+            log.info("Removed banner (adminBannerId={}) from content service", adminBannerId);
+        } catch (RestClientException e) {
+            log.warn("Failed to remove banner (adminBannerId={}) from content service: {}", adminBannerId, e.getMessage());
         }
     }
 }
