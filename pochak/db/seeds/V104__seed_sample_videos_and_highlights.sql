@@ -19,18 +19,18 @@ SELECT setval('content.teams_id_seq', 110, true);
 -- ----------------------------------------------------------------------------
 -- 2. 샘플 경기 (Matches) — 4종목 각 1경기
 -- ----------------------------------------------------------------------------
-INSERT INTO content.matches (id, sport_id, name, status, start_time, end_time, is_displayed) VALUES
+INSERT INTO content.matches (id, sport_id, name, title, status, start_time, end_time, is_displayed) VALUES
     (101, (SELECT id FROM content.sports WHERE code='SOCCER'),
-        '샘플 축구 경기 - POC 테스트', 'COMPLETED',
+        '샘플 축구 경기 - POC 테스트', '샘플 축구 경기 - POC 테스트', 'COMPLETED',
         '2025-09-01 14:00:00+09', '2025-09-01 16:00:00+09', TRUE),
     (102, (SELECT id FROM content.sports WHERE code='BASEBALL'),
-        '샘플 야구 경기 - POC 테스트', 'COMPLETED',
+        '샘플 야구 경기 - POC 테스트', '샘플 야구 경기 - POC 테스트', 'COMPLETED',
         '2025-09-02 14:00:00+09', '2025-09-02 17:00:00+09', TRUE),
     (103, (SELECT id FROM content.sports WHERE code='BASKETBALL'),
-        '샘플 농구 경기 - POC 테스트', 'COMPLETED',
+        '샘플 농구 경기 - POC 테스트', '샘플 농구 경기 - POC 테스트', 'COMPLETED',
         '2025-09-03 15:00:00+09', '2025-09-03 17:00:00+09', TRUE),
     (104, (SELECT id FROM content.sports WHERE code='VOLLEYBALL'),
-        '샘플 배구 경기 - POC 테스트', 'COMPLETED',
+        '샘플 배구 경기 - POC 테스트', '샘플 배구 경기 - POC 테스트', 'COMPLETED',
         '2025-09-04 16:00:00+09', '2025-09-04 18:00:00+09', TRUE)
 ON CONFLICT DO NOTHING;
 
@@ -71,29 +71,29 @@ SELECT setval('content.vod_assets_id_seq', 110, true);
 --    출처: scripts/ai-highlight/output/*.json
 -- ----------------------------------------------------------------------------
 
--- soccer_highlights.json (3 highlights: PENALTY x3)
-INSERT INTO content.highlights (content_id, content_type, start_time_seconds, end_time_seconds, highlight_type, confidence_score, description, is_auto_generated) VALUES
-    (101, 'VOD',  35,  40, 'PENALTY', 0.88, '페널티킥', TRUE),
-    (101, 'VOD',  95, 100, 'PENALTY', 0.89, '페널티킥', TRUE),
-    (101, 'VOD', 155, 160, 'PENALTY', 0.89, '페널티킥', TRUE);
+-- soccer_highlights.json (3 highlights: PENALTY → GOAL)
+INSERT INTO content.highlights (content_id, content_type, sport, start_time_seconds, end_time_seconds, highlight_type, confidence_score, description, is_auto_generated, created_at) VALUES
+    (101, 'VOD', 'SOCCER',  35,  40, 'GOAL', 0.88, '페널티킥', TRUE, NOW()),
+    (101, 'VOD', 'SOCCER',  95, 100, 'GOAL', 0.89, '페널티킥', TRUE, NOW()),
+    (101, 'VOD', 'SOCCER', 155, 160, 'GOAL', 0.89, '페널티킥', TRUE, NOW());
 
--- baseball_highlights.json (3 highlights: HOME_RUN x3)
-INSERT INTO content.highlights (content_id, content_type, start_time_seconds, end_time_seconds, highlight_type, confidence_score, description, is_auto_generated) VALUES
-    (102, 'VOD',  25,  30, 'HOME_RUN', 0.94, '홈런!', TRUE),
-    (102, 'VOD',  80,  85, 'HOME_RUN', 0.85, '홈런!', TRUE),
-    (102, 'VOD', 140, 145, 'HOME_RUN', 0.99, '홈런!', TRUE);
+-- baseball_highlights.json (3 highlights: HOME_RUN → CUSTOM)
+INSERT INTO content.highlights (content_id, content_type, sport, start_time_seconds, end_time_seconds, highlight_type, confidence_score, description, is_auto_generated, created_at) VALUES
+    (102, 'VOD', 'BASEBALL',  25,  30, 'CUSTOM', 0.94, '홈런!', TRUE, NOW()),
+    (102, 'VOD', 'BASEBALL',  80,  85, 'CUSTOM', 0.85, '홈런!', TRUE, NOW()),
+    (102, 'VOD', 'BASEBALL', 140, 145, 'CUSTOM', 0.99, '홈런!', TRUE, NOW());
 
--- basketball_highlights.json (BUZZER_BEATER, DUNK x3)
-INSERT INTO content.highlights (content_id, content_type, start_time_seconds, end_time_seconds, highlight_type, confidence_score, description, is_auto_generated) VALUES
-    (103, 'VOD',  20,  25, 'BUZZER_BEATER', 0.87, '버저비터!', TRUE),
-    (103, 'VOD',  60,  65, 'DUNK',          0.90, '덩크!',     TRUE),
-    (103, 'VOD', 110, 115, 'DUNK',          0.93, '덩크!',     TRUE),
-    (103, 'VOD', 160, 165, 'DUNK',          0.88, '덩크!',     TRUE);
+-- basketball_highlights.json (BUZZER_BEATER → CUSTOM, DUNK → DUNK)
+INSERT INTO content.highlights (content_id, content_type, sport, start_time_seconds, end_time_seconds, highlight_type, confidence_score, description, is_auto_generated, created_at) VALUES
+    (103, 'VOD', 'BASKETBALL',  20,  25, 'CUSTOM', 0.87, '버저비터!', TRUE, NOW()),
+    (103, 'VOD', 'BASKETBALL',  60,  65, 'DUNK',   0.90, '덩크!',     TRUE, NOW()),
+    (103, 'VOD', 'BASKETBALL', 110, 115, 'DUNK',   0.93, '덩크!',     TRUE, NOW()),
+    (103, 'VOD', 'BASKETBALL', 160, 165, 'DUNK',   0.88, '덩크!',     TRUE, NOW());
 
--- volleyball_highlights.json (SPIKE_ACE x4, SERVICE_ACE x1)
-INSERT INTO content.highlights (content_id, content_type, start_time_seconds, end_time_seconds, highlight_type, confidence_score, description, is_auto_generated) VALUES
-    (104, 'VOD',  15,  20, 'SPIKE_ACE',   0.93, '스파이크 에이스!', TRUE),
-    (104, 'VOD',  45,  50, 'SPIKE_ACE',   0.94, '스파이크 에이스!', TRUE),
-    (104, 'VOD',  75,  80, 'SERVICE_ACE', 0.97, '서비스 에이스!',   TRUE),
-    (104, 'VOD', 120, 125, 'SPIKE_ACE',   0.94, '스파이크 에이스!', TRUE),
-    (104, 'VOD', 165, 170, 'SPIKE_ACE',   0.99, '스파이크 에이스!', TRUE);
+-- volleyball_highlights.json (SPIKE_ACE → ACE, SERVICE_ACE → ACE)
+INSERT INTO content.highlights (content_id, content_type, sport, start_time_seconds, end_time_seconds, highlight_type, confidence_score, description, is_auto_generated, created_at) VALUES
+    (104, 'VOD', 'VOLLEYBALL',  15,  20, 'ACE', 0.93, '스파이크 에이스!', TRUE, NOW()),
+    (104, 'VOD', 'VOLLEYBALL',  45,  50, 'ACE', 0.94, '스파이크 에이스!', TRUE, NOW()),
+    (104, 'VOD', 'VOLLEYBALL',  75,  80, 'ACE', 0.97, '서비스 에이스!',   TRUE, NOW()),
+    (104, 'VOD', 'VOLLEYBALL', 120, 125, 'ACE', 0.94, '스파이크 에이스!', TRUE, NOW()),
+    (104, 'VOD', 'VOLLEYBALL', 165, 170, 'ACE', 0.99, '스파이크 에이스!', TRUE, NOW());

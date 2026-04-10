@@ -66,24 +66,24 @@ SELECT setval('content.teams_id_seq', 20, true);
 -- ----------------------------------------------------------------------------
 -- 4. 경기 (Matches) — matches pochakMatches live-1~6
 -- ----------------------------------------------------------------------------
-INSERT INTO content.matches (id, competition_id, sport_id, name, status, start_time, end_time) VALUES
+INSERT INTO content.matches (id, competition_id, sport_id, name, title, status, start_time, end_time) VALUES
     (1, 1, (SELECT id FROM content.sports WHERE code='SOCCER'),
-        '경기용인YSFC vs 대구강북주니어', 'LIVE',
+        '경기용인YSFC vs 대구강북주니어', '경기용인YSFC vs 대구강북주니어', 'LIVE',
         '2025-10-20 12:00:00+09', '2025-10-20 14:00:00+09'),
     (2, 1, (SELECT id FROM content.sports WHERE code='SOCCER'),
-        '인천남동FC vs 수원삼성블루윙즈', 'LIVE',
+        '인천남동FC vs 수원삼성블루윙즈', '인천남동FC vs 수원삼성블루윙즈', 'LIVE',
         '2025-10-20 12:00:00+09', '2025-10-20 14:00:00+09'),
     (3, 1, (SELECT id FROM content.sports WHERE code='SOCCER'),
-        '서울강남FC vs 부산서면유소년', 'LIVE',
+        '서울강남FC vs 부산서면유소년', '서울강남FC vs 부산서면유소년', 'LIVE',
         '2025-10-20 14:00:00+09', '2025-10-20 16:00:00+09'),
     (4, 2, (SELECT id FROM content.sports WHERE code='BASEBALL'),
-        '인천리틀스타 vs 수원이글스Jr', 'SCHEDULED',
+        '인천리틀스타 vs 수원이글스Jr', '인천리틀스타 vs 수원이글스Jr', 'SCHEDULED',
         '2025-11-01 10:00:00+09', '2025-11-01 13:00:00+09'),
     (5, 4, (SELECT id FROM content.sports WHERE code='BASKETBALL'),
-        '서울시협회장기 남자단식 결승', 'SCHEDULED',
+        '서울시협회장기 남자단식 결승', '서울시협회장기 남자단식 결승', 'SCHEDULED',
         '2025-11-05 14:00:00+09', '2025-11-05 17:00:00+09'),
     (6, 3, (SELECT id FROM content.sports WHERE code='FUTSAL'),
-        '나이키 에어맥스 프리데이 결승', 'SCHEDULED',
+        '나이키 에어맥스 프리데이 결승', '나이키 에어맥스 프리데이 결승', 'SCHEDULED',
         '2025-10-27 16:00:00+09', '2025-10-27 18:00:00+09')
 ON CONFLICT DO NOTHING;
 
