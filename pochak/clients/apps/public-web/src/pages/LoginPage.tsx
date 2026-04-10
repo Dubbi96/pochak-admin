@@ -1,6 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { postApi } from '@/services/apiClient';
 
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'http://localhost:8080';
 
@@ -63,16 +62,12 @@ export default function LoginPage() {
         setError('이메일 또는 비밀번호가 올바르지 않습니다.');
         return;
       }
-      // Server error — fall through to mock
+      setError('서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     } catch {
-      // Network unavailable — fall through to mock
+      setError('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.');
     } finally {
       setIsLoading(false);
     }
-    // Mock fallback: only when backend is unreachable
-    localStorage.setItem('pochak_token', 'mock-token');
-    localStorage.setItem('pochak_user', JSON.stringify({ nickname: userId }));
-    navigate('/home');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
