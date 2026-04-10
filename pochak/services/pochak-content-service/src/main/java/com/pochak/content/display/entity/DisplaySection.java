@@ -42,6 +42,10 @@ public class DisplaySection {
     @Builder.Default
     private Boolean active = true;
 
+    @Column(name = "page", length = 30, nullable = false)
+    @Builder.Default
+    private String page = "HOME";
+
     @Column(name = "target_page", length = 50)
     @Builder.Default
     private String targetPage = "HOME";
