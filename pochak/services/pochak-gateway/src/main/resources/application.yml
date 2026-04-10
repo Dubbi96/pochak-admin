@@ -15,7 +15,7 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3300,http://localhost:8097}
+            allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3200,http://localhost:3300,http://localhost:8097}
             allowedMethods:
               - GET
               - POST
@@ -31,7 +31,7 @@ pochak:
     type: ${RATE_LIMIT_TYPE:redis}
     trusted-proxies: ${TRUSTED_PROXIES:127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3300,http://localhost:8097}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3200,http://localhost:3300,http://localhost:8097}
 
 jwt:
   secret: ${JWT_SECRET:}

@@ -66,7 +66,10 @@ public class RouteConfig {
                               "/api/v1/cameras/**",
                               "/api/v1/reservations/**",
                               "/api/v1/streaming/ingest/**",
-                              "/api/v1/studio/**")
+                              "/api/v1/studio/**",
+                              "/api/v1/recording-schedules/**",
+                              "/api/v1/recording-sessions/**",
+                              "/api/v1/recording-notifications/**")
                         .filters(f -> f.stripPrefix(2))
                         .uri(operationUrl))
                 // 4. content-service (all content routes including consumer-facing streaming)
@@ -91,6 +94,12 @@ public class RouteConfig {
                               "/api/v1/communities/**")
                         .filters(f -> f.stripPrefix(2))
                         .uri(contentUrl))
+                // 5a. commerce wallets alias (/api/v1/wallets/** → /wallet/** on commerce)
+                .route("commerce-wallets-alias", r -> r
+                        .path("/api/v1/wallets/**")
+                        .filters(f -> f.rewritePath("/api/v1/wallets/(?<segment>.*)", "/wallet/${segment}")
+                                       .rewritePath("/api/v1/wallets", "/wallet"))
+                        .uri(commerceUrl))
                 // 5. commerce-service
                 .route("commerce-service", r -> r
                         .path("/api/v1/subscriptions/**",
@@ -103,9 +112,15 @@ public class RouteConfig {
                               "/api/v1/coupons/**")
                         .filters(f -> f.stripPrefix(2))
                         .uri(commerceUrl))
-                // 6. admin-service (NO stripPrefix)
+                // 6. admin-service (NO stripPrefix - direct /admin/** paths)
                 .route("admin-service", r -> r
                         .path("/admin/**")
+                        .uri(adminUrl))
+                // 6a. admin-api-v1: /api/v1/admin/** → admin (/admin/api/v1/**)
+                // Note: /api/v1/admin/members/** is handled by identity-service above
+                .route("admin-api-v1-service", r -> r
+                        .path("/api/v1/admin/**")
+                        .filters(f -> f.rewritePath("/api/v1/admin/(?<segment>.*)", "/admin/api/v1/${segment}"))
                         .uri(adminUrl))
                 .build();
     }
