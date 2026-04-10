@@ -262,7 +262,7 @@ export default function ClubPage() {
     if (!clubId || joinLoading || joinStatus !== 'none') return;
     setJoinLoading(true);
     try {
-      await postApi(`/api/v1/clubs/${clubId}/join`, { role: 'PLAYER' }, null);
+      await postApi(`/api/v1/clubs/${clubId}/join`, { role: 'PLAYER' });
       setJoinStatus('pending');
     } catch {
       // join request submitted — show pending state

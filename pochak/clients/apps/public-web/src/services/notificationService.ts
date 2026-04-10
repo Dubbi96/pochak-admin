@@ -62,9 +62,8 @@ export async function reserveMatchNotification(matchId: string): Promise<boolean
   const result = await postApi<{ success: boolean }>(
     `/contents/matches/${matchId}/reserve`,
     {},
-    { success: true },
   );
-  return result.success;
+  return result?.success ?? false;
 }
 
 /**
@@ -73,16 +72,16 @@ export async function reserveMatchNotification(matchId: string): Promise<boolean
 export async function cancelMatchReservation(matchId: string): Promise<boolean> {
   const result = await deleteApi<{ success: boolean }>(
     `/contents/matches/${matchId}/reserve`,
-    { success: true },
   );
-  return result.success;
+  return result?.success ?? false;
 }
 
 /**
  * Get all reservations for current user.
  */
 export async function getMyReservations(): Promise<MatchReservation[]> {
-  return fetchApi<MatchReservation[]>('/users/me/reservations', []);
+  const result = await fetchApi<MatchReservation[]>('/users/me/reservations');
+  return result ?? [];
 }
 
 // ─── Backend API: Push Subscription ──────────────────────────
@@ -140,8 +139,8 @@ export async function checkReservedMatchesStatus(reservedMatchIds: string[]): Pr
 }[]> {
   if (reservedMatchIds.length === 0) return [];
 
-  return fetchApi(
+  const result = await fetchApi<{ matchId: string; status: 'LIVE' | '예정' | '종료'; contentId?: string }[]>(
     `/contents/matches/status?ids=${reservedMatchIds.join(',')}`,
-    reservedMatchIds.map(id => ({ matchId: id, status: '예정' as const })),
   );
+  return result ?? [];
 }

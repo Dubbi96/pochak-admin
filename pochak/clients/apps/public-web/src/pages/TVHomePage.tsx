@@ -22,14 +22,13 @@ function SportFilter({ selected, onChange }: { selected: Sport; onChange: (s: Sp
         <button
           key={sport}
           onClick={() => onChange(sport)}
-          className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+          className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
             selected === sport
               ? 'bg-[#00CC33] text-[#1A1A1A]'
               : 'bg-[#262626] text-[#A6A6A6] hover:bg-[#333] hover:text-white'
           }`}
         >
-          <span>{SPORT_ICON[sport]}</span>
-          <span>{sport}</span>
+          {sport}
         </button>
       ))}
     </div>
@@ -55,9 +54,6 @@ import SectionHeader from '@/components/SectionHeader';
 import HVideoCard from '@/components/HVideoCard';
 import VClipCard from '@/components/VClipCard';
 import {
-  banners as defaultBanners,
-  competitions as defaultCompetitions,
-  popularClips as defaultPopularClips,
   pochakLiveContents,
   pochakVodContents,
   pochakChannels,
@@ -350,14 +346,14 @@ function BestClubSection() {
 
   return (
     <section className="py-8">
-      <SectionHeader prefix="인기" highlight="팀/클럽" />
+      <SectionHeader prefix="인기" highlight="클럽" />
       <HScrollRow scrollAmount={280}>
         {pochakChannels.map((club) => {
           const isFollowed = followedClubs.has(club.id);
           return (
             <div
               key={club.id}
-              className="flex-shrink-0 w-[130px] flex flex-col items-center gap-2.5 py-4 cursor-pointer"
+              className="flex-shrink-0 w-[130px] flex flex-col items-center gap-2.5 py-4 px-2 cursor-pointer border border-[#2D2D2D] rounded-xl"
             >
               <div
                 className="w-16 h-16 rounded-full flex items-center justify-center text-xs font-bold text-white border-2 border-[#4D4D4D]"
@@ -395,7 +391,7 @@ function ClubLiveSection({ sport }: { sport: Sport }) {
   return (
     <section className="py-8">
       <div className="flex items-center gap-2 mb-1">
-        <SectionHeader prefix="팀/클럽" highlight="라이브" />
+        <SectionHeader prefix="클럽" highlight="라이브" />
         {sport !== '전체' && <SportBadge sport={sport} />}
       </div>
       <HScrollRow scrollAmount={300}>
@@ -423,7 +419,7 @@ function ClubLatestSection({ sport }: { sport: Sport }) {
   return (
     <section className="py-8">
       <div className="flex items-center gap-2 mb-1">
-        <SectionHeader prefix="팀/클럽" highlight="클립" />
+        <SectionHeader prefix="클럽" highlight="클립" />
         {sport !== '전체' && <SportBadge sport={sport} />}
       </div>
       <HScrollRow scrollAmount={300}>
@@ -478,19 +474,34 @@ function CompetitionVideosSection({ title }: { title: string }) {
 
 /* ── Home Page ───────────────────────────────────────────── */
 export default function HomePage() {
-  const [bannerItems, setBannerItems] = useState<PochakBanner[]>(defaultBanners);
-  const [competitionItems, setCompetitionItems] = useState<CompetitionCardType[]>(defaultCompetitions);
-  const [clipItems, setClipItems] = useState<PopularClipType[]>(defaultPopularClips);
+  const [bannerItems, setBannerItems] = useState<PochakBanner[]>([]);
+  const [competitionItems, setCompetitionItems] = useState<CompetitionCardType[]>([]);
+  const [clipItems, setClipItems] = useState<PopularClipType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState(false);
   const [selectedSport, setSelectedSport] = useState<Sport>('전체');
 
   useEffect(() => {
     Promise.all([
-      fetchHomeBanners().then(setBannerItems).catch(() => {}),
-      fetchCompetitions().then(setCompetitionItems).catch(() => {}),
-      fetchPopularClips().then(setClipItems).catch(() => {}),
+      fetchHomeBanners().then((data) => { if (data) setBannerItems(data); else setApiError(true); }),
+      fetchCompetitions().then((data) => { if (data) setCompetitionItems(data); else setApiError(true); }),
+      fetchPopularClips().then((data) => { if (data) setClipItems(data); else setApiError(true); }),
     ]).finally(() => setLoading(false));
   }, []);
+
+  if (apiError && !loading && bannerItems.length === 0 && competitionItems.length === 0 && clipItems.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 text-[#A6A6A6]">
+        <p className="text-base">데이터를 불러올 수 없습니다</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 rounded-lg border border-border px-6 py-2 text-sm hover:border-accent hover:text-white transition-colors"
+        >
+          다시 시도
+        </button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

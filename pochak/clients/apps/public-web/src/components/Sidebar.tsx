@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   Home,
   Calendar,
@@ -9,8 +9,8 @@ import {
   Plus,
   ExternalLink,
 } from "lucide-react";
-import { popularChannels } from "@/services/webApi";
-import { pochakChannels } from '../../../../shared/mockData';
+import { fetchJoinedChannels, fetchPopularChannels } from "@/services/webApi";
+import type { PochakChannel } from '../../../../shared/types';
 
 const navItems = [
   { label: "홈", icon: Home, path: "/home" },
@@ -24,8 +24,6 @@ const adItems = [
   { id: 'ad2', name: '광고카피', logo: '🥤', color: '#00838F' },
 ];
 
-// All joined teams (can be more than 4)
-const joinedTeams = pochakChannels.slice(0, 6);
 
 const bottomLinks = [
   { label: "알림내역", path: "/notifications" },
@@ -38,6 +36,13 @@ export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const joinedTeamsRef = useRef<HTMLDivElement>(null);
+  const [joinedTeams, setJoinedTeams] = useState<PochakChannel[]>([]);
+  const [popularChannels, setPopularChannels] = useState<PochakChannel[]>([]);
+
+  useEffect(() => {
+    fetchJoinedChannels().then((data) => { if (data) setJoinedTeams(data.slice(0, 6)); });
+    fetchPopularChannels().then((data) => { if (data) setPopularChannels(data); });
+  }, []);
 
 
   return (
@@ -126,7 +131,7 @@ export default function Sidebar() {
       {/* ── 인기 팀/클럽 > ── */}
       <div className="px-3 py-2 flex-1">
         <div className="flex items-center justify-between px-3 mb-2">
-          <h3 className="text-[13px] font-semibold text-[#A6A6A6]">인기 팀/클럽</h3>
+          <h3 className="text-[13px] font-semibold text-[#A6A6A6]">인기 클럽</h3>
           <button
             onClick={() => {
               navigate('/home');

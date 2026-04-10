@@ -17,7 +17,7 @@ export default function JoinedClubsPage() {
     setLeavingId(clubId);
     try {
       // membershipId는 실제 API에서는 별도 필드이나 여기서는 clubId를 사용
-      await deleteApi(`/clubs/${clubId}/members/${clubId}`, null);
+      await deleteApi(`/clubs/${clubId}/members/${clubId}`);
       setClubs((prev) => prev.filter((c) => c.id !== clubId));
     } catch {
       alert('탈퇴 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');

@@ -4,18 +4,20 @@ import ContentCardItem from '@/components/ContentCardItem';
 import HScrollRow from '@/components/HScrollRow';
 import HVideoCard from '@/components/HVideoCard';
 import VClipCard from '@/components/VClipCard';
-import { getAllContents, trendingSearches, fetchSearchResults } from '@/services/webApi';
 import {
+  getAllContents,
+  trendingSearches,
+  fetchSearchResults,
   pochakChannels,
   pochakLiveContents,
   pochakCompetitions,
   pochakVodContents,
   pochakClips,
-} from '../../../../shared/mockData';
+} from '@/services/webApi';
 import type { ContentCard } from '@/services/webApi';
 
-type SearchTab = '전체' | '팀/클럽' | '라이브' | '대회' | '영상' | '클립';
-const tabs: SearchTab[] = ['전체', '팀/클럽', '라이브', '대회', '영상', '클립'];
+type SearchTab = '전체' | '클럽' | '라이브' | '대회' | '영상' | '클립';
+const tabs: SearchTab[] = ['전체', '클럽', '라이브', '대회', '영상', '클립'];
 
 // ── Mock data for team/club circular logos ──────────────────────────────────
 const teamLogos = pochakChannels.slice(0, 9).map((ch) => ({
@@ -109,7 +111,7 @@ export default function SearchPage() {
     setIsLoading(true);
     try {
       const data = await fetchSearchResults(q);
-      setApiResults(data);
+      setApiResults(data ?? []);
     } finally {
       setIsLoading(false);
     }
@@ -176,7 +178,7 @@ export default function SearchPage() {
     <div className="mt-6 space-y-8">
       {/* 팀 */}
       <section>
-        <CategoryHeader title="팀" linkTo="/search?tab=팀/클럽" />
+        <CategoryHeader title="팀" linkTo="/search?tab=클럽" />
         <HScrollRow>
           {teamLogos.map((t) => (
             <CircleLogo key={t.id} name={t.name} color={t.color} initial={t.initial} />
@@ -186,7 +188,7 @@ export default function SearchPage() {
 
       {/* 클럽 */}
       <section>
-        <CategoryHeader title="클럽" linkTo="/search?tab=팀/클럽" />
+        <CategoryHeader title="클럽" linkTo="/search?tab=클럽" />
         <HScrollRow>
           {clubLogos.map((c) => (
             <CircleLogo key={c.id} name={c.name} color={c.color} initial={c.initial} />

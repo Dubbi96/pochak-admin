@@ -1,10 +1,6 @@
 /**
  * Extensible API client for Pochak Public Web.
- * Calls the gateway API with automatic fallback to mock data.
- *
- * Migration path:
- *   Phase 4A: gateway calls with mock fallback
- *   Phase 4B: full gateway integration with user auth tokens
+ * Calls the gateway API; returns null on failure instead of falling back to mock data.
  */
 
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || "http://localhost:8080";
@@ -85,14 +81,13 @@ async function handleUnauthorized(): Promise<boolean> {
 }
 
 /**
- * Fetch data from the gateway API with a typed fallback.
- * If the gateway is unavailable or returns an error, the fallback value is returned.
+ * Fetch data from the gateway API.
+ * Returns null if the API is unavailable or returns an error.
  *
  * @param path - API path relative to /api/v1 (e.g. "/home/banners")
- * @param fallback - Mock data to return if the API call fails
- * @returns The API response data or the fallback
+ * @returns The API response data or null on failure
  */
-export async function fetchApi<T>(path: string, fallback: T): Promise<T> {
+export async function fetchApi<T>(path: string): Promise<T | null> {
   try {
     let res = await fetch(`${GATEWAY_URL}/api/v1${path}`, {
       headers: buildHeaders(),
@@ -104,34 +99,31 @@ export async function fetchApi<T>(path: string, fallback: T): Promise<T> {
           headers: buildHeaders(),
         });
       } else {
-        return fallback;
+        return null;
       }
     }
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      console.warn(`[PublicAPI] ${path} failed with HTTP ${res.status}`);
+      return null;
     }
     const json = await res.json();
     // Unwrap standard API envelope { data: T } if present
     return (json.data ?? json) as T;
   } catch {
-    console.warn(`[PublicAPI] Using mock for ${path}`);
-    return fallback;
+    console.warn(`[PublicAPI] ${path} request failed`);
+    return null;
   }
 }
 
 /**
- * POST request to gateway API with fallback.
+ * POST request to gateway API.
+ * Returns null on failure.
  *
  * @param path - API path relative to /api/v1
  * @param body - Request body
- * @param fallback - Mock data to return if the API call fails
- * @returns The API response data or the fallback
+ * @returns The API response data or null on failure
  */
-export async function postApi<T>(
-  path: string,
-  body: unknown,
-  fallback: T
-): Promise<T> {
+export async function postApi<T>(path: string, body: unknown): Promise<T | null> {
   try {
     let res = await fetch(`${GATEWAY_URL}/api/v1${path}`, {
       method: "POST",
@@ -147,33 +139,30 @@ export async function postApi<T>(
           body: JSON.stringify(body),
         });
       } else {
-        return fallback;
+        return null;
       }
     }
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      console.warn(`[PublicAPI] POST ${path} failed with HTTP ${res.status}`);
+      return null;
     }
     const json = await res.json();
     return (json.data ?? json) as T;
   } catch {
-    console.warn(`[PublicAPI] Using mock for POST ${path}`);
-    return fallback;
+    console.warn(`[PublicAPI] POST ${path} request failed`);
+    return null;
   }
 }
 
 /**
- * PUT request to gateway API with fallback.
+ * PUT request to gateway API.
+ * Returns null on failure.
  *
  * @param path - API path relative to /api/v1
  * @param body - Request body
- * @param fallback - Mock data to return if the API call fails
- * @returns The API response data or the fallback
+ * @returns The API response data or null on failure
  */
-export async function putApi<T>(
-  path: string,
-  body: unknown,
-  fallback: T
-): Promise<T> {
+export async function putApi<T>(path: string, body: unknown): Promise<T | null> {
   try {
     let res = await fetch(`${GATEWAY_URL}/api/v1${path}`, {
       method: "PUT",
@@ -189,24 +178,26 @@ export async function putApi<T>(
           body: JSON.stringify(body),
         });
       } else {
-        return fallback;
+        return null;
       }
     }
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      console.warn(`[PublicAPI] PUT ${path} failed with HTTP ${res.status}`);
+      return null;
     }
     const json = await res.json();
     return (json.data ?? json) as T;
   } catch {
-    console.warn(`[PublicAPI] Using mock for PUT ${path}`);
-    return fallback;
+    console.warn(`[PublicAPI] PUT ${path} request failed`);
+    return null;
   }
 }
 
 /**
  * DELETE request to gateway API.
+ * Returns null on failure.
  */
-export async function deleteApi<T>(path: string, fallback: T): Promise<T> {
+export async function deleteApi<T>(path: string): Promise<T | null> {
   try {
     let res = await fetch(`${GATEWAY_URL}/api/v1${path}`, {
       method: "DELETE",
@@ -220,17 +211,18 @@ export async function deleteApi<T>(path: string, fallback: T): Promise<T> {
           headers: buildHeaders(),
         });
       } else {
-        return fallback;
+        return null;
       }
     }
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      console.warn(`[PublicAPI] DELETE ${path} failed with HTTP ${res.status}`);
+      return null;
     }
     const json = await res.json();
     return (json.data ?? json) as T;
   } catch {
-    console.warn(`[PublicAPI] Using mock for DELETE ${path}`);
-    return fallback;
+    console.warn(`[PublicAPI] DELETE ${path} request failed`);
+    return null;
   }
 }
 
@@ -239,7 +231,7 @@ export async function deleteApi<T>(path: string, fallback: T): Promise<T> {
  */
 export async function logoutUser(): Promise<void> {
   try {
-    await postApi('/auth/logout', {}, null);
+    await postApi('/auth/logout', {});
   } catch {
     // ignore — always clear local state
   }
@@ -253,7 +245,7 @@ export async function logoutUser(): Promise<void> {
  */
 export async function withdrawUser(): Promise<void> {
   try {
-    await deleteApi('/auth/withdraw', null);
+    await deleteApi('/auth/withdraw');
   } catch {
     // ignore — always clear local state
   }

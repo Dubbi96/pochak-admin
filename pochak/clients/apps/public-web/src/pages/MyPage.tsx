@@ -8,7 +8,6 @@ import HVideoCard from '@/components/HVideoCard';
 import VClipCard from '@/components/VClipCard';
 import {
   fetchMyProfile,
-  defaultProfile,
   pochakVodContents,
   pochakClips,
   pochakCompetitions,
@@ -149,11 +148,15 @@ function HomeTab() {
 /* ── Main Page ───────────────────────────────────────────────── */
 export default function MyPage() {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<UserProfile>(defaultProfile);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileError, setProfileError] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('home');
 
   useEffect(() => {
-    fetchMyProfile().then(setProfile).catch(() => {});
+    fetchMyProfile().then((data) => {
+      if (data) setProfile(data);
+      else setProfileError(true);
+    }).catch(() => { setProfileError(true); });
   }, []);
 
   return (
@@ -166,12 +169,12 @@ export default function MyPage() {
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <p className="text-[20px] font-semibold text-white">{profile.nickname || '홍길동'}</p>
+              <p className="text-[20px] font-semibold text-white">{profileError ? '데이터를 불러올 수 없습니다' : (profile?.nickname || '홍길동')}</p>
               <button className="text-[#A6A6A6] hover:text-white transition-colors" onClick={() => navigate('/account')}>
                 <Edit3 className="h-4 w-4" />
               </button>
             </div>
-            <p className="text-[15px] text-[#A6A6A6] mt-1">{maskEmail(profile.email)}</p>
+            <p className="text-[15px] text-[#A6A6A6] mt-1">{profile ? maskEmail(profile.email) : ''}</p>
           </div>
         </section>
 
