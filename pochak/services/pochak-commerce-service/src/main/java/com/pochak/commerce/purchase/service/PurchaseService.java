@@ -134,6 +134,8 @@ public class PurchaseService {
             case SUBSCRIPTION -> EntitlementType.SUBSCRIPTION;
             case SEASON_PASS -> EntitlementType.SEASON_PASS;
             case MATCH_TICKET -> EntitlementType.MATCH_TICKET;
+            case SPORT_PASS -> EntitlementType.SEASON_PASS;
+            case COMPETITION_PASS -> EntitlementType.MATCH_TICKET;
             case POINT_CHARGE, GIFT_BALL -> null;
         };
     }

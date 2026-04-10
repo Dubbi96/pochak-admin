@@ -5,5 +5,7 @@ public enum ProductType {
     SEASON_PASS,
     MATCH_TICKET,
     POINT_CHARGE,
-    GIFT_BALL
+    GIFT_BALL,
+    SPORT_PASS,
+    COMPETITION_PASS
 }
