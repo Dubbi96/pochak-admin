@@ -71,9 +71,10 @@ public class VenueController {
             @RequestParam(required = false) VenueType venueType,
             @RequestParam(required = false) Long sportId,
             @RequestParam(required = false) String name,
+            @RequestParam(required = false) Long ownerId,
             @PageableDefault(size = 20) Pageable pageable) {
 
-        Page<VenueListResponse> page = venueService.listVenues(ownerType, venueType, sportId, name, pageable);
+        Page<VenueListResponse> page = venueService.listVenues(ownerType, venueType, sportId, name, ownerId, pageable);
 
         PageMeta meta = PageMeta.builder()
                 .page(page.getNumber())

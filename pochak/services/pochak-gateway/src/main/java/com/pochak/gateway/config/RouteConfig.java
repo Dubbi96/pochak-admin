@@ -36,11 +36,10 @@ public class RouteConfig {
     @Bean
     public RouteLocator pochakRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
-                // 0. partner-bff routes (/api/v1/partners/**, /api/v1/partner/** → partner-bff)
+                // 0. partner-bff routes (/api/v1/partners/**, /api/v1/partner/** → partner-bff, no strip)
                 .route("partner-bff-service", r -> r
                         .path("/api/v1/partners/**",
                               "/api/v1/partner/**")
-                        .filters(f -> f.stripPrefix(2))
                         .uri(partnerBffUrl))
                 // 0a. web-bff routes (FIRST - /api/v1/web/** → web-bff, stripPrefix(3))
                 .route("web-bff-service", r -> r
