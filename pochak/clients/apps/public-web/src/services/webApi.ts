@@ -168,6 +168,21 @@ export async function fetchPopularChannels(): Promise<PochakChannel[] | null> {
   return fetchApi('/channels/popular');
 }
 
+/** Fetch live contents (all sports) */
+export async function fetchLiveContents(): Promise<PochakContent[] | null> {
+  return fetchApi('/contents/live');
+}
+
+/** Fetch VOD contents (all sports) */
+export async function fetchVodContents(): Promise<PochakContent[] | null> {
+  return fetchApi('/contents/vod');
+}
+
+/** Fetch popular clubs */
+export async function fetchPopularClubs(): Promise<PochakChannel[] | null> {
+  return fetchApi('/clubs/popular');
+}
+
 // ── Mock Timeline / Chapter Data ─────────────────────────────────────────────
 
 export const mockTimelineEvents: TimelineEvent[] = [
