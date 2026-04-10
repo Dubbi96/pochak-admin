@@ -108,6 +108,7 @@ export default function ContentPlayerPage() {
   const type = params.type ?? params.contentType ?? 'vod';
   const id = params.id ?? params.contentId ?? '1';
   const [player, setPlayer] = useState<PlayerData | null>(null);
+  const [playerError, setPlayerError] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [showMore, setShowMore] = useState(false);
@@ -135,6 +136,7 @@ export default function ContentPlayerPage() {
   useEffect(() => {
     fetchPlayerData(type, id)
       .then((data) => {
+        if (!data) { setPlayerError(true); return; }
         setPlayer(data);
         setLikeCount(data.likeCount ?? 0);
         setOgMeta(
@@ -148,15 +150,15 @@ export default function ContentPlayerPage() {
 
   useEffect(() => {
     if (!id || type === 'clip') return;
-    fetchApi<HighlightItem[]>(`/contents/${type}/${id}/highlights`, []).then((items) => {
-      if (items.length > 0) {
+    fetchApi<HighlightItem[]>(`/contents/${type}/${id}/highlights`).then((items) => {
+      if (items && items.length > 0) {
         const sorted = [...items].sort((a, b) => a.startTimeSeconds - b.startTimeSeconds);
         setHighlightItems(sorted);
         setHighlightPanelOpen(true);
       }
     });
-    fetchApi<AiClipItem[]>(`/contents/${type}/${id}/highlights/ai-clips`, []).then((clips) => {
-      if (clips.length > 0) {
+    fetchApi<AiClipItem[]>(`/contents/${type}/${id}/highlights/ai-clips`).then((clips) => {
+      if (clips && clips.length > 0) {
         setAiClipItems(clips);
         setHighlightPanelOpen(true);
       }
@@ -170,15 +172,14 @@ export default function ContentPlayerPage() {
       const result = await postApi<{ highlights: HighlightItem[] }>(
         `/contents/${type}/${id}/highlights/detect`,
         {},
-        { highlights: [] }
       );
       if (result?.highlights?.length > 0) {
         const sorted = [...result.highlights].sort((a, b) => a.startTimeSeconds - b.startTimeSeconds);
         setHighlightItems(sorted);
         setHighlightPanelOpen(true);
         // Refresh AI clips generated from this detection
-        fetchApi<AiClipItem[]>(`/contents/${type}/${id}/highlights/ai-clips`, []).then((clips) => {
-          setAiClipItems(clips);
+        fetchApi<AiClipItem[]>(`/contents/${type}/${id}/highlights/ai-clips`).then((clips) => {
+          if (clips) setAiClipItems(clips);
         });
       } else {
         toast.show('감지된 하이라이트가 없습니다');
@@ -245,7 +246,9 @@ export default function ContentPlayerPage() {
     return (
       <div className="px-6 py-8 lg:px-8">
         <div className="flex aspect-video items-center justify-center rounded-lg bg-[#262626]">
-          <p className="text-sm text-[#A6A6A6]">로딩 중...</p>
+          <p className="text-sm text-[#A6A6A6]">
+            {playerError ? '데이터를 불러올 수 없습니다' : '로딩 중...'}
+          </p>
         </div>
       </div>
     );
@@ -643,7 +646,7 @@ export default function ContentPlayerPage() {
             </div>
 
             {/* Recommended video vertical list */}
-            <div className="space-y-3">
+            <div className="space-y-5">
               {pochakVodContents.slice(0, 6).map((v) => (
                 <RecommendedVideoItem
                   key={v.id}

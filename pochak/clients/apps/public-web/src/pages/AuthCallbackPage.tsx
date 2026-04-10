@@ -69,13 +69,18 @@ export default function AuthCallbackPage() {
     // Fetch user profile and store complete data
     fetchMyProfile()
       .then((profile) => {
-        localStorage.setItem('pochak_user', JSON.stringify({
-          nickname: profile.nickname || profile.name || '사용자',
-          name: profile.name || '',
-          email: profile.email || '',
-          role: profile.role || 'USER',
-          profileImageUrl: profile.profileImageUrl || null,
-        }));
+        if (profile) {
+          localStorage.setItem('pochak_user', JSON.stringify({
+            nickname: profile.nickname || profile.name || '사용자',
+            name: profile.name || '',
+            email: profile.email || '',
+            role: profile.role || 'USER',
+            profileImageUrl: profile.profileImageUrl || null,
+          }));
+        } else {
+          // Profile fetch returned null — store minimal user
+          localStorage.setItem('pochak_user', JSON.stringify({ nickname: '사용자', role: 'USER' }));
+        }
         window.dispatchEvent(new Event('pochak_auth_change'));
         navigate('/home', { replace: true });
       })

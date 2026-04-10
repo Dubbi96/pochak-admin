@@ -175,7 +175,7 @@ export default function AccountInfoPage() {
     }
     setSavingNickname(true);
     try {
-      await putApi('/users/me', { nickname: nickname.trim() }, { nickname: nickname.trim() });
+      await putApi('/users/me', { nickname: nickname.trim() });
       // Update localStorage
       try {
         const raw = localStorage.getItem('pochak_user');
