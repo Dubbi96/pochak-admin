@@ -1,16 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Bookmark, Bell } from 'lucide-react';
 import HScrollRow from '@/components/HScrollRow';
 import {
-  pochakVodContents,
-  pochakCompetitions,
-  pochakChannels,
+  fetchVodContents,
+  fetchCompetitions,
+  fetchPopularClubs,
 } from '@/services/webApi';
+import type { PochakContent, CompetitionCard, PochakChannel } from '@/services/webApi';
 import { SubTabChips } from './shared';
 
 export default function FavoritesPage() {
   const [sub, setSub] = useState<'team' | 'competition'>('team');
+  const [vodItems, setVodItems] = useState<PochakContent[]>([]);
+  const [competitions, setCompetitions] = useState<CompetitionCard[]>([]);
+  const [channels, setChannels] = useState<PochakChannel[]>([]);
+
+  useEffect(() => {
+    fetchVodContents().then((data) => { if (data) setVodItems(data); });
+    fetchCompetitions().then((data) => { if (data) setCompetitions(data); });
+    fetchPopularClubs().then((data) => { if (data) setChannels(data); });
+  }, []);
 
   return (
     <div>
@@ -36,7 +46,7 @@ export default function FavoritesPage() {
               </Link>
             </div>
             <HScrollRow scrollAmount={200}>
-              {pochakChannels.map((ch) => (
+              {channels.map((ch) => (
                 <div key={ch.id} className="flex-shrink-0 flex flex-col items-center gap-1.5 w-[100px]">
                   <div
                     className="w-[80px] h-[80px] rounded-full flex items-center justify-center text-lg font-bold text-white border-2 border-[#4D4D4D]"
@@ -54,7 +64,7 @@ export default function FavoritesPage() {
           {/* Favorite team content list */}
           <section>
             <div className="space-y-3">
-              {pochakVodContents.slice(0, 6).map((v) => (
+              {vodItems.slice(0, 6).map((v) => (
                 <Link
                   key={v.id}
                   to={`/contents/vod/${v.id}`}
@@ -93,7 +103,7 @@ export default function FavoritesPage() {
 
       {sub === 'competition' && (
         <div className="space-y-3">
-          {pochakCompetitions.map((comp) => (
+          {competitions.map((comp) => (
             <Link
               key={comp.id}
               to={`/competition/${comp.id}`}

@@ -32,35 +32,6 @@ export type {
 // Re-export it under the same name so consumers see the full shape.
 export type { PochakBanner as BannerItem } from '../../../../shared/types';
 
-// ── Re-export mock data from shared (backward compatible) ──────────────────────
-export {
-  banners,
-  competitions,
-  liveMatches,
-  popularClips,
-  popularChannels,
-  adBanners,
-  liveContents,
-  highlightContents,
-  vodContents,
-  clipContents,
-  scheduleData,
-  trendingSearches,
-  getAllContents,
-  defaultPlayerData,
-  defaultProfile,
-  defaultWatchHistory,
-  pochakChannels,
-  pochakCompetitions,
-  pochakLiveContents,
-  pochakVodContents,
-  pochakClips,
-  pochakMatches,
-  pochakPosts,
-  pochakSubscriptionProducts,
-  pochakSportProducts,
-  pochakCompetitionProducts,
-} from '../../../../shared/mockData';
 
 // ── Type imports for fetch function signatures ─────────────────────────────────
 import type {

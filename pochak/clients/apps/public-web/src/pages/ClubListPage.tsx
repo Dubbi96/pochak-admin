@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Users, ChevronRight, Flame } from 'lucide-react';
 import HScrollRow from '@/components/HScrollRow';
-import { pochakChannels } from '@/services/webApi';
+import { fetchPopularClubs } from '@/services/webApi';
+import type { PochakChannel } from '@/services/webApi';
 
 const SPORTS = ['전체', '축구', '야구', '농구', '배구', '풋살'];
 
@@ -15,7 +16,7 @@ const TONE_COLORS = [
   'rgba(19,181,201,0.25)',
 ];
 
-function ClubFeatureCard({ club, tone }: { club: typeof pochakChannels[number]; tone: string }) {
+function ClubFeatureCard({ club, tone }: { club: PochakChannel; tone: string }) {
   return (
     <Link
       to={`/club/${club.id}`}
@@ -50,7 +51,7 @@ function ClubFeatureCard({ club, tone }: { club: typeof pochakChannels[number]; 
   );
 }
 
-function ClubListCard({ club }: { club: typeof pochakChannels[number] }) {
+function ClubListCard({ club }: { club: PochakChannel }) {
   return (
     <Link
       to={`/club/${club.id}`}
@@ -83,16 +84,21 @@ function ClubListCard({ club }: { club: typeof pochakChannels[number] }) {
 export default function ClubListPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSport, setSelectedSport] = useState('전체');
+  const [clubs, setClubs] = useState<PochakChannel[]>([]);
+
+  useEffect(() => {
+    fetchPopularClubs().then((data) => { if (data) setClubs(data); });
+  }, []);
 
   const filtered = useMemo(() => {
-    return pochakChannels.filter((club) => {
+    return clubs.filter((club) => {
       const matchQuery =
         !searchQuery ||
         club.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         club.subtitle.toLowerCase().includes(searchQuery.toLowerCase());
       return matchQuery;
     });
-  }, [searchQuery]);
+  }, [searchQuery, clubs]);
 
   const popular = filtered.slice().sort((a, b) => b.memberCount - a.memberCount);
   const recent = filtered.slice().reverse();

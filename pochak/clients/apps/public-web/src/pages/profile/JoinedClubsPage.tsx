@@ -1,12 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users } from 'lucide-react';
-import { pochakChannels } from '@/services/webApi';
+import { fetchJoinedChannels } from '@/services/webApi';
+import type { PochakChannel } from '@/services/webApi';
 import { deleteApi } from '@/services/apiClient';
 
 export default function JoinedClubsPage() {
-  const [clubs, setClubs] = useState(() => pochakChannels.slice(0, 7));
+  const [clubs, setClubs] = useState<PochakChannel[]>([]);
   const [leavingId, setLeavingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchJoinedChannels().then((data) => { if (data) setClubs(data.slice(0, 7)); });
+  }, []);
 
   const handleLeave = async (e: React.MouseEvent, clubId: string) => {
     e.preventDefault();
