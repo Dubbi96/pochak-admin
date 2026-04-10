@@ -40,3 +40,21 @@ SELECT u.id, 50000, NOW(), NOW()
 FROM identity.users u
 WHERE u.email = 'user@pochak.live'
 ON CONFLICT (user_id) DO NOTHING;
+
+-- POC-225: Partner 테스트 계정 비밀번호 설정 + 클럽 배정
+-- partner@pochak.live / Pochak2026!
+UPDATE identity.users
+SET password_hash = '$2b$10$edMHq3tU2zvI0/GmiXfyKugvySszi3naUYk7rpa2xrdYqhXtGVxSi',
+    updated_at = NOW()
+WHERE email = 'partner@pochak.live';
+
+-- club_customizations: team_id=1 (서울FC유소년) → partner_id=24
+INSERT INTO content.club_customizations (club_id, partner_id, intro_text, created_at, updated_at)
+SELECT 1, u.id, '서울FC유소년 클럽입니다.', NOW(), NOW()
+FROM identity.users u
+WHERE u.email = 'partner@pochak.live'
+  AND NOT EXISTS (
+    SELECT 1 FROM content.club_customizations cc
+    JOIN identity.users iu ON iu.id = cc.partner_id
+    WHERE iu.email = 'partner@pochak.live' AND cc.club_id = 1
+  );
