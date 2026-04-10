@@ -5,28 +5,18 @@ import HScrollRow from '@/components/HScrollRow';
 import HVideoCard from '@/components/HVideoCard';
 import VClipCard from '@/components/VClipCard';
 import {
-  getAllContents,
-  trendingSearches,
   fetchSearchResults,
-  pochakChannels,
-  pochakLiveContents,
-  pochakCompetitions,
-  pochakVodContents,
-  pochakClips,
+  fetchLiveContents,
+  fetchVodContents,
+  fetchPopularClubs,
+  fetchCompetitions,
+  fetchPopularClips,
+  fetchTrendingSearches,
 } from '@/services/webApi';
-import type { ContentCard } from '@/services/webApi';
+import type { ContentCard, PochakContent, PochakChannel, CompetitionCard, PopularClip } from '@/services/webApi';
 
 type SearchTab = '전체' | '클럽' | '라이브' | '대회' | '영상' | '클립';
 const tabs: SearchTab[] = ['전체', '클럽', '라이브', '대회', '영상', '클립'];
-
-// ── Mock data for team/club circular logos ──────────────────────────────────
-const teamLogos = pochakChannels.slice(0, 9).map((ch) => ({
-  id: ch.id,
-  name: ch.name,
-  color: ch.color,
-  initial: ch.initial,
-  type: 'team' as const,
-}));
 
 const clubLogos = [
   { id: 'club-1', name: '도곡 스포츠 아카데미', color: '#6A1B9A', initial: '도', type: 'club' as const },
@@ -98,7 +88,21 @@ export default function SearchPage() {
   const [activeTab, setActiveTab] = useState<SearchTab>('전체');
   const [apiResults, setApiResults] = useState<ContentCard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const localContents = useMemo(() => getAllContents(), []);
+  const [teamItems, setTeamItems] = useState<PochakChannel[]>([]);
+  const [liveItems, setLiveItems] = useState<PochakContent[]>([]);
+  const [competitionItems, setCompetitionItems] = useState<CompetitionCard[]>([]);
+  const [vodItems, setVodItems] = useState<PochakContent[]>([]);
+  const [clipItems, setClipItems] = useState<PopularClip[]>([]);
+  const [trendingTerms, setTrendingTerms] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetchPopularClubs().then((data) => { if (data) setTeamItems(data); });
+    fetchLiveContents().then((data) => { if (data) setLiveItems(data); });
+    fetchCompetitions().then((data) => { if (data) setCompetitionItems(data); });
+    fetchVodContents().then((data) => { if (data) setVodItems(data); });
+    fetchPopularClips().then((data) => { if (data) setClipItems(data); });
+    fetchTrendingSearches().then((data) => { if (data) setTrendingTerms(data); });
+  }, []);
 
   const isSearching = query.trim().length > 0;
 
@@ -128,10 +132,9 @@ export default function SearchPage() {
 
   // Filter results by active tab (applied locally on whatever the API returned)
   const results = useMemo(() => {
-    const source = apiResults.length > 0 ? apiResults : localContents;
     if (!isSearching) return [];
     const q = query.toLowerCase();
-    let filtered = source.filter(
+    let filtered = apiResults.filter(
       (c) =>
         c.title.toLowerCase().includes(q) ||
         c.competition.toLowerCase().includes(q) ||
@@ -153,7 +156,7 @@ export default function SearchPage() {
       });
     }
     return filtered;
-  }, [query, activeTab, apiResults, localContents, isSearching]);
+  }, [query, activeTab, apiResults, isSearching]);
 
   const handleSearch = (term: string) => {
     setQuery(term);
@@ -168,23 +171,25 @@ export default function SearchPage() {
 
   const suggestions = useMemo(() => {
     if (!query.trim()) return [];
-    return trendingSearches.filter((s) =>
+    return trendingTerms.filter((s) =>
       s.toLowerCase().includes(query.toLowerCase())
     );
-  }, [query]);
+  }, [query, trendingTerms]);
 
   // ── "전체" tab categorized view (when not searching) ──────────────────────
   const renderAllCategories = () => (
     <div className="mt-6 space-y-8">
       {/* 팀 */}
-      <section>
-        <CategoryHeader title="팀" linkTo="/search?tab=클럽" />
-        <HScrollRow>
-          {teamLogos.map((t) => (
-            <CircleLogo key={t.id} name={t.name} color={t.color} initial={t.initial} />
-          ))}
-        </HScrollRow>
-      </section>
+      {teamItems.length > 0 && (
+        <section>
+          <CategoryHeader title="팀" linkTo="/search?tab=클럽" />
+          <HScrollRow>
+            {teamItems.slice(0, 9).map((t) => (
+              <CircleLogo key={t.id} name={t.name} color={t.color} initial={t.initial} />
+            ))}
+          </HScrollRow>
+        </section>
+      )}
 
       {/* 클럽 */}
       <section>
@@ -197,65 +202,73 @@ export default function SearchPage() {
       </section>
 
       {/* 라이브 */}
-      <section>
-        <CategoryHeader title="라이브" linkTo="/search?tab=라이브" />
-        <HScrollRow>
-          {pochakLiveContents.slice(0, 6).map((item) => (
-            <HVideoCard
-              key={item.id}
-              title={item.title}
-              sub={item.competition}
-              tags={item.tags.slice(0, 2)}
-              live={item.status === 'LIVE'}
-              thumbnailUrl={item.thumbnailUrl}
-              linkTo={`/contents/live/${item.id}`}
-            />
-          ))}
-        </HScrollRow>
-      </section>
+      {liveItems.length > 0 && (
+        <section>
+          <CategoryHeader title="라이브" linkTo="/search?tab=라이브" />
+          <HScrollRow>
+            {liveItems.slice(0, 6).map((item) => (
+              <HVideoCard
+                key={item.id}
+                title={item.title}
+                sub={item.competition}
+                tags={item.tags.slice(0, 2)}
+                live={item.status === 'LIVE'}
+                thumbnailUrl={item.thumbnailUrl}
+                linkTo={`/contents/live/${item.id}`}
+              />
+            ))}
+          </HScrollRow>
+        </section>
+      )}
 
       {/* 대회 */}
-      <section>
-        <CategoryHeader title="대회" linkTo="/search?tab=대회" />
-        <HScrollRow>
-          {pochakCompetitions.slice(0, 4).map((comp) => (
-            <CompBannerCard key={comp.id} name={comp.name} posterColor={comp.logoColor} />
-          ))}
-        </HScrollRow>
-      </section>
+      {competitionItems.length > 0 && (
+        <section>
+          <CategoryHeader title="대회" linkTo="/search?tab=대회" />
+          <HScrollRow>
+            {competitionItems.slice(0, 4).map((comp) => (
+              <CompBannerCard key={comp.id} name={comp.name} posterColor={comp.logoColor} />
+            ))}
+          </HScrollRow>
+        </section>
+      )}
 
       {/* 영상 */}
-      <section>
-        <CategoryHeader title="영상" linkTo="/search?tab=영상" />
-        <HScrollRow>
-          {pochakVodContents.slice(0, 6).map((item) => (
-            <HVideoCard
-              key={item.id}
-              title={item.title}
-              sub={item.competition}
-              tags={item.tags.slice(0, 2)}
-              duration={item.duration ? `${Math.floor(item.duration / 3600)}:${String(Math.floor((item.duration % 3600) / 60)).padStart(2, '0')}:${String(item.duration % 60).padStart(2, '0')}` : undefined}
-              thumbnailUrl={item.thumbnailUrl}
-              linkTo={`/contents/vod/${item.id}`}
-            />
-          ))}
-        </HScrollRow>
-      </section>
+      {vodItems.length > 0 && (
+        <section>
+          <CategoryHeader title="영상" linkTo="/search?tab=영상" />
+          <HScrollRow>
+            {vodItems.slice(0, 6).map((item) => (
+              <HVideoCard
+                key={item.id}
+                title={item.title}
+                sub={item.competition}
+                tags={item.tags.slice(0, 2)}
+                duration={item.duration ? `${Math.floor(item.duration / 3600)}:${String(Math.floor((item.duration % 3600) / 60)).padStart(2, '0')}:${String(item.duration % 60).padStart(2, '0')}` : undefined}
+                thumbnailUrl={item.thumbnailUrl}
+                linkTo={`/contents/vod/${item.id}`}
+              />
+            ))}
+          </HScrollRow>
+        </section>
+      )}
 
       {/* 클립 */}
-      <section>
-        <CategoryHeader title="클립" linkTo="/search?tab=클립" />
-        <HScrollRow>
-          {pochakClips.slice(0, 8).map((clip) => (
-            <VClipCard
-              key={clip.id}
-              title={clip.title}
-              viewCount={clip.viewCount}
-              linkTo={`/clip/${clip.id}`}
-            />
-          ))}
-        </HScrollRow>
-      </section>
+      {clipItems.length > 0 && (
+        <section>
+          <CategoryHeader title="클립" linkTo="/search?tab=클립" />
+          <HScrollRow>
+            {clipItems.slice(0, 8).map((clip) => (
+              <VClipCard
+                key={clip.id}
+                title={clip.title}
+                thumbnailUrl={clip.thumbnail}
+                linkTo={`/clip/${clip.id}`}
+              />
+            ))}
+          </HScrollRow>
+        </section>
+      )}
     </div>
   );
 
@@ -377,13 +390,14 @@ export default function SearchPage() {
               )}
 
               {/* Trending searches */}
+              {trendingTerms.length > 0 && (
               <section className="mt-8">
                 <div className="mb-3 flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-accent" />
                   <h2 className="text-base font-semibold">인기 검색어</h2>
                 </div>
                 <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
-                  {trendingSearches.map((term, i) => (
+                  {trendingTerms.map((term, i) => (
                     <button
                       key={term}
                       onClick={() => handleSearch(term)}
@@ -401,6 +415,7 @@ export default function SearchPage() {
                   ))}
                 </div>
               </section>
+              )}
             </>
           )}
         </>
