@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom';
 import { Bookmark } from 'lucide-react';
 import HScrollRow from '@/components/HScrollRow';
 import HVideoCard from '@/components/HVideoCard';
-import { pochakVodContents } from '@/services/webApi';
+import { fetchVodContents } from '@/services/webApi';
+import type { PochakContent } from '@/services/webApi';
 import { getReservations, type ReservedMatch } from '@/stores/reservationStore';
 import { formatDuration } from './shared';
 
 export default function ReservationPage() {
   const [reservations, setReservations] = useState<ReservedMatch[]>([]);
+  const [vodItems, setVodItems] = useState<PochakContent[]>([]);
 
   const refresh = useCallback(() => {
     setReservations(getReservations());
@@ -16,6 +18,7 @@ export default function ReservationPage() {
 
   useEffect(() => {
     refresh();
+    fetchVodContents().then((data) => { if (data) setVodItems(data); });
     window.addEventListener('pochak_reservation_change', refresh);
     return () => window.removeEventListener('pochak_reservation_change', refresh);
   }, [refresh]);
@@ -24,10 +27,10 @@ export default function ReservationPage() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Build date groups from reservations + mock VOD data for demo
-  const dateGroups: { date: string; label: string; dDay: string; items: typeof pochakVodContents }[] = [];
+  // Build date groups from reservations + VOD data for demo
+  const dateGroups: { date: string; label: string; dDay: string; items: PochakContent[] }[] = [];
 
-  // Use mock data grouped by date for demo display
+  // Use vod data grouped by date for demo display
   const mockDates = ['2026-01-01', '2026-01-02', '2026-01-03'];
   mockDates.forEach((dateStr) => {
     const d = new Date(dateStr);
@@ -41,11 +44,11 @@ export default function ReservationPage() {
       date: dateStr,
       label: formatted,
       dDay,
-      items: pochakVodContents.slice(0, 4),
+      items: vodItems.slice(0, 4),
     });
   });
 
-  // Also include actual reservations mapped to vod mock items
+  // Also include actual reservations mapped to vod items
   if (reservations.length > 0) {
     const resDates = [...new Set(reservations.map((r) => r.date))];
     resDates.forEach((dateStr) => {
@@ -61,7 +64,7 @@ export default function ReservationPage() {
         date: dateStr,
         label: formatted,
         dDay,
-        items: pochakVodContents.slice(0, 3),
+        items: vodItems.slice(0, 3),
       });
     });
   }

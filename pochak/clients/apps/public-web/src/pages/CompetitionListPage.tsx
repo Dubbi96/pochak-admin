@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MoreHorizontal } from 'lucide-react';
-import { pochakCompetitions } from '@/services/webApi';
+import { fetchCompetitions } from '@/services/webApi';
+import type { CompetitionCard } from '@/services/webApi';
 
 const SPORT_FILTERS = ['전체', '축구', '야구', '배구', '핸드볼', '농구', '기타'] as const;
 
@@ -15,11 +16,16 @@ const gradients = [
 
 export default function CompetitionListPage() {
   const [activeFilter, setActiveFilter] = useState<string>('전체');
+  const [competitions, setCompetitions] = useState<CompetitionCard[]>([]);
+
+  useEffect(() => {
+    fetchCompetitions().then((data) => { if (data) setCompetitions(data); });
+  }, []);
 
   const filtered =
     activeFilter === '전체'
-      ? pochakCompetitions
-      : pochakCompetitions.filter(
+      ? competitions
+      : competitions.filter(
           (c) => c.sport === activeFilter || (activeFilter === '기타' && !SPORT_FILTERS.slice(1, -1).includes(c.sport as typeof SPORT_FILTERS[number])),
         );
 
