@@ -183,6 +183,11 @@ export async function fetchPopularClubs(): Promise<PochakChannel[] | null> {
   return fetchApi('/clubs/popular');
 }
 
+/** Fetch trending search keywords */
+export async function fetchTrendingSearches(): Promise<string[] | null> {
+  return fetchApi('/home/trending-searches');
+}
+
 // ── Mock Timeline / Chapter Data ─────────────────────────────────────────────
 
 export const mockTimelineEvents: TimelineEvent[] = [
