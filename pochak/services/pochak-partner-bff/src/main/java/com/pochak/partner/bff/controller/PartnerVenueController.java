@@ -13,6 +13,21 @@ public class PartnerVenueController {
     private final RestClient operationClient;
 
     /**
+     * 파트너 시설 목록 조회 - X-User-Id 기반으로 소유 시설 반환
+     */
+    @GetMapping
+    public String getPartnerVenues(
+            @RequestHeader(HeaderConstants.X_USER_ID) Long userId) {
+        return operationClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/api/v1/venues")
+                        .queryParam("ownerId", userId)
+                        .build())
+                .header(HeaderConstants.X_USER_ID, userId.toString())
+                .retrieve()
+                .body(String.class);
+    }
+
+    /**
      * 시설 운영시간 및 휴무일 일괄 설정 (POC-80)
      * body: { timeSlots: [...], closedDays: [...] }
      */

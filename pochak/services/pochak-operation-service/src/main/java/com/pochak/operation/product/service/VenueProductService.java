@@ -57,6 +57,13 @@ public class VenueProductService {
                 .toList();
     }
 
+    public List<VenueProductResponse> getProductsByOwner(Long ownerId) {
+        return venueProductRepository.findByVenueOwnerIdAndIsActiveTrue(ownerId)
+                .stream()
+                .map(VenueProductResponse::from)
+                .toList();
+    }
+
     public VenueProductResponse getProduct(Long productId) {
         return VenueProductResponse.from(findActiveById(productId));
     }

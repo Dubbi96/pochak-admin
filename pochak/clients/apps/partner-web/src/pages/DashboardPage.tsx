@@ -2,13 +2,8 @@ import { useEffect, useState } from 'react'
 import { LuMapPin, LuPackage, LuCalendarCheck, LuTrendingUp, LuUsers, LuFileText, LuSettings, LuArrowRight, LuUserCheck } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
 import { get } from '@/lib/api'
-
-const stats = [
-  { label: '등록 시설', value: '—', icon: LuMapPin, path: '/venues' },
-  { label: '활성 상품', value: '—', icon: LuPackage, path: '/products' },
-  { label: '이번 달 예약', value: '—', icon: LuCalendarCheck, path: '/reservations' },
-  { label: '이번 달 매출', value: '—', icon: LuTrendingUp, path: '/analytics' },
-]
+import { fetchVenues } from '@/lib/venues'
+import { fetchProducts } from '@/lib/products'
 
 interface ClubItem {
   teamId: number
@@ -21,6 +16,13 @@ interface ClubStats {
   pendingCount: number
   recentPostCount: number
   status: 'active' | 'suspended'
+}
+
+interface DashboardStats {
+  venueCount: number
+  productCount: number
+  monthlyReservations: number
+  monthlyRevenue: number
 }
 
 function ClubStatsWidget() {
@@ -140,6 +142,34 @@ function ClubStatsWidget() {
 }
 
 export default function DashboardPage() {
+  const [venueCount, setVenueCount] = useState<string>('—')
+  const [productCount, setProductCount] = useState<string>('—')
+  const [monthlyReservations, setMonthlyReservations] = useState<string>('—')
+  const [monthlyRevenue, setMonthlyRevenue] = useState<string>('—')
+
+  useEffect(() => {
+    fetchVenues().then((venues) => setVenueCount(String(venues.length)))
+    fetchProducts().then((products) => {
+      const activeCount = products.filter((p) => p.isActive).length
+      setProductCount(String(activeCount))
+    })
+    get<DashboardStats>('/api/v1/partners/me/dashboard-stats').then((stats) => {
+      if (stats) {
+        setMonthlyReservations(String(stats.monthlyReservations))
+        setMonthlyRevenue(
+          stats.monthlyRevenue > 0 ? stats.monthlyRevenue.toLocaleString() + '원' : '0원',
+        )
+      }
+    })
+  }, [])
+
+  const stats = [
+    { label: '등록 시설', value: venueCount, icon: LuMapPin, path: '/venues' },
+    { label: '활성 상품', value: productCount, icon: LuPackage, path: '/products' },
+    { label: '이번 달 예약', value: monthlyReservations, icon: LuCalendarCheck, path: '/reservations' },
+    { label: '이번 달 매출', value: monthlyRevenue, icon: LuTrendingUp, path: '/analytics' },
+  ]
+
   return (
     <div>
       <h1 className="text-[22px] font-bold" style={{ marginBottom: 24 }}>대시보드</h1>
@@ -175,7 +205,7 @@ export default function DashboardPage() {
       <div className="rounded-xl border" style={{ padding: 24, backgroundColor: 'var(--color-bg-surface)', borderColor: 'var(--color-border-subtle)' }}>
         <h2 className="text-[16px] font-semibold" style={{ marginBottom: 16 }}>최근 예약</h2>
         <p className="text-[14px]" style={{ color: 'var(--color-pochak-text-muted)' }}>
-          API 연동 후 최근 예약 목록이 표시됩니다.
+          <Link to="/reservations" style={{ color: 'var(--color-pochak-primary)' }}>예약 관리</Link>에서 전체 예약 내역을 확인하세요.
         </p>
       </div>
     </div>
