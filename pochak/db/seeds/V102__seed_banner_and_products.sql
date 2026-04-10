@@ -39,15 +39,15 @@ ON CONFLICT DO NOTHING;
 -- ----------------------------------------------------------------------------
 -- 4. 추가 경기 (MLB컵 경기들)
 -- ----------------------------------------------------------------------------
-INSERT INTO content.matches (id, competition_id, sport_id, name, status, start_time, end_time, home_score, away_score) VALUES
+INSERT INTO content.matches (id, competition_id, sport_id, name, title, status, start_time, end_time, home_score, away_score) VALUES
     (7, 6, (SELECT id FROM content.sports WHERE code='BASEBALL'),
-        '동대문구 리틀야구 vs 군포시 리틀야구', 'COMPLETED',
+        '동대문구 리틀야구 vs 군포시 리틀야구', '동대문구 리틀야구 vs 군포시 리틀야구', 'COMPLETED',
         '2026-01-01 01:30:00+09', '2026-01-01 03:00:00+09', 5, 2),
     (8, 6, (SELECT id FROM content.sports WHERE code='BASEBALL'),
-        '동대문구 리틀야구 vs 군포시 리틀야구', 'COMPLETED',
+        '동대문구 리틀야구 vs 군포시 리틀야구', '동대문구 리틀야구 vs 군포시 리틀야구', 'COMPLETED',
         '2026-01-01 04:00:00+09', '2026-01-01 05:30:00+09', 5, 2),
     (9, 6, (SELECT id FROM content.sports WHERE code='BASEBALL'),
-        '동대문구 리틀야구 vs 군포시 리틀야구', 'COMPLETED',
+        '동대문구 리틀야구 vs 군포시 리틀야구', '동대문구 리틀야구 vs 군포시 리틀야구', 'COMPLETED',
         '2026-01-01 06:00:00+09', '2026-01-01 07:30:00+09', 5, 2)
 ON CONFLICT DO NOTHING;
 
@@ -78,22 +78,12 @@ ON CONFLICT DO NOTHING;
 -- ----------------------------------------------------------------------------
 -- 6. 상품 (Commerce Products) — BO/웹 구독 페이지 공용
 -- ----------------------------------------------------------------------------
-INSERT INTO commerce.products (id, name, product_type, price, original_price, description, is_active, meta) VALUES
-    (1, '''6회 MLB컵 리틀야구 U10'' 시청권', 'SUBSCRIPTION', 10010, 101010,
-        '스포츠는 정해진 규칙과 공정성을 바탕으로 신체 능력, 기술, 전략, 정신력을 겨루는 인간 활동이다.',
-        TRUE, '{"discount": 17, "period": "monthly"}'::jsonb),
-    (2, '''6회 MLB컵 리틀야구 U10'' 시청권', 'SUBSCRIPTION', 10010, 101010,
-        '스포츠는 정해진 규칙과 공정성을 바탕으로 신체 능력, 기술, 전략, 정신력을 겨루는 인간 활동이다.',
-        TRUE, '{"discount": 17, "period": "monthly"}'::jsonb),
-    (3, '''6회 MLB컵 리틀야구 U10'' 시청권', 'SPORT_PASS', 10010, 101010,
-        '스포츠는 정해진 규칙과 공정성을 바탕으로 신체 능력, 기술, 전략, 정신력을 겨루는 인간 활동이다.',
-        TRUE, '{"discount": 17, "sport": "야구"}'::jsonb),
-    (4, '''6회 MLB컵 리틀야구 U10'' 시청권', 'COMPETITION_PASS', 10010, 101010,
-        '스포츠는 정해진 규칙과 공정성을 바탕으로 신체 능력, 기술, 전략, 정신력을 겨루는 인간 활동이다.',
-        TRUE, '{"discount": 17, "competitionId": 6}'::jsonb),
-    (5, '''6회 MLB컵 리틀야구 U10'' 시청권', 'SUBSCRIPTION', 10010, 101010,
-        '스포츠는 정해진 규칙과 공정성을 바탕으로 신체 능력, 기술, 전략, 정신력을 겨루는 인간 활동이다.',
-        TRUE, '{"discount": 17, "period": "monthly"}'::jsonb)
+INSERT INTO commerce.products (id, name, product_type, price_krw, is_active) VALUES
+    (1, '''6회 MLB컵 리틀야구 U10'' 시청권', 'SUBSCRIPTION', 10010, TRUE),
+    (2, '''6회 MLB컵 리틀야구 U10'' 시청권', 'SUBSCRIPTION', 10010, TRUE),
+    (3, '''6회 MLB컵 리틀야구 U10'' 시청권', 'SPORT_PASS', 10010, TRUE),
+    (4, '''6회 MLB컵 리틀야구 U10'' 시청권', 'COMPETITION_PASS', 10010, TRUE),
+    (5, '''6회 MLB컵 리틀야구 U10'' 시청권', 'SUBSCRIPTION', 10010, TRUE)
 ON CONFLICT DO NOTHING;
 
 SELECT setval('commerce.products_id_seq', 10, true);
@@ -101,12 +91,17 @@ SELECT setval('commerce.products_id_seq', 10, true);
 -- ----------------------------------------------------------------------------
 -- 7. 공지사항 (Admin Notices)
 -- ----------------------------------------------------------------------------
-INSERT INTO admin.notices (id, category, title, content, is_published, published_at) VALUES
-    (1, 'SERVICE', '[공지] 포착 3.0 서비스 오픈 안내', '포착 3.0 서비스가 오픈되었습니다.', TRUE, '2026-03-20'),
-    (2, 'EVENT', '[이벤트] 화랑대기 무료 시청 이벤트', '화랑대기 전 경기 무료 시청 이벤트를 진행합니다.', TRUE, '2026-03-15'),
-    (3, 'MAINTENANCE', '[점검] 3/10 서버 점검 안내', '3월 10일 02:00~06:00 서버 점검이 진행됩니다.', TRUE, '2026-03-08'),
-    (4, 'SERVICE', '[공지] 개인정보처리방침 변경 안내', '개인정보처리방침이 변경되었습니다.', TRUE, '2026-03-01'),
-    (5, 'EVENT', '[이벤트] 신규 가입 시 30일 무료 시청권', '신규 가입 시 30일 무료 시청권을 지급합니다.', TRUE, '2026-02-20')
+INSERT INTO admin.notices (id, notice_type, title, content, start_date, end_date, is_active) VALUES
+    (1, 'SERVICE', '[공지] 포착 3.0 서비스 오픈 안내', '포착 3.0 서비스가 오픈되었습니다.',
+        '2026-03-20 00:00:00+09', '2099-12-31 23:59:59+09', TRUE),
+    (2, 'EVENT', '[이벤트] 화랑대기 무료 시청 이벤트', '화랑대기 전 경기 무료 시청 이벤트를 진행합니다.',
+        '2026-03-15 00:00:00+09', '2099-12-31 23:59:59+09', TRUE),
+    (3, 'MAINTENANCE', '[점검] 3/10 서버 점검 안내', '3월 10일 02:00~06:00 서버 점검이 진행됩니다.',
+        '2026-03-08 00:00:00+09', '2099-12-31 23:59:59+09', TRUE),
+    (4, 'SERVICE', '[공지] 개인정보처리방침 변경 안내', '개인정보처리방침이 변경되었습니다.',
+        '2026-03-01 00:00:00+09', '2099-12-31 23:59:59+09', TRUE),
+    (5, 'EVENT', '[이벤트] 신규 가입 시 30일 무료 시청권', '신규 가입 시 30일 무료 시청권을 지급합니다.',
+        '2026-02-20 00:00:00+09', '2099-12-31 23:59:59+09', TRUE)
 ON CONFLICT DO NOTHING;
 
 SELECT setval('admin.notices_id_seq', 10, true);
