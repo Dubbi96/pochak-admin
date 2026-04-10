@@ -22,8 +22,11 @@ public class Banner {
     @Column(nullable = false)
     private String title;
 
-    @Column(name = "image_url")
-    private String imageUrl;
+    @Column(name = "pc_image_url")
+    private String pcImageUrl;
+
+    @Column(name = "mobile_image_url")
+    private String mobileImageUrl;
 
     @Column(name = "link_url")
     private String linkUrl;

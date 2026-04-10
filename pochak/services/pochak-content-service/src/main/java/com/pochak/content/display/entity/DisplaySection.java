@@ -28,6 +28,12 @@ public class DisplaySection {
     @Column(name = "content_query", length = 500)
     private String contentQuery;
 
+    @Column(name = "link_url", length = 500)
+    private String linkUrl;
+
+    @Column(name = "admin_banner_id")
+    private Long adminBannerId;
+
     @Column(name = "display_order")
     @Builder.Default
     private Integer displayOrder = 0;
