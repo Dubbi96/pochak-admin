@@ -43,19 +43,19 @@ public interface CompetitionRepository extends JpaRepository<Competition, Long>,
             " AND (CAST(:sportId AS long) IS NULL OR c.sport.id = :sportId)" +
             " AND (CAST(:status AS string) IS NULL OR c.status = :status)" +
             " AND (CAST(:isDisplayed AS boolean) IS NULL OR c.isDisplayed = :isDisplayed)" +
-            " AND (CAST(:keyword AS string) IS NULL OR LOWER(CAST(c.name AS string)) LIKE LOWER(CONCAT('%', :keyword, '%')))" +
+            " AND (:keywordPattern IS NULL OR LOWER(c.name) LIKE :keywordPattern)" +
             " ORDER BY c.startDate DESC")
     Page<Competition> findWithFilters(
             @Param("sportId") Long sportId,
             @Param("status") Competition.CompetitionStatus status,
             @Param("isDisplayed") Boolean isDisplayed,
-            @Param("keyword") String keyword,
+            @Param("keywordPattern") String keywordPattern,
             Pageable pageable);
 
     @Query("SELECT c FROM Competition c WHERE c.active = true AND c.isDisplayed = true" +
-            " AND LOWER(CAST(c.name AS string)) LIKE LOWER(CONCAT('%', :keyword, '%'))" +
+            " AND LOWER(c.name) LIKE :keywordPattern" +
             " ORDER BY c.startDate DESC")
-    List<Competition> searchByName(@Param("keyword") String keyword, Pageable pageable);
+    List<Competition> searchByName(@Param("keywordPattern") String keywordPattern, Pageable pageable);
 
     Optional<Competition> findByInviteCodeAndActiveTrue(String inviteCode);
 
@@ -64,13 +64,13 @@ public interface CompetitionRepository extends JpaRepository<Competition, Long>,
             " AND (CAST(:sportId AS long) IS NULL OR c.sport.id = :sportId)" +
             " AND (CAST(:status AS string) IS NULL OR c.status = :status)" +
             " AND (CAST(:isDisplayed AS boolean) IS NULL OR c.isDisplayed = :isDisplayed)" +
-            " AND (CAST(:keyword AS string) IS NULL OR LOWER(CAST(c.name AS string)) LIKE LOWER(CONCAT('%', :keyword, '%')))" +
+            " AND (:keywordPattern IS NULL OR LOWER(c.name) LIKE :keywordPattern)" +
             " ORDER BY c.startDate DESC")
     Page<Competition> findWithFiltersAndVisibility(
             @Param("sportId") Long sportId,
             @Param("status") Competition.CompetitionStatus status,
             @Param("isDisplayed") Boolean isDisplayed,
-            @Param("keyword") String keyword,
+            @Param("keywordPattern") String keywordPattern,
             @Param("visibility") CompetitionVisibility visibility,
             Pageable pageable);
 

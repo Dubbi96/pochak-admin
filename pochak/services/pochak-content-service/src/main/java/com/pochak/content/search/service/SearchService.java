@@ -108,7 +108,7 @@ public class SearchService {
 
         // 5. COMPETITION (vertical)
         if (searchAll || types.contains("COMPETITION")) {
-            List<Competition> competitions = competitionRepository.searchByName(keyword, limit);
+            List<Competition> competitions = competitionRepository.searchByName("%" + keyword.toLowerCase() + "%", limit);
             if (!competitions.isEmpty()) {
                 sections.add(buildSection(SearchSection.SearchType.COMPETITION,
                         SearchSection.LayoutType.VERTICAL,
@@ -176,7 +176,7 @@ public class SearchService {
         }
 
         // Search across competition names
-        List<Competition> competitions = competitionRepository.searchByName(keyword, limit);
+        List<Competition> competitions = competitionRepository.searchByName("%" + keyword.toLowerCase() + "%", limit);
         for (Competition comp : competitions) {
             suggestions.add(SearchSuggestion.builder()
                     .text(comp.getName())
