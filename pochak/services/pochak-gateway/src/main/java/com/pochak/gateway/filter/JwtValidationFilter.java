@@ -53,6 +53,7 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
             "/api/v1/teams",
             "/api/v1/organizations",
             "/api/v1/recommendations",
+            "/api/v1/admin/auth",
             "/admin/api/v1/auth",
             "/actuator",
             "/api-docs",
