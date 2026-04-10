@@ -2,11 +2,12 @@
 -- BO 관리자: login_id='admin' / 'test_admin', password='admin1234!' / 'Pochak2026!'
 -- Web/App 유저: email='user@pochak.live', password='Pochak2026!'
 -- Partner: email='partner@pochak.live', password='Pochak2026!'
+-- 해시: Spring BCryptPasswordEncoder($2a$10$) 형식으로 생성
 
 INSERT INTO admin.admin_users (login_id, password_hash, name, email, is_blocked, fail_count, is_active, created_at, updated_at)
 VALUES (
     'test_admin',
-    '$2b$10$edMHq3tU2zvI0/GmiXfyKugvySszi3naUYk7rpa2xrdYqhXtGVxSi',
+    '$2a$10$7gwdpTkcLUC5vES9QUM3bOJzq0jUzYdr7hZrnngtWge2W1hF.qxdm',
     '테스트관리자',
     'testadmin@pochak.com',
     false,
@@ -24,9 +25,9 @@ WHERE u.login_id = 'test_admin'
 ON CONFLICT DO NOTHING;
 
 -- POC-224: Web/App 테스트 유저 계정 (이메일 로그인, identity 서비스)
--- password: Pochak2026!  hash: $2b$10$edMHq3tU2zvI0/GmiXfyKugvySszi3naUYk7rpa2xrdYqhXtGVxSi
+-- password: Pochak2026!  hash: $2a$10$ (Spring BCryptPasswordEncoder 생성)
 INSERT INTO identity.users (email, password_hash, nickname, phone_number, status, role, is_marketing, is_minor, phone_verified, created_at, updated_at)
-SELECT 'user@pochak.live', '$2b$10$edMHq3tU2zvI0/GmiXfyKugvySszi3naUYk7rpa2xrdYqhXtGVxSi', '포착유저', NULL, 'ACTIVE', 'USER', false, false, false, NOW(), NOW()
+SELECT 'user@pochak.live', '$2a$10$7gwdpTkcLUC5vES9QUM3bOJzq0jUzYdr7hZrnngtWge2W1hF.qxdm', '포착유저', NULL, 'ACTIVE', 'USER', false, false, false, NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM identity.users WHERE email = 'user@pochak.live');
 
 INSERT INTO identity.user_auth_accounts (user_id, provider, provider_user_id, provider_email, created_at, updated_at)
@@ -42,9 +43,9 @@ WHERE u.email = 'user@pochak.live'
 ON CONFLICT (user_id) DO NOTHING;
 
 -- POC-225: Partner 테스트 계정 비밀번호 설정 + 클럽 배정
--- partner@pochak.live / Pochak2026!
+-- partner@pochak.live / Pochak2026!  hash: $2a$10$ (Spring BCryptPasswordEncoder 생성)
 UPDATE identity.users
-SET password_hash = '$2b$10$edMHq3tU2zvI0/GmiXfyKugvySszi3naUYk7rpa2xrdYqhXtGVxSi',
+SET password_hash = '$2a$10$7gwdpTkcLUC5vES9QUM3bOJzq0jUzYdr7hZrnngtWge2W1hF.qxdm',
     updated_at = NOW()
 WHERE email = 'partner@pochak.live';
 
