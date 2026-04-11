@@ -1,16 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   fetchPlayerData,
-  pochakLiveContents,
-  pochakVodContents,
-  pochakClips,
+  fetchLiveContents,
+  fetchVodContents,
+  fetchPopularClips,
   formatViewCount,
-  mockTimelineEvents,
   mockChapters,
 } from '@/services/webApi';
-import type { PlayerData } from '@/services/webApi';
+import type { PlayerData, PochakContent, PopularClip } from '@/services/webApi';
 import WebVideoPlayer from '@/components/WebVideoPlayer';
+import type { TimelineEvent } from '@/components/WebVideoPlayer';
 import CommentSection from '@/components/CommentSection';
 import CollapsibleSection from '@/components/CollapsibleSection';
 import HScrollRow from '@/components/HScrollRow';
@@ -18,7 +18,57 @@ import HVideoCard from '@/components/HVideoCard';
 import VClipCard from '@/components/VClipCard';
 import RecommendedVideoItem from '@/components/RecommendedVideoItem';
 import { setOgMeta } from '@/utils/ogMeta';
-import { Heart, Share2, MoreHorizontal } from 'lucide-react';
+import { fetchApi, postApi } from '@/services/apiClient';
+import { useToast } from '@/hooks/useToast';
+import { Heart, Share2, MoreHorizontal, Sparkles, PanelRight, Goal, AlertTriangle, ArrowLeftRight, Star, Clock, Zap, Scissors, Download } from 'lucide-react';
+
+// ── AI Clip API ────────────────────────────────────────────────────
+
+interface AiClipItem {
+  id: number;
+  title: string;
+  startTimeSec: number;
+  endTimeSec: number;
+  duration: number;
+}
+
+// ── Highlight API ─────────────────────────────────────────────────
+
+interface HighlightItem {
+  id: number;
+  startTimeSeconds: number;
+  endTimeSeconds: number;
+  highlightType: string;
+  confidenceScore: number;
+  description: string;
+}
+
+const HIGHLIGHT_TYPE_MAP: Record<string, TimelineEvent['type']> = {
+  GOAL: 'GOAL',
+  FOUL: 'FOUL',
+  SUBSTITUTION: 'SUBSTITUTION',
+  HIGHLIGHT: 'HIGHLIGHT',
+  PERIOD: 'PERIOD',
+  CUSTOM: 'CUSTOM',
+};
+
+const HIGHLIGHT_TYPE_COLORS: Record<string, string> = {
+  GOAL: '#4CAF50',
+  FOUL: '#FFD600',
+  SUBSTITUTION: '#2196F3',
+  HIGHLIGHT: '#FFFFFF',
+  PERIOD: '#FF9800',
+  CUSTOM: '#CE93D8',
+};
+
+const HIGHLIGHT_TYPE_ICON: Record<string, React.ElementType> = {
+  GOAL: Goal,
+  FOUL: AlertTriangle,
+  SUBSTITUTION: ArrowLeftRight,
+  HIGHLIGHT: Star,
+  PERIOD: Clock,
+  CUSTOM: Zap,
+};
 
 /* ── Sidebar tag filter pills ── */
 const SIDEBAR_TAGS = ['#야구', '#유료', '#해설', '#MLB', '#동대문구리'] as const;
@@ -58,17 +108,45 @@ export default function ContentPlayerPage() {
   const type = params.type ?? params.contentType ?? 'vod';
   const id = params.id ?? params.contentId ?? '1';
   const [player, setPlayer] = useState<PlayerData | null>(null);
+  const [playerError, setPlayerError] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [showMore, setShowMore] = useState(false);
+  const [highlightItems, setHighlightItems] = useState<HighlightItem[]>([]);
+  const [aiClipItems, setAiClipItems] = useState<AiClipItem[]>([]);
+  const [panelTab, setPanelTab] = useState<'highlights' | 'ai-clips'>('highlights');
+  const [detectingHighlights, setDetectingHighlights] = useState(false);
+  const [highlightPanelOpen, setHighlightPanelOpen] = useState(false);
+  const [seekToTime, setSeekToTime] = useState<number | undefined>(undefined);
+  const [reelIndex, setReelIndex] = useState<number | null>(null);
+  const reelRef = useRef<number | null>(null);
+  const toast = useToast();
+
+  const [liveContents, setLiveContents] = useState<PochakContent[]>([]);
+  const [vodContents, setVodContents] = useState<PochakContent[]>([]);
+  const [clips, setClips] = useState<PopularClip[]>([]);
+
+  const highlights: TimelineEvent[] = highlightItems.map((h) => ({
+    id: String(h.id),
+    time: h.startTimeSeconds,
+    label: h.description || h.highlightType,
+    type: HIGHLIGHT_TYPE_MAP[h.highlightType] ?? 'HIGHLIGHT',
+  }));
 
   const isClipView = type === 'clip';
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   useEffect(() => {
+    fetchLiveContents().then((data) => { if (data) setLiveContents(data); });
+    fetchVodContents().then((data) => { if (data) setVodContents(data); });
+    fetchPopularClips().then((data) => { if (data) setClips(data); });
+  }, []);
+
+  useEffect(() => {
     fetchPlayerData(type, id)
       .then((data) => {
+        if (!data) { setPlayerError(true); return; }
         setPlayer(data);
         setLikeCount(data.likeCount ?? 0);
         setOgMeta(
@@ -79,6 +157,49 @@ export default function ContentPlayerPage() {
       })
       .catch(() => {});
   }, [type, id]);
+
+  useEffect(() => {
+    if (!id || type === 'clip') return;
+    fetchApi<HighlightItem[]>(`/contents/${type}/${id}/highlights`).then((items) => {
+      if (items && items.length > 0) {
+        const sorted = [...items].sort((a, b) => a.startTimeSeconds - b.startTimeSeconds);
+        setHighlightItems(sorted);
+        setHighlightPanelOpen(true);
+      }
+    });
+    fetchApi<AiClipItem[]>(`/contents/${type}/${id}/highlights/ai-clips`).then((clips) => {
+      if (clips && clips.length > 0) {
+        setAiClipItems(clips);
+        setHighlightPanelOpen(true);
+      }
+    });
+  }, [type, id]);
+
+  const handleDetectHighlights = useCallback(async () => {
+    if (detectingHighlights) return;
+    setDetectingHighlights(true);
+    try {
+      const result = await postApi<{ highlights: HighlightItem[] }>(
+        `/contents/${type}/${id}/highlights/detect`,
+        {},
+      );
+      if (result && result.highlights && result.highlights.length > 0) {
+        const sorted = [...result.highlights].sort((a, b) => a.startTimeSeconds - b.startTimeSeconds);
+        setHighlightItems(sorted);
+        setHighlightPanelOpen(true);
+        // Refresh AI clips generated from this detection
+        fetchApi<AiClipItem[]>(`/contents/${type}/${id}/highlights/ai-clips`).then((clips) => {
+          if (clips) setAiClipItems(clips);
+        });
+      } else {
+        toast.show('감지된 하이라이트가 없습니다');
+      }
+    } catch {
+      toast.show('하이라이트 감지에 실패했습니다');
+    } finally {
+      setDetectingHighlights(false);
+    }
+  }, [type, id, detectingHighlights, toast]);
 
   const handleLike = useCallback(() => {
     setIsLiked((prev) => {
@@ -100,11 +221,44 @@ export default function ContentPlayerPage() {
     }
   }, [type, id, player]);
 
+  const handleSeekToHighlight = useCallback((startTime: number) => {
+    setSeekToTime(startTime);
+    setReelIndex(null);
+    reelRef.current = null;
+  }, []);
+
+  const handleStartReel = useCallback(() => {
+    if (highlightItems.length === 0) return;
+    const idx = 0;
+    reelRef.current = idx;
+    setReelIndex(idx);
+    setSeekToTime(highlightItems[idx].startTimeSeconds);
+  }, [highlightItems]);
+
+  const handleTimeUpdate = useCallback((current: number) => {
+    if (reelRef.current === null) return;
+    const item = highlightItems[reelRef.current];
+    if (!item) return;
+    if (current >= item.endTimeSeconds) {
+      const next = reelRef.current + 1;
+      if (next < highlightItems.length) {
+        reelRef.current = next;
+        setReelIndex(next);
+        setSeekToTime(highlightItems[next].startTimeSeconds);
+      } else {
+        reelRef.current = null;
+        setReelIndex(null);
+      }
+    }
+  }, [highlightItems]);
+
   if (!player) {
     return (
       <div className="px-6 py-8 lg:px-8">
         <div className="flex aspect-video items-center justify-center rounded-lg bg-[#262626]">
-          <p className="text-sm text-[#A6A6A6]">로딩 중...</p>
+          <p className="text-sm text-[#A6A6A6]">
+            {playerError ? '데이터를 불러올 수 없습니다' : '로딩 중...'}
+          </p>
         </div>
       </div>
     );
@@ -130,6 +284,30 @@ export default function ContentPlayerPage() {
       >
         <Share2 className="w-4.5 h-4.5" />
       </button>
+      {!isClipView && (
+        <button
+          title="하이라이트 자동 감지"
+          disabled={detectingHighlights}
+          onClick={handleDetectHighlights}
+          className={`flex items-center gap-1.5 text-sm transition-colors ${
+            detectingHighlights ? 'text-[#606060] cursor-not-allowed' : 'text-[#A6A6A6] hover:text-[#00CC33]'
+          }`}
+        >
+          <Sparkles className={`w-4.5 h-4.5 ${detectingHighlights ? 'animate-spin' : ''}`} />
+          {detectingHighlights && <span className="text-xs">감지 중...</span>}
+        </button>
+      )}
+      {!isClipView && (highlightItems.length > 0 || aiClipItems.length > 0) && (
+        <button
+          title={highlightPanelOpen ? '패널 닫기' : '패널 열기'}
+          onClick={() => setHighlightPanelOpen((p) => !p)}
+          className={`flex items-center gap-1.5 text-sm transition-colors ${
+            highlightPanelOpen ? 'text-[#00CC33]' : 'text-[#A6A6A6] hover:text-white'
+          }`}
+        >
+          <PanelRight className="w-4.5 h-4.5" />
+        </button>
+      )}
       <button
         className="flex items-center gap-1.5 text-sm text-[#A6A6A6] hover:text-white transition-colors"
         onClick={() => setShowMore((prev) => !prev)}
@@ -147,7 +325,7 @@ export default function ContentPlayerPage() {
           {/* Left: vertical video */}
           <div className="lg:w-[400px] flex-shrink-0">
             <div className="aspect-[9/16] bg-[#1A1A1A] rounded-lg overflow-hidden flex items-center justify-center">
-              <WebVideoPlayer src={player.streamUrl} isLive={false} autoPlay events={mockTimelineEvents} chapters={mockChapters} />
+              <WebVideoPlayer src={player.streamUrl} isLive={false} autoPlay events={highlights} chapters={mockChapters} />
             </div>
           </div>
 
@@ -177,11 +355,10 @@ export default function ContentPlayerPage() {
             <div className="mt-8">
               <h2 className="text-lg font-bold text-white mb-4">추천 클립</h2>
               <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
-                {pochakClips.slice(0, 6).map((clip) => (
+                {clips.slice(0, 6).map((clip: PopularClip) => (
                   <VClipCard
                     key={clip.id}
                     title={clip.title}
-                    viewCount={clip.viewCount}
                     className="w-full"
                     linkTo={`/clip/${clip.id}`}
                   />
@@ -200,8 +377,158 @@ export default function ContentPlayerPage() {
       <div className="flex gap-6">
         {/* ── Left column: player + info (~65%) ────────── */}
         <div className="flex-1 min-w-0">
-          {/* Video Player */}
-          <WebVideoPlayer src={player.streamUrl} isLive={isLive} autoPlay events={mockTimelineEvents} chapters={mockChapters} />
+          {/* Video Player + Highlight Panel */}
+          <div className={`flex gap-3 ${highlightPanelOpen && highlightItems.length > 0 ? 'items-start' : ''}`}>
+            <div className="flex-1 min-w-0">
+              <WebVideoPlayer
+                src={player.streamUrl}
+                isLive={isLive}
+                autoPlay
+                events={highlights}
+                chapters={mockChapters}
+                seekToTime={seekToTime}
+                onTimeUpdate={handleTimeUpdate}
+              />
+            </div>
+            {highlightPanelOpen && (highlightItems.length > 0 || aiClipItems.length > 0) && (
+              <div className="w-[260px] flex-shrink-0 bg-[#1A1A1A] rounded-xl overflow-hidden flex flex-col" style={{ maxHeight: 400 }}>
+                {/* Tab header */}
+                <div className="flex border-b border-[#2A2A2A]">
+                  {highlightItems.length > 0 && (
+                    <button
+                      onClick={() => setPanelTab('highlights')}
+                      className={`flex-1 px-3 py-2.5 text-[12px] font-semibold transition-colors ${
+                        panelTab === 'highlights'
+                          ? 'text-white border-b-2 border-[#00CC33]'
+                          : 'text-[#606060] hover:text-[#A6A6A6]'
+                      }`}
+                    >
+                      하이라이트 ({highlightItems.length})
+                    </button>
+                  )}
+                  {aiClipItems.length > 0 && (
+                    <button
+                      onClick={() => setPanelTab('ai-clips')}
+                      className={`flex-1 px-3 py-2.5 text-[12px] font-semibold transition-colors flex items-center justify-center gap-1 ${
+                        panelTab === 'ai-clips'
+                          ? 'text-white border-b-2 border-[#00CC33]'
+                          : 'text-[#606060] hover:text-[#A6A6A6]'
+                      }`}
+                    >
+                      <Scissors className="w-3 h-3" />
+                      AI 클립 ({aiClipItems.length})
+                    </button>
+                  )}
+                  {panelTab === 'highlights' && highlightItems.length > 0 && (
+                    <button
+                      onClick={handleStartReel}
+                      className="px-2.5 py-1 m-1.5 flex items-center gap-1 text-[11px] font-medium rounded-full bg-[#00CC33] text-black hover:bg-[#00AA29] transition-colors flex-shrink-0"
+                      title="하이라이트 릴 재생"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      릴
+                    </button>
+                  )}
+                </div>
+
+                {/* Highlights tab */}
+                {panelTab === 'highlights' && (
+                  <div className="overflow-y-auto flex-1 scrollbar-hide">
+                    {highlightItems.map((item, idx) => {
+                      const TypeIcon = HIGHLIGHT_TYPE_ICON[item.highlightType] ?? Zap;
+                      const color = HIGHLIGHT_TYPE_COLORS[item.highlightType] ?? '#FFFFFF';
+                      const isActive = reelIndex === idx;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => handleSeekToHighlight(item.startTimeSeconds)}
+                          className={`w-full text-left px-3 py-2.5 border-b border-[#2A2A2A] last:border-0 transition-colors ${
+                            isActive ? 'bg-[#00CC33]/10' : 'hover:bg-[#262626]'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2">
+                            <TypeIcon className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color }} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-1 mb-0.5">
+                                <span className="text-[11px] font-mono text-[#A6A6A6]">
+                                  {formatDuration(item.startTimeSeconds)}
+                                </span>
+                                <span className="text-[10px]" style={{ color }}>{item.highlightType}</span>
+                              </div>
+                              <p className="text-[12px] text-white truncate leading-tight">{item.description || item.highlightType}</p>
+                              <div className="mt-1.5 flex items-center gap-1.5">
+                                <div className="flex-1 h-1 bg-[#333] rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full transition-all"
+                                    style={{ width: `${Math.round(item.confidenceScore * 100)}%`, backgroundColor: color }}
+                                  />
+                                </div>
+                                <span className="text-[10px] text-[#606060] flex-shrink-0">
+                                  {Math.round(item.confidenceScore * 100)}%
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* AI Clips tab */}
+                {panelTab === 'ai-clips' && (
+                  <div className="overflow-y-auto flex-1 scrollbar-hide">
+                    {aiClipItems.map((clip) => (
+                      <div
+                        key={clip.id}
+                        className="px-3 py-2.5 border-b border-[#2A2A2A] last:border-0 hover:bg-[#262626] transition-colors"
+                      >
+                        <button
+                          className="w-full text-left"
+                          onClick={() => handleSeekToHighlight(clip.startTimeSec)}
+                        >
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <Scissors className="w-3 h-3 text-[#00CC33] flex-shrink-0" />
+                            <p className="text-[12px] text-white truncate leading-tight flex-1">{clip.title}</p>
+                          </div>
+                          <span className="text-[11px] font-mono text-[#A6A6A6]">
+                            {formatDuration(clip.startTimeSec)} – {formatDuration(clip.endTimeSec)}
+                            <span className="ml-1.5 text-[#606060]">({formatDuration(clip.duration)})</span>
+                          </span>
+                        </button>
+                        <div className="flex items-center gap-2 mt-2">
+                          <button
+                            onClick={async () => {
+                              const url = `${window.location.origin}/clip/${clip.id}`;
+                              if (navigator.share) {
+                                try { await navigator.share({ title: clip.title, url }); } catch {}
+                              } else {
+                                await navigator.clipboard.writeText(url);
+                                toast.show('클립 링크가 복사되었습니다');
+                              }
+                            }}
+                            className="flex items-center gap-1 text-[11px] text-[#A6A6A6] hover:text-white transition-colors"
+                            title="클립 공유"
+                          >
+                            <Share2 className="w-3 h-3" />
+                            공유
+                          </button>
+                          <button
+                            onClick={() => toast.show('클립이 저장되었습니다')}
+                            className="flex items-center gap-1 text-[11px] text-[#A6A6A6] hover:text-[#00CC33] transition-colors"
+                            title="클립 저장"
+                          >
+                            <Download className="w-3 h-3" />
+                            저장
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Match Info */}
           <div className="mt-6 space-y-3">
@@ -236,11 +563,10 @@ export default function ContentPlayerPage() {
           <div className="mt-8">
             <h2 className="text-lg font-bold text-white mb-4">클립</h2>
             <HScrollRow scrollAmount={200}>
-              {pochakClips.map((clip) => (
+              {clips.map((clip: PopularClip) => (
                 <VClipCard
                   key={clip.id}
                   title={clip.title}
-                  viewCount={clip.viewCount}
                   linkTo={`/clip/${clip.id}`}
                 />
               ))}
@@ -251,7 +577,7 @@ export default function ContentPlayerPage() {
           <div className="mt-8">
             <h2 className="text-lg font-bold text-white mb-4">관련 VOD</h2>
             <HScrollRow scrollAmount={300}>
-              {pochakVodContents.map((v) => (
+              {vodContents.map((v: PochakContent) => (
                 <HVideoCard
                   key={v.id}
                   title={v.title}
@@ -274,11 +600,10 @@ export default function ContentPlayerPage() {
           {/* ── Section 1: 이 영상의 내 클립 ──────────── */}
           <CollapsibleSection title="이 영상의 내 클립">
             <HScrollRow scrollAmount={160}>
-              {pochakClips.slice(0, 4).map((clip) => (
+              {clips.slice(0, 4).map((clip: PopularClip) => (
                 <VClipCard
                   key={clip.id}
                   title={clip.title}
-                  viewCount={clip.viewCount}
                   linkTo={`/clip/${clip.id}`}
                   className="w-[110px]"
                   showMoreMenu
@@ -290,7 +615,7 @@ export default function ContentPlayerPage() {
           {/* ── Section 2: 이 대회의 라이브 ──────────── */}
           <CollapsibleSection title="이 대회의 라이브">
             <HScrollRow scrollAmount={200}>
-              {pochakLiveContents.slice(0, 5).map((c) => (
+              {liveContents.slice(0, 5).map((c: PochakContent) => (
                 <HVideoCard
                   key={c.id}
                   title={c.title}
@@ -315,11 +640,10 @@ export default function ContentPlayerPage() {
             {/* Recommended clips (9:16 horizontal scroll) */}
             <div className="mb-4">
               <HScrollRow scrollAmount={140}>
-                {pochakClips.slice(0, 6).map((clip) => (
+                {clips.slice(0, 6).map((clip: PopularClip) => (
                   <VClipCard
                     key={clip.id}
                     title={clip.title}
-                    viewCount={clip.viewCount}
                     linkTo={`/clip/${clip.id}`}
                     className="w-[100px]"
                   />
@@ -328,8 +652,8 @@ export default function ContentPlayerPage() {
             </div>
 
             {/* Recommended video vertical list */}
-            <div className="space-y-3">
-              {pochakVodContents.slice(0, 6).map((v) => (
+            <div className="space-y-5">
+              {vodContents.slice(0, 6).map((v: PochakContent) => (
                 <RecommendedVideoItem
                   key={v.id}
                   title={v.title}

@@ -8,13 +8,12 @@ import HVideoCard from '@/components/HVideoCard';
 import VClipCard from '@/components/VClipCard';
 import {
   fetchMyProfile,
-  defaultProfile,
-  pochakVodContents,
-  pochakClips,
-  pochakCompetitions,
-  pochakChannels,
+  fetchVodContents,
+  fetchPopularClips,
+  fetchCompetitions,
+  fetchPopularChannels,
 } from '@/services/webApi';
-import type { UserProfile } from '@/services/webApi';
+import type { UserProfile, PochakContent, PopularClip, CompetitionCard, PochakChannel } from '@/services/webApi';
 
 /* ── Tab definitions ────────────────────────────────────────── */
 type TabKey = 'home' | 'history' | 'myclip' | 'reservation' | 'favorites';
@@ -45,103 +44,123 @@ function maskEmail(email: string): string {
 
 /* ── 홈 Tab ──────────────────────────────────────────────────── */
 function HomeTab() {
+  const [vodContents, setVodContents] = useState<PochakContent[]>([]);
+  const [clips, setClips] = useState<PopularClip[]>([]);
+  const [competitions, setCompetitions] = useState<CompetitionCard[]>([]);
+  const [channels, setChannels] = useState<PochakChannel[]>([]);
+
+  useEffect(() => {
+    fetchVodContents().then((data) => { if (data) setVodContents(data); });
+    fetchPopularClips().then((data) => { if (data) setClips(data); });
+    fetchCompetitions().then((data) => { if (data) setCompetitions(data); });
+    fetchPopularChannels().then((data) => { if (data) setChannels(data); });
+  }, []);
+
   return (
     <div className="space-y-10">
       {/* 최근 본 영상 */}
-      <section>
-        <SectionHeader prefix="최근 본" highlight="영상" linkTo="/my/history" showSort />
-        <HScrollRow scrollAmount={300}>
-          {pochakVodContents.slice(0, 6).map((v) => (
-            <div key={v.id} className="flex-shrink-0 w-[280px]">
-              <HVideoCard
-                title={v.title}
-                sub={v.competition ?? ''}
-                duration={v.duration ? formatDuration(v.duration) : undefined}
-                tags={v.tags.slice(0, 4)}
-                thumbnailUrl={v.thumbnailUrl}
-                linkTo={`/contents/vod/${v.id}`}
-                className="w-full"
-              />
-            </div>
-          ))}
-        </HScrollRow>
-      </section>
+      {vodContents.length > 0 && (
+        <section>
+          <SectionHeader prefix="최근 본" highlight="영상" linkTo="/my/history" showSort />
+          <HScrollRow scrollAmount={300}>
+            {vodContents.slice(0, 6).map((v) => (
+              <div key={v.id} className="flex-shrink-0 w-[280px]">
+                <HVideoCard
+                  title={v.title}
+                  sub={v.competition ?? ''}
+                  duration={v.duration ? formatDuration(v.duration) : undefined}
+                  tags={v.tags.slice(0, 4)}
+                  thumbnailUrl={v.thumbnailUrl}
+                  linkTo={`/contents/vod/${v.id}`}
+                  className="w-full"
+                />
+              </div>
+            ))}
+          </HScrollRow>
+        </section>
+      )}
 
       {/* 최근 본 클립 */}
-      <section>
-        <SectionHeader prefix="최근 본" highlight="클립" linkTo="/my/history" showSort />
-        <HScrollRow scrollAmount={200}>
-          {pochakClips.slice(0, 8).map((clip) => (
-            <VClipCard
-              key={clip.id}
-              title={clip.title}
-              viewCount={clip.viewCount}
-              linkTo={`/clip/${clip.id}`}
-            />
-          ))}
-        </HScrollRow>
-      </section>
+      {clips.length > 0 && (
+        <section>
+          <SectionHeader prefix="최근 본" highlight="클립" linkTo="/my/history" showSort />
+          <HScrollRow scrollAmount={200}>
+            {clips.slice(0, 8).map((clip) => (
+              <VClipCard
+                key={clip.id}
+                title={clip.title}
+                linkTo={`/clip/${clip.id}`}
+              />
+            ))}
+          </HScrollRow>
+        </section>
+      )}
 
       {/* 내 클립 */}
-      <section>
-        <SectionHeader prefix="내" highlight="클립" linkTo="/my/myclip" showSort />
-        <HScrollRow scrollAmount={200}>
-          {pochakClips.slice(2, 8).map((clip) => (
-            <VClipCard
-              key={clip.id}
-              title={clip.title}
-              viewCount={clip.viewCount}
-              linkTo={`/clip/${clip.id}`}
-            />
-          ))}
-        </HScrollRow>
-      </section>
+      {clips.length > 2 && (
+        <section>
+          <SectionHeader prefix="내" highlight="클립" linkTo="/my/myclip" showSort />
+          <HScrollRow scrollAmount={200}>
+            {clips.slice(2, 8).map((clip) => (
+              <VClipCard
+                key={clip.id}
+                title={clip.title}
+                linkTo={`/clip/${clip.id}`}
+              />
+            ))}
+          </HScrollRow>
+        </section>
+      )}
 
       {/* 즐겨찾는 대회 */}
-      <section>
-        <SectionHeader prefix="즐겨찾는" highlight="대회" linkTo="/my/favorites" showSort />
-        <HScrollRow scrollAmount={260}>
-          {pochakCompetitions.slice(0, 4).map((comp) => (
-            <Link
-              key={comp.id}
-              to={`/competition/${comp.id}`}
-              className="flex-shrink-0 w-[220px] group cursor-pointer"
-            >
-              <div
-                className="aspect-[3/2] rounded-xl flex items-center justify-center group-hover:ring-1 group-hover:ring-[#00CC33] transition-all overflow-hidden"
-                style={{
-                  background: `linear-gradient(135deg, ${comp.logoColor}CC, ${comp.logoColor}66)`,
-                }}
+      {competitions.length > 0 && (
+        <section>
+          <SectionHeader prefix="즐겨찾는" highlight="대회" linkTo="/my/favorites" showSort />
+          <HScrollRow scrollAmount={260}>
+            {competitions.slice(0, 4).map((comp) => (
+              <Link
+                key={comp.id}
+                to={`/competition/${comp.id}`}
+                className="flex-shrink-0 w-[220px] group cursor-pointer"
               >
-                <span className="text-white text-2xl font-black drop-shadow-lg">{comp.logoText}</span>
-              </div>
-              <p className="mt-2 text-[15px] font-semibold text-white leading-tight line-clamp-1 group-hover:text-[#00CC33] transition-colors">
-                {comp.name}
-              </p>
-              <p className="text-[13px] text-[#A6A6A6] mt-0.5">{comp.dateRange}</p>
-            </Link>
-          ))}
-        </HScrollRow>
-      </section>
+                <div
+                  className="aspect-[3/2] rounded-xl flex items-center justify-center group-hover:ring-1 group-hover:ring-[#00CC33] transition-all overflow-hidden"
+                  style={{
+                    background: `linear-gradient(135deg, ${comp.logoColor}CC, ${comp.logoColor}66)`,
+                  }}
+                >
+                  <span className="text-white text-2xl font-black drop-shadow-lg">{comp.logoText}</span>
+                </div>
+                <p className="mt-2 text-[15px] font-semibold text-white leading-tight line-clamp-1 group-hover:text-[#00CC33] transition-colors">
+                  {comp.name}
+                </p>
+                <p className="text-[13px] text-[#A6A6A6] mt-0.5">{comp.dateRange}</p>
+              </Link>
+            ))}
+          </HScrollRow>
+        </section>
+      )}
 
       {/* 즐겨찾는 팀/클럽 */}
-      <section>
-        <SectionHeader prefix="즐겨찾는" highlight="팀/클럽" linkTo="/my/favorites" showSort />
-        <HScrollRow scrollAmount={200}>
-          {pochakChannels.slice(0, 9).map((ch) => (
-            <div key={ch.id} className="flex-shrink-0 flex flex-col items-center gap-1.5 w-[100px]">
-              <div
-                className="w-[80px] h-[80px] rounded-full flex items-center justify-center text-lg font-bold text-white border-2 border-[#4D4D4D]"
-                style={{ backgroundColor: ch.color }}
-              >
-                {ch.initial}
+      {channels.length > 0 && (
+        <section>
+          <SectionHeader prefix="즐겨찾는" highlight="팀/클럽" linkTo="/my/favorites" showSort />
+          <HScrollRow scrollAmount={200}>
+            {channels.slice(0, 9).map((ch) => (
+              <div key={ch.id} className="flex-shrink-0 flex flex-col items-center gap-1.5 w-[100px]">
+                <div
+                  className="w-[80px] h-[80px] rounded-full flex items-center justify-center text-lg font-bold text-white border-2 border-[#4D4D4D]"
+                  style={{ backgroundColor: ch.color }}
+                >
+                  {ch.initial}
+                </div>
+                <p className="text-[13px] text-white text-center truncate w-full">{ch.name}</p>
+                <p className="text-[11px] text-[#A6A6A6] text-center truncate w-full">{ch.subtitle}</p>
               </div>
-              <p className="text-[13px] text-white text-center truncate w-full">{ch.name}</p>
-              <p className="text-[11px] text-[#A6A6A6] text-center truncate w-full">{ch.subtitle}</p>
-            </div>
-          ))}
-        </HScrollRow>
-      </section>
+            ))}
+          </HScrollRow>
+        </section>
+      )}
     </div>
   );
 }
@@ -149,11 +168,15 @@ function HomeTab() {
 /* ── Main Page ───────────────────────────────────────────────── */
 export default function MyPage() {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<UserProfile>(defaultProfile);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileError, setProfileError] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('home');
 
   useEffect(() => {
-    fetchMyProfile().then(setProfile).catch(() => {});
+    fetchMyProfile().then((data) => {
+      if (data) setProfile(data);
+      else setProfileError(true);
+    }).catch(() => { setProfileError(true); });
   }, []);
 
   return (
@@ -166,12 +189,12 @@ export default function MyPage() {
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <p className="text-[20px] font-semibold text-white">{profile.nickname || '홍길동'}</p>
+              <p className="text-[20px] font-semibold text-white">{profileError ? '데이터를 불러올 수 없습니다' : (profile?.nickname || '홍길동')}</p>
               <button className="text-[#A6A6A6] hover:text-white transition-colors" onClick={() => navigate('/account')}>
                 <Edit3 className="h-4 w-4" />
               </button>
             </div>
-            <p className="text-[15px] text-[#A6A6A6] mt-1">{maskEmail(profile.email)}</p>
+            <p className="text-[15px] text-[#A6A6A6] mt-1">{profile ? maskEmail(profile.email) : ''}</p>
           </div>
         </section>
 

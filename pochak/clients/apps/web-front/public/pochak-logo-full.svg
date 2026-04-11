@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 40" fill="none">
+  <!-- P Icon -->
+  <g transform="translate(0,0)">
+    <path d="M8 2h18l-4 8H8L4 18h18l-4 8H0l4-8 4-8 4-8z" fill="#00CC33"/>
+    <path d="M10 14h18l-4 8H10l-4 8h18l-4 8H2l4-8 4-8 4-8z" fill="#00CC33"/>
+  </g>
+  <!-- POCHAK Text -->
+  <g transform="translate(50,4)" fill="#00CC33">
+    <text font-family="Pretendard, Arial, sans-serif" font-size="30" font-weight="800" letter-spacing="2">POCHAK</text>
+  </g>
+</svg>

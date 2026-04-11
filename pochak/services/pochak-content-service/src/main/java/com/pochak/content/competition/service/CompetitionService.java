@@ -38,9 +38,10 @@ public class CompetitionService {
                                                           Boolean isDisplayed,
                                                           String keyword,
                                                           Pageable pageable) {
+        String keywordPattern = keyword != null ? "%" + keyword.toLowerCase() + "%" : null;
         // Public listing: only show PUBLIC competitions
         Page<Competition> page = competitionRepository.findWithFiltersAndVisibility(
-                sportId, status, isDisplayed, keyword, CompetitionVisibility.PUBLIC, pageable);
+                sportId, status, isDisplayed, keywordPattern, CompetitionVisibility.PUBLIC, pageable);
         return page.map(CompetitionListResponse::from);
     }
 
@@ -49,9 +50,10 @@ public class CompetitionService {
                                                                 Boolean isDisplayed,
                                                                 String keyword,
                                                                 Pageable pageable) {
+        String keywordPattern = keyword != null ? "%" + keyword.toLowerCase() + "%" : null;
         // Admin listing: show all competitions regardless of visibility
         Page<Competition> page = competitionRepository.findWithFilters(
-                sportId, status, isDisplayed, keyword, pageable);
+                sportId, status, isDisplayed, keywordPattern, pageable);
         return page.map(CompetitionListResponse::from);
     }
 

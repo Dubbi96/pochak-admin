@@ -44,7 +44,12 @@ public class VenueService {
 
     public Page<VenueListResponse> listVenues(OwnerType ownerType, VenueType venueType,
                                                Long sportId, String name, Pageable pageable) {
-        Page<Venue> page = venueRepository.findByFilters(ownerType, venueType, sportId, name, pageable);
+        return listVenues(ownerType, venueType, sportId, name, null, pageable);
+    }
+
+    public Page<VenueListResponse> listVenues(OwnerType ownerType, VenueType venueType,
+                                               Long sportId, String name, Long ownerId, Pageable pageable) {
+        Page<Venue> page = venueRepository.findByFilters(ownerType, venueType, sportId, name, ownerId, pageable);
         return page.map(venue -> {
             long cameraCount = venueCameraRepository.countByIdVenueId(venue.getId());
             return VenueListResponse.from(venue, cameraCount);

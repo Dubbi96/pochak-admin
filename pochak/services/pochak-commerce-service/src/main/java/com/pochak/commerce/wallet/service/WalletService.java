@@ -25,11 +25,13 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final WalletLedgerRepository walletLedgerRepository;
 
+    @Transactional
     public WalletResponse getWallet(Long userId) {
         Wallet wallet = createWalletIfNotExists(userId);
         return WalletResponse.from(wallet);
     }
 
+    @Transactional
     public Page<WalletHistoryResponse> getWalletHistory(Long userId, LedgerType ledgerType,
                                                          LocalDateTime dateFrom, LocalDateTime dateTo,
                                                          Pageable pageable) {
@@ -38,6 +40,7 @@ public class WalletService {
                 .map(WalletHistoryResponse::from);
     }
 
+    @Transactional
     public Page<WalletHistoryResponse> getWalletHistory(Long userId, Pageable pageable) {
         Wallet wallet = createWalletIfNotExists(userId);
         return walletLedgerRepository.findByWalletIdOrderByCreatedAtDesc(wallet.getId(), pageable)

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MoreHorizontal, Play } from 'lucide-react';
 
@@ -18,15 +19,18 @@ export default function RecommendedVideoItem({
   thumbnailUrl?: string;
   linkTo: string;
 }) {
+  const [imgError, setImgError] = useState(false);
+
   const content = (
     <div className="flex gap-3 group cursor-pointer">
       {/* Thumbnail */}
       <div className="w-[120px] flex-shrink-0 relative">
-        {thumbnailUrl ? (
+        {thumbnailUrl && !imgError ? (
           <img
             src={thumbnailUrl}
             alt=""
             className="w-full aspect-video rounded object-cover"
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="w-full aspect-video rounded bg-[#262626] flex items-center justify-center">

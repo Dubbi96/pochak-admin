@@ -21,13 +21,17 @@ public interface VenueRepository extends JpaRepository<Venue, Long> {
             "AND (CAST(:ownerType AS string) IS NULL OR v.ownerType = :ownerType) " +
             "AND (CAST(:venueType AS string) IS NULL OR v.venueType = :venueType) " +
             "AND (CAST(:sportId AS long) IS NULL OR v.sportId = :sportId) " +
-            "AND (CAST(:name AS string) IS NULL OR LOWER(CAST(v.name AS string)) LIKE LOWER(CAST(CONCAT('%', :name, '%') AS string)))")
+            "AND (CAST(:name AS string) IS NULL OR LOWER(CAST(v.name AS string)) LIKE LOWER(CAST(CONCAT('%', :name, '%') AS string))) " +
+            "AND (CAST(:ownerId AS long) IS NULL OR v.ownerId = :ownerId)")
     Page<Venue> findByFilters(
             @Param("ownerType") OwnerType ownerType,
             @Param("venueType") VenueType venueType,
             @Param("sportId") Long sportId,
             @Param("name") String name,
+            @Param("ownerId") Long ownerId,
             Pageable pageable);
+
+    List<Venue> findByOwnerIdAndIsActiveTrue(Long ownerId);
 
     @Query("SELECT v FROM Venue v WHERE v.isActive = true" +
             " AND (CAST(:keyword AS string) IS NULL OR LOWER(CAST(v.name AS string)) LIKE LOWER(CAST(CONCAT('%', :keyword, '%') AS string)))" +

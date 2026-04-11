@@ -1,0 +1,46 @@
+{
+  "version": "1.0.0",
+  "detector": "pochak-ai-highlight",
+  "highlights": [
+    {
+      "timestamp": 15.0,
+      "duration": 5.0,
+      "event_type": "SPIKE_ACE",
+      "confidence": 0.933,
+      "description": "스파이크 에이스!",
+      "sport": "volleyball"
+    },
+    {
+      "timestamp": 45.0,
+      "duration": 5.0,
+      "event_type": "SPIKE_ACE",
+      "confidence": 0.935,
+      "description": "스파이크 에이스!",
+      "sport": "volleyball"
+    },
+    {
+      "timestamp": 75.0,
+      "duration": 5.0,
+      "event_type": "SERVICE_ACE",
+      "confidence": 0.968,
+      "description": "서비스 에이스!",
+      "sport": "volleyball"
+    },
+    {
+      "timestamp": 120.0,
+      "duration": 5.0,
+      "event_type": "SPIKE_ACE",
+      "confidence": 0.943,
+      "description": "스파이크 에이스!",
+      "sport": "volleyball"
+    },
+    {
+      "timestamp": 165.0,
+      "duration": 5.0,
+      "event_type": "SPIKE_ACE",
+      "confidence": 0.99,
+      "description": "스파이크 에이스!",
+      "sport": "volleyball"
+    }
+  ]
+}

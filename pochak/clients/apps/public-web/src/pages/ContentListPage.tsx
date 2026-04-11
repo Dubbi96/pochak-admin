@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ContentCardItem from '@/components/ContentCardItem';
-import { getAllContents, fetchContentList } from '@/services/webApi';
+import { fetchContentList } from '@/services/webApi';
 import type { ContentType, SportType, ContentCard } from '@/services/webApi';
 
 type SortType = '최신순' | '인기순';
@@ -22,14 +22,19 @@ export default function ContentListPage() {
   const [selectedSport, setSelectedSport] = useState<SportType>('전체');
   const [sortBy, setSortBy] = useState<SortType>('최신순');
   const [page, setPage] = useState(1);
-  const [contents, setContents] = useState<ContentCard[]>(() => getAllContents());
+  const [contents, setContents] = useState<ContentCard[]>([]);
+  const [contentsError, setContentsError] = useState(false);
 
   // Fetch from API when filters change
   useEffect(() => {
     const type = selectedType === '전체' ? undefined : selectedType;
     const sport = selectedSport === '전체' ? undefined : selectedSport;
     const sort = sortBy === '최신순' ? 'latest' : 'popular';
-    fetchContentList(type, sport, sort, page).then(setContents).catch(() => {});
+    setContentsError(false);
+    fetchContentList(type, sport, sort, page).then((data) => {
+      if (data) setContents(data);
+      else setContentsError(true);
+    }).catch(() => { setContentsError(true); });
   }, [selectedType, selectedSport, sortBy, page]);
 
   const filtered = useMemo(() => {
@@ -118,7 +123,11 @@ export default function ContentListPage() {
       </p>
 
       {/* Grid — left-aligned, no mx-auto or max-w centering */}
-      {paged.length === 0 ? (
+      {contentsError ? (
+        <div className="flex flex-col items-center justify-center py-20 text-[#A6A6A6]">
+          <p className="text-sm">데이터를 불러올 수 없습니다</p>
+        </div>
+      ) : paged.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-[#A6A6A6]">
           <p className="text-sm">조건에 맞는 콘텐츠가 없습니다.</p>
         </div>

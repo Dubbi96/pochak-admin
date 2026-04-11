@@ -1,25 +1,17 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
-import { post } from '@/lib/api'
-
-interface LoginResponse {
-  accessToken: string
-  refreshToken: string
-  partner: { id: string; name: string; email: string }
-}
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const { setAuth, isAuthenticated } = useAuthStore()
+  const { login, isAuthenticated } = useAuthStore()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   if (isAuthenticated()) {
-    navigate('/dashboard', { replace: true })
-    return null
+    return <Navigate to="/dashboard" replace />
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,13 +19,17 @@ export default function LoginPage() {
     setError(null)
     setLoading(true)
 
-    const result = await post<LoginResponse>('/api/v1/auth/partner/login', { email, password })
+    const result = await login(email, password)
 
-    if (result) {
-      setAuth(result.accessToken, result.refreshToken, result.partner)
+    if (result.ok) {
       navigate('/dashboard')
     } else {
-      setError('이메일 또는 비밀번호가 올바르지 않습니다.')
+      const messages: Record<string, string> = {
+        invalid_credentials: '이메일 또는 비밀번호가 올바르지 않습니다.',
+        network_error: '네트워크 오류가 발생했습니다. 연결 상태를 확인해 주세요.',
+        server_error: '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+      }
+      setError(messages[result.errorCode] ?? '로그인에 실패했습니다.')
     }
     setLoading(false)
   }

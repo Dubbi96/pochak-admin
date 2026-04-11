@@ -110,7 +110,7 @@ function useAuth() {
 const serviceTabs = [
   { label: "TV", path: "/home", enabled: true },
   { label: "시티", path: "/city", enabled: true },
-  { label: "클럽", path: "/club", enabled: false },
+  { label: "클럽", path: "/club", enabled: true },
   { label: "커뮤니티", path: "/community", enabled: true },
 ];
 
@@ -241,21 +241,21 @@ export default function Header() {
         </div>
 
         {/* Right: icons + avatar */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-5">
           <Link to="/search" className="md:hidden text-[#A6A6A6] hover:text-white">
-            <Search className="h-5 w-5" />
+            <Search className="h-6 w-6" />
           </Link>
 
           <button className="hidden md:block text-[#A6A6A6] hover:text-white" aria-label="TV" onClick={() => navigate('/home')}>
-            <Tv className="h-5 w-5" />
+            <Tv className="h-6 w-6" />
           </button>
           <button className="hidden md:block text-[#A6A6A6] hover:text-white" aria-label="촬영" onClick={() => navigate('/contents')}>
-            <Video className="h-5 w-5" />
+            <Video className="h-6 w-6" />
           </button>
 
           {/* Notification bell */}
           <Link to="/notifications" className="hidden md:block relative text-[#A6A6A6] hover:text-white" aria-label="알림">
-            <Bell className="h-5 w-5" />
+            <Bell className="h-6 w-6" />
             {unreadCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-[#00CC33] text-[10px] font-bold text-white leading-none">
                 {unreadCount > 99 ? '99+' : unreadCount}

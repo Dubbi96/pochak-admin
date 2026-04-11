@@ -24,9 +24,28 @@ public class RouteConfig {
     @Value("${services.admin-url:http://localhost:8085}")
     private String adminUrl;
 
+    @Value("${services.web-bff-url:http://localhost:9080}")
+    private String webBffUrl;
+
+    @Value("${services.bo-bff-url:http://localhost:9081}")
+    private String boBffUrl;
+
+    @Value("${services.partner-bff-url:http://localhost:9091}")
+    private String partnerBffUrl;
+
     @Bean
     public RouteLocator pochakRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
+                // 0. partner-bff routes (/api/v1/partners/**, /api/v1/partner/** → partner-bff, no strip)
+                .route("partner-bff-service", r -> r
+                        .path("/api/v1/partners/**",
+                              "/api/v1/partner/**")
+                        .uri(partnerBffUrl))
+                // 0a. web-bff routes (FIRST - /api/v1/web/** → web-bff, stripPrefix(3))
+                .route("web-bff-service", r -> r
+                        .path("/api/v1/web/**")
+                        .filters(f -> f.stripPrefix(3))
+                        .uri(webBffUrl))
                 // 1. content-user-routes (FIRST - resolves ISSUE-004 /users/** path conflict)
                 .route("content-user-routes", r -> r
                         .path("/api/v1/users/me/watch-history/**",
@@ -47,7 +66,10 @@ public class RouteConfig {
                               "/api/v1/cameras/**",
                               "/api/v1/reservations/**",
                               "/api/v1/streaming/ingest/**",
-                              "/api/v1/studio/**")
+                              "/api/v1/studio/**",
+                              "/api/v1/recording-schedules/**",
+                              "/api/v1/recording-sessions/**",
+                              "/api/v1/recording-notifications/**")
                         .filters(f -> f.stripPrefix(2))
                         .uri(operationUrl))
                 // 4. content-service (all content routes including consumer-facing streaming)
@@ -72,6 +94,12 @@ public class RouteConfig {
                               "/api/v1/communities/**")
                         .filters(f -> f.stripPrefix(2))
                         .uri(contentUrl))
+                // 5a. commerce wallets alias (/api/v1/wallets/** → /wallet/** on commerce)
+                .route("commerce-wallets-alias", r -> r
+                        .path("/api/v1/wallets/**")
+                        .filters(f -> f.rewritePath("/api/v1/wallets/(?<segment>.*)", "/wallet/${segment}")
+                                       .rewritePath("/api/v1/wallets", "/wallet"))
+                        .uri(commerceUrl))
                 // 5. commerce-service
                 .route("commerce-service", r -> r
                         .path("/api/v1/subscriptions/**",
@@ -84,9 +112,15 @@ public class RouteConfig {
                               "/api/v1/coupons/**")
                         .filters(f -> f.stripPrefix(2))
                         .uri(commerceUrl))
-                // 6. admin-service (NO stripPrefix)
+                // 6. admin-service (NO stripPrefix - direct /admin/** paths)
                 .route("admin-service", r -> r
                         .path("/admin/**")
+                        .uri(adminUrl))
+                // 6a. admin-api-v1: /api/v1/admin/** → admin (/admin/api/v1/**)
+                // Note: /api/v1/admin/members/** is handled by identity-service above
+                .route("admin-api-v1-service", r -> r
+                        .path("/api/v1/admin/**")
+                        .filters(f -> f.rewritePath("/api/v1/admin/(?<segment>.*)", "/admin/api/v1/${segment}"))
                         .uri(adminUrl))
                 .build();
     }

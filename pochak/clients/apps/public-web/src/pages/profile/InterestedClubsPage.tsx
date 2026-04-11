@@ -1,18 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Bell, BellOff } from 'lucide-react';
-import { pochakChannels } from '@/services/webApi';
-
-const interestedClubs = pochakChannels.slice(2, 7);
+import { fetchJoinedChannels } from '@/services/webApi';
+import type { PochakChannel } from '@/services/webApi';
 
 export default function InterestedClubsPage() {
-  const [notifications, setNotifications] = useState<Record<string, boolean>>(
-    () => Object.fromEntries(interestedClubs.map((c) => [c.id, true])),
-  );
-
+  const [clubs, setClubs] = useState<PochakChannel[]>([]);
+  const [notifications, setNotifications] = useState<Record<string, boolean>>({});
   const [removed, setRemoved] = useState<Set<string>>(new Set());
 
-  const visibleClubs = interestedClubs.filter((c) => !removed.has(c.id));
+  useEffect(() => {
+    fetchJoinedChannels().then((data) => {
+      if (data) {
+        setClubs(data.slice(0, 5));
+        setNotifications(Object.fromEntries(data.slice(0, 5).map((c) => [c.id, true])));
+      }
+    });
+  }, []);
+
+  const visibleClubs = clubs.filter((c) => !removed.has(c.id));
 
   const toggleNotification = (id: string) => {
     setNotifications((prev) => ({ ...prev, [id]: !prev[id] }));

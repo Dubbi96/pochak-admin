@@ -1,6 +1,47 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
+
+/* ── Sport Filter ────────────────────────────────────────────── */
+type Sport = '전체' | '축구' | '야구' | '테니스' | '풋살';
+
+const SPORTS: Sport[] = ['전체', '축구', '야구', '테니스', '풋살'];
+
+const SPORT_ICON: Record<Sport, string> = {
+  전체: '🏟',
+  축구: '⚽',
+  야구: '⚾',
+  테니스: '🎾',
+  풋살: '🥅',
+};
+
+function SportFilter({ selected, onChange }: { selected: Sport; onChange: (s: Sport) => void }) {
+  return (
+    <div className="flex items-center gap-2 py-4 overflow-x-auto scrollbar-none">
+      {SPORTS.map((sport) => (
+        <button
+          key={sport}
+          onClick={() => onChange(sport)}
+          className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            selected === sport
+              ? 'bg-[#00CC33] text-[#1A1A1A]'
+              : 'bg-[#262626] text-[#A6A6A6] hover:bg-[#333] hover:text-white'
+          }`}
+        >
+          {sport}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function SportBadge({ sport }: { sport: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-[#1A3320] text-[#00CC33] font-medium">
+      {SPORT_ICON[sport as Sport] ?? '🏅'} {sport}
+    </span>
+  );
+}
 import {
   BannerSkeleton,
   CompetitionCardSkeleton,
@@ -13,19 +54,16 @@ import SectionHeader from '@/components/SectionHeader';
 import HVideoCard from '@/components/HVideoCard';
 import VClipCard from '@/components/VClipCard';
 import {
-  banners as defaultBanners,
-  competitions as defaultCompetitions,
-  popularClips as defaultPopularClips,
-  pochakLiveContents,
-  pochakVodContents,
-  pochakChannels,
   fetchHomeBanners,
   fetchCompetitions,
   fetchPopularClips,
+  fetchLiveContents,
+  fetchVodContents,
+  fetchPopularClubs,
   type CompetitionCard as CompetitionCardType,
   type PopularClip as PopularClipType,
 } from '@/services/webApi';
-import type { PochakBanner } from '../../../../shared/types';
+import type { PochakBanner, PochakContent, PochakChannel } from '../../../../shared/types';
 
 /* ── More Button ─────────────────────────────────────────── */
 function MoreButton({ linkTo }: { linkTo?: string }) {
@@ -207,12 +245,17 @@ function CompetitionCards({ items }: { items: CompetitionCardType[] }) {
 }
 
 /* ── 3. 공식 라이브 (HVideoCard style) ─────────────────────── */
-function OfficialLiveSection() {
+function OfficialLiveSection({ sport, allItems }: { sport: Sport; allItems: PochakContent[] }) {
+  const items = sport === '전체' ? allItems : allItems.filter((c) => c.sport === sport);
+  if (items.length === 0) return null;
   return (
     <section className="py-8">
-      <SectionHeader prefix="공식" highlight="라이브" />
+      <div className="flex items-center gap-2 mb-1">
+        <SectionHeader prefix="공식" highlight="라이브" />
+        {sport !== '전체' && <SportBadge sport={sport} />}
+      </div>
       <HScrollRow scrollAmount={300}>
-        {pochakLiveContents.map((c) => {
+        {items.map((c) => {
           const isLive = c.status === 'LIVE';
           const d = new Date(c.date);
           const dateBadgeText = isLive
@@ -224,7 +267,7 @@ function OfficialLiveSection() {
               key={c.id}
               title={`${c.homeTeam.name} vs ${c.awayTeam.name}`}
               sub={`${c.competition} | ${c.sport}`}
-              tags={c.tags.slice(0, 4)}
+              tags={[c.sport, ...c.tags.filter((t) => t !== c.sport)].slice(0, 4)}
               live={isLive}
               duration={durationText}
               dateBadge={dateBadgeText}
@@ -257,17 +300,22 @@ function PopularPochakSection({ items }: { items: PopularClipType[] }) {
 }
 
 /* ── 5. 최근 영상 (가로형) ────────────────────────────────── */
-function LatestVideosSection() {
+function LatestVideosSection({ sport, allItems }: { sport: Sport; allItems: PochakContent[] }) {
+  const items = sport === '전체' ? allItems : allItems.filter((v) => v.sport === sport);
+  if (items.length === 0) return null;
   return (
     <section className="py-8">
-      <SectionHeader prefix="최근" highlight="영상" />
+      <div className="flex items-center gap-2 mb-1">
+        <SectionHeader prefix="최근" highlight="영상" />
+        {sport !== '전체' && <SportBadge sport={sport} />}
+      </div>
       <HScrollRow scrollAmount={300}>
-        {pochakVodContents.map((v) => (
+        {items.map((v) => (
           <HVideoCard
             key={v.id}
             title={v.title}
             sub={`${v.competition} · ${v.date.slice(0, 10)}`}
-            tags={v.tags.slice(0, 3)}
+            tags={[v.sport, ...v.tags.filter((t) => t !== v.sport)].slice(0, 3)}
             duration={v.duration ? `${Math.floor(v.duration / 60)}:${String(v.duration % 60).padStart(2, '0')}` : undefined}
             thumbnailUrl={v.thumbnailUrl}
             linkTo={`/contents/vod/${v.id}`}
@@ -280,7 +328,7 @@ function LatestVideosSection() {
 }
 
 /* ── 6. 인기 팀/클럽 ────────────────────────────────────── */
-function BestClubSection() {
+function BestClubSection({ clubs }: { clubs: PochakChannel[] }) {
   // id for scroll-to from sidebar "인기팀 +"
   const [followedClubs, setFollowedClubs] = useState<Set<string>>(new Set());
 
@@ -296,16 +344,18 @@ function BestClubSection() {
     });
   };
 
+  if (clubs.length === 0) return null;
+
   return (
     <section className="py-8">
-      <SectionHeader prefix="인기" highlight="팀/클럽" />
+      <SectionHeader prefix="인기" highlight="클럽" />
       <HScrollRow scrollAmount={280}>
-        {pochakChannels.map((club) => {
+        {clubs.map((club) => {
           const isFollowed = followedClubs.has(club.id);
           return (
             <div
               key={club.id}
-              className="flex-shrink-0 w-[130px] flex flex-col items-center gap-2.5 py-4 cursor-pointer"
+              className="flex-shrink-0 w-[130px] flex flex-col items-center gap-2.5 py-4 px-2 cursor-pointer border border-[#2D2D2D] rounded-xl"
             >
               <div
                 className="w-16 h-16 rounded-full flex items-center justify-center text-xs font-bold text-white border-2 border-[#4D4D4D]"
@@ -337,16 +387,21 @@ function BestClubSection() {
 }
 
 /* ── 7. 팀/클럽 라이브 (가로형) ────────────────────────────── */
-function ClubLiveSection() {
+function ClubLiveSection({ sport, allItems }: { sport: Sport; allItems: PochakContent[] }) {
+  const items = sport === '전체' ? allItems : allItems.filter((c) => c.sport === sport);
+  if (items.length === 0) return null;
   return (
     <section className="py-8">
-      <SectionHeader prefix="팀/클럽" highlight="라이브" />
+      <div className="flex items-center gap-2 mb-1">
+        <SectionHeader prefix="클럽" highlight="라이브" />
+        {sport !== '전체' && <SportBadge sport={sport} />}
+      </div>
       <HScrollRow scrollAmount={300}>
-        {pochakLiveContents.map((c) => (
+        {items.map((c) => (
           <HVideoCard
             key={c.id}
             title={c.title}
-            sub={c.homeTeam.name}
+            sub={`${c.homeTeam.name} · ${c.sport}`}
             live={c.status === 'LIVE'}
             duration={c.status === 'LIVE' ? undefined : c.date.slice(5, 10).replace('-', '월 ') + '일'}
             thumbnailUrl={c.thumbnailUrl}
@@ -360,16 +415,21 @@ function ClubLiveSection() {
 }
 
 /* ── 8. 팀/클럽 클립 (가로형) ──────────────────────────── */
-function ClubLatestSection() {
+function ClubLatestSection({ sport, allItems }: { sport: Sport; allItems: PochakContent[] }) {
+  const items = sport === '전체' ? allItems : allItems.filter((v) => v.sport === sport);
+  if (items.length === 0) return null;
   return (
     <section className="py-8">
-      <SectionHeader prefix="팀/클럽" highlight="클립" />
+      <div className="flex items-center gap-2 mb-1">
+        <SectionHeader prefix="클럽" highlight="클립" />
+        {sport !== '전체' && <SportBadge sport={sport} />}
+      </div>
       <HScrollRow scrollAmount={300}>
-        {pochakVodContents.map((v) => (
+        {items.map((v) => (
           <HVideoCard
             key={v.id}
             title={v.title}
-            sub={`${v.homeTeam.name} · ${v.date.slice(5, 10).replace('-', '월 ')}일`}
+            sub={`${v.homeTeam.name} · ${v.sport} · ${v.date.slice(5, 10).replace('-', '월 ')}일`}
             duration={v.duration ? `${Math.floor(v.duration / 3600)}:${String(Math.floor((v.duration % 3600) / 60)).padStart(2, '0')}:${String(v.duration % 60).padStart(2, '0')}` : undefined}
             thumbnailUrl={v.thumbnailUrl}
             linkTo={`/contents/vod/${v.id}`}
@@ -382,7 +442,8 @@ function ClubLatestSection() {
 }
 
 /* ── 9. 대회별 영상 섹션 (가로형, 반복) ──────────────────── */
-function CompetitionVideosSection({ title }: { title: string }) {
+function CompetitionVideosSection({ title, items }: { title: string; items: PochakContent[] }) {
+  if (items.length === 0) return null;
   return (
     <section className="py-8">
       <div className="flex items-center justify-between mb-4">
@@ -396,7 +457,7 @@ function CompetitionVideosSection({ title }: { title: string }) {
         </div>
       </div>
       <HScrollRow scrollAmount={300}>
-        {pochakLiveContents.slice(0, 6).map((c, i) => (
+        {items.slice(0, 6).map((c, i) => (
           <HVideoCard
             key={c.id}
             title={c.title}
@@ -416,18 +477,40 @@ function CompetitionVideosSection({ title }: { title: string }) {
 
 /* ── Home Page ───────────────────────────────────────────── */
 export default function HomePage() {
-  const [bannerItems, setBannerItems] = useState<PochakBanner[]>(defaultBanners);
-  const [competitionItems, setCompetitionItems] = useState<CompetitionCardType[]>(defaultCompetitions);
-  const [clipItems, setClipItems] = useState<PopularClipType[]>(defaultPopularClips);
+  const [bannerItems, setBannerItems] = useState<PochakBanner[]>([]);
+  const [competitionItems, setCompetitionItems] = useState<CompetitionCardType[]>([]);
+  const [clipItems, setClipItems] = useState<PopularClipType[]>([]);
+  const [liveContents, setLiveContents] = useState<PochakContent[]>([]);
+  const [vodContents, setVodContents] = useState<PochakContent[]>([]);
+  const [clubItems, setClubItems] = useState<PochakChannel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState(false);
+  const [selectedSport, setSelectedSport] = useState<Sport>('전체');
 
   useEffect(() => {
     Promise.all([
-      fetchHomeBanners().then(setBannerItems).catch(() => {}),
-      fetchCompetitions().then(setCompetitionItems).catch(() => {}),
-      fetchPopularClips().then(setClipItems).catch(() => {}),
+      fetchHomeBanners().then((data) => { if (data) setBannerItems(data); else setApiError(true); }),
+      fetchCompetitions().then((data) => { if (data) setCompetitionItems(data); else setApiError(true); }),
+      fetchPopularClips().then((data) => { if (data) setClipItems(data); else setApiError(true); }),
+      fetchLiveContents().then((data) => { if (data) setLiveContents(data); }),
+      fetchVodContents().then((data) => { if (data) setVodContents(data); }),
+      fetchPopularClubs().then((data) => { if (data) setClubItems(data); }),
     ]).finally(() => setLoading(false));
   }, []);
+
+  if (apiError && !loading && bannerItems.length === 0 && competitionItems.length === 0 && clipItems.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 text-[#A6A6A6]">
+        <p className="text-base">데이터를 불러올 수 없습니다</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 rounded-lg border border-border px-6 py-2 text-sm hover:border-accent hover:text-white transition-colors"
+        >
+          다시 시도
+        </button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -466,16 +549,17 @@ export default function HomePage() {
     <div className="px-5 py-4">
       <BannerCarousel items={bannerItems} />
       <CompetitionCards items={competitionItems} />
-      <OfficialLiveSection />
+      <SportFilter selected={selectedSport} onChange={setSelectedSport} />
+      <OfficialLiveSection sport={selectedSport} allItems={liveContents} />
       <PopularPochakSection items={clipItems} />
-      <LatestVideosSection />
-      <div id="best-club-section"><BestClubSection /></div>
-      <ClubLiveSection />
-      <ClubLatestSection />
-      <CompetitionVideosSection title="2025화랑대기 유소년축구" />
-      <CompetitionVideosSection title="제5회 전국 리틀야구" />
-      <CompetitionVideosSection title="2025 전국 대학핸드볼 선수권" />
-      <CompetitionVideosSection title="제4회 춘계 꿈나무 야구 대회" />
+      <LatestVideosSection sport={selectedSport} allItems={vodContents} />
+      <div id="best-club-section"><BestClubSection clubs={clubItems} /></div>
+      <ClubLiveSection sport={selectedSport} allItems={liveContents} />
+      <ClubLatestSection sport={selectedSport} allItems={vodContents} />
+      <CompetitionVideosSection title="2025화랑대기 유소년축구" items={liveContents} />
+      <CompetitionVideosSection title="제5회 전국 리틀야구" items={liveContents} />
+      <CompetitionVideosSection title="2025 전국 대학핸드볼 선수권" items={liveContents} />
+      <CompetitionVideosSection title="제4회 춘계 꿈나무 야구 대회" items={liveContents} />
       <div className="h-16" />
     </div>
   );

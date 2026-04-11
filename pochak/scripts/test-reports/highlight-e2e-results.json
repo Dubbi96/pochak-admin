@@ -1,0 +1,510 @@
+{
+  "config": {
+    "configFile": "/Users/gangjong-won/Dubbi/pochak/scripts/playwright-highlight.config.js",
+    "rootDir": "/Users/gangjong-won/Dubbi/pochak/scripts",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/gangjong-won/Dubbi/pochak/scripts",
+        "testIgnore": [],
+        "testMatch": [
+          "**/highlight-e2e.spec.js"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/Users/gangjong-won/Dubbi/pochak/scripts/test-reports/highlight-e2e-results.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 4,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "highlight-e2e.spec.js",
+      "file": "highlight-e2e.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Web 하이라이트 기능 (localhost:3300)",
+          "file": "highlight-e2e.spec.js",
+          "line": 7,
+          "column": 6,
+          "specs": [
+            {
+              "title": "영상 플레이어에서 하이라이트 감지 버튼 클릭",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 447,
+                      "error": {
+                        "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 하이라이트 감지 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 하이라이트 감지 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js:34:79",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                          "column": 79,
+                          "line": 34
+                        },
+                        "snippet": "  32 |     const available = await checkWebAvailable(page);\n  33 |     if (!available) {\n> 34 |       expect(available, 'Web 서비스(localhost:3300)가 실행되지 않음 - 하이라이트 감지 테스트 불가').toBe(true);\n     |                                                                               ^\n  35 |       return;\n  36 |     }\n  37 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                            "column": 79,
+                            "line": 34
+                          },
+                          "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 하이라이트 감지 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  32 |     const available = await checkWebAvailable(page);\n  33 |     if (!available) {\n> 34 |       expect(available, 'Web 서비스(localhost:3300)가 실행되지 않음 - 하이라이트 감지 테스트 불가').toBe(true);\n     |                                                                               ^\n  35 |       return;\n  36 |     }\n  37 |\n    at /Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js:34:79"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:16:33.571Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/highlight-e2e-Web-하이라이트-기능-2a8bc-00-영상-플레이어에서-하이라이트-감지-버튼-클릭-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/highlight-e2e-Web-하이라이트-기능-2a8bc-00-영상-플레이어에서-하이라이트-감지-버튼-클릭-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                        "column": 79,
+                        "line": 34
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "9eebd4698752d9b8d51f-f9e691233190a7119d82",
+              "file": "highlight-e2e.spec.js",
+              "line": 31,
+              "column": 3
+            },
+            {
+              "title": "API 호출 → mock 하이라이트 생성 확인",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 240,
+                      "error": {
+                        "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 하이라이트 API 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 하이라이트 API 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js:73:80",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                          "column": 80,
+                          "line": 73
+                        },
+                        "snippet": "  71 |     const available = await checkWebAvailable(page);\n  72 |     if (!available) {\n> 73 |       expect(available, 'Web 서비스(localhost:3300)가 실행되지 않음 - 하이라이트 API 테스트 불가').toBe(true);\n     |                                                                                ^\n  74 |       return;\n  75 |     }\n  76 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                            "column": 80,
+                            "line": 73
+                          },
+                          "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 하이라이트 API 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  71 |     const available = await checkWebAvailable(page);\n  72 |     if (!available) {\n> 73 |       expect(available, 'Web 서비스(localhost:3300)가 실행되지 않음 - 하이라이트 API 테스트 불가').toBe(true);\n     |                                                                                ^\n  74 |       return;\n  75 |     }\n  76 |\n    at /Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js:73:80"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:16:34.976Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/highlight-e2e-Web-하이라이트-기능-90cb0-0-API-호출-→-mock-하이라이트-생성-확인-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/highlight-e2e-Web-하이라이트-기능-90cb0-0-API-호출-→-mock-하이라이트-생성-확인-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                        "column": 80,
+                        "line": 73
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "9eebd4698752d9b8d51f-7da74a16d86c74dfab6b",
+              "file": "highlight-e2e.spec.js",
+              "line": 70,
+              "column": 3
+            },
+            {
+              "title": "시크바에 하이라이트 마커 표시 확인",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 210,
+                      "error": {
+                        "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 마커 표시 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 마커 표시 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js:109:76",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                          "column": 76,
+                          "line": 109
+                        },
+                        "snippet": "  107 |     const available = await checkWebAvailable(page);\n  108 |     if (!available) {\n> 109 |       expect(available, 'Web 서비스(localhost:3300)가 실행되지 않음 - 마커 표시 테스트 불가').toBe(true);\n      |                                                                            ^\n  110 |       return;\n  111 |     }\n  112 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                            "column": 76,
+                            "line": 109
+                          },
+                          "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 마커 표시 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  107 |     const available = await checkWebAvailable(page);\n  108 |     if (!available) {\n> 109 |       expect(available, 'Web 서비스(localhost:3300)가 실행되지 않음 - 마커 표시 테스트 불가').toBe(true);\n      |                                                                            ^\n  110 |       return;\n  111 |     }\n  112 |\n    at /Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js:109:76"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:16:36.009Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/highlight-e2e-Web-하이라이트-기능-77887-st-3300-시크바에-하이라이트-마커-표시-확인-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/highlight-e2e-Web-하이라이트-기능-77887-st-3300-시크바에-하이라이트-마커-표시-확인-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                        "column": 76,
+                        "line": 109
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "9eebd4698752d9b8d51f-16c5a965ded44fe22f25",
+              "file": "highlight-e2e.spec.js",
+              "line": 106,
+              "column": 3
+            },
+            {
+              "title": "마커 클릭 → 해당 시점 이동 확인",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 163,
+                      "error": {
+                        "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 마커 클릭 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 마커 클릭 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js:139:76",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                          "column": 76,
+                          "line": 139
+                        },
+                        "snippet": "  137 |     const available = await checkWebAvailable(page);\n  138 |     if (!available) {\n> 139 |       expect(available, 'Web 서비스(localhost:3300)가 실행되지 않음 - 마커 클릭 테스트 불가').toBe(true);\n      |                                                                            ^\n  140 |       return;\n  141 |     }\n  142 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                            "column": 76,
+                            "line": 139
+                          },
+                          "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 마커 클릭 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  137 |     const available = await checkWebAvailable(page);\n  138 |     if (!available) {\n> 139 |       expect(available, 'Web 서비스(localhost:3300)가 실행되지 않음 - 마커 클릭 테스트 불가').toBe(true);\n      |                                                                            ^\n  140 |       return;\n  141 |     }\n  142 |\n    at /Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js:139:76"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:16:36.989Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/highlight-e2e-Web-하이라이트-기능-a1587-st-3300-마커-클릭-→-해당-시점-이동-확인-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/highlight-e2e-Web-하이라이트-기능-a1587-st-3300-마커-클릭-→-해당-시점-이동-확인-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                        "column": 76,
+                        "line": 139
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "9eebd4698752d9b8d51f-208a038514dac0eb1c80",
+              "file": "highlight-e2e.spec.js",
+              "line": 136,
+              "column": 3
+            },
+            {
+              "title": "사이드패널 하이라이트 목록 표시 확인",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 155,
+                      "error": {
+                        "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 사이드패널 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 사이드패널 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js:172:76",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                          "column": 76,
+                          "line": 172
+                        },
+                        "snippet": "  170 |     const available = await checkWebAvailable(page);\n  171 |     if (!available) {\n> 172 |       expect(available, 'Web 서비스(localhost:3300)가 실행되지 않음 - 사이드패널 테스트 불가').toBe(true);\n      |                                                                            ^\n  173 |       return;\n  174 |     }\n  175 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                            "column": 76,
+                            "line": 172
+                          },
+                          "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 사이드패널 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  170 |     const available = await checkWebAvailable(page);\n  171 |     if (!available) {\n> 172 |       expect(available, 'Web 서비스(localhost:3300)가 실행되지 않음 - 사이드패널 테스트 불가').toBe(true);\n      |                                                                            ^\n  173 |       return;\n  174 |     }\n  175 |\n    at /Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js:172:76"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:16:37.799Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/highlight-e2e-Web-하이라이트-기능-72c49-t-3300-사이드패널-하이라이트-목록-표시-확인-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/highlight-e2e-Web-하이라이트-기능-72c49-t-3300-사이드패널-하이라이트-목록-표시-확인-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                        "column": 76,
+                        "line": 172
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "9eebd4698752d9b8d51f-61fc665895e5950e6b53",
+              "file": "highlight-e2e.spec.js",
+              "line": 169,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "BO 하이라이트 관리 (localhost:3000)",
+          "file": "highlight-e2e.spec.js",
+          "line": 200,
+          "column": 6,
+          "specs": [
+            {
+              "title": "BO 하이라이트 관리 페이지 접근 확인",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3418,
+                      "error": {
+                        "message": "Error: [BUG-002] BO 로그인 실패로 하이라이트 관리 페이지 접근 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: [BUG-002] BO 로그인 실패로 하이라이트 관리 페이지 접근 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js:227:72",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                          "column": 72,
+                          "line": 227
+                        },
+                        "snippet": "  225 |       const hasApiResponse = loginResp !== undefined;\n  226 |       expect.soft(hasApiResponse, '[BUG-002] BO 로그인 API가 호출되지 않음 — auth/login 응답 없음').toBe(true);\n> 227 |       expect.soft(loggedIn, '[BUG-002] BO 로그인 실패로 하이라이트 관리 페이지 접근 불가').toBe(true);\n      |                                                                        ^\n  228 |       return;\n  229 |     }\n  230 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                            "column": 72,
+                            "line": 227
+                          },
+                          "message": "Error: [BUG-002] BO 로그인 실패로 하이라이트 관리 페이지 접근 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  225 |       const hasApiResponse = loginResp !== undefined;\n  226 |       expect.soft(hasApiResponse, '[BUG-002] BO 로그인 API가 호출되지 않음 — auth/login 응답 없음').toBe(true);\n> 227 |       expect.soft(loggedIn, '[BUG-002] BO 로그인 실패로 하이라이트 관리 페이지 접근 불가').toBe(true);\n      |                                                                        ^\n  228 |       return;\n  229 |     }\n  230 |\n    at /Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js:227:72"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:16:38.573Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/highlight-e2e-BO-하이라이트-관리--90ab1--3000-BO-하이라이트-관리-페이지-접근-확인-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/highlight-e2e-BO-하이라이트-관리--90ab1--3000-BO-하이라이트-관리-페이지-접근-확인-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/highlight-e2e.spec.js",
+                        "column": 72,
+                        "line": 227
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "9eebd4698752d9b8d51f-27de90aaafb9ff271375",
+              "file": "highlight-e2e.spec.js",
+              "line": 201,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-04-09T04:16:32.862Z",
+    "duration": 9420.953,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 6,
+    "flaky": 0
+  }
+}

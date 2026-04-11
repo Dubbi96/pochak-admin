@@ -1,6 +1,6 @@
-// Mock data service for Pochak TV public web (Figma-aligned)
-// Types & mock data imported from the shared package; async fetch functions use
-// apiClient with mock fallback.
+// Data service for Pochak TV public web (Figma-aligned)
+// Types & mock data re-exported from the shared package for backward compatibility.
+// Async fetch functions call the gateway API; null is returned on failure.
 
 import { fetchApi } from './apiClient';
 import type { TimelineEvent, Chapter } from '@/components/WebVideoPlayer';
@@ -32,37 +32,8 @@ export type {
 // Re-export it under the same name so consumers see the full shape.
 export type { PochakBanner as BannerItem } from '../../../../shared/types';
 
-// ── Re-export mock data from shared (backward compatible) ──────────────────────
-export {
-  banners,
-  competitions,
-  liveMatches,
-  popularClips,
-  popularChannels,
-  adBanners,
-  liveContents,
-  highlightContents,
-  vodContents,
-  clipContents,
-  scheduleData,
-  trendingSearches,
-  getAllContents,
-  defaultPlayerData,
-  defaultProfile,
-  defaultWatchHistory,
-  pochakChannels,
-  pochakCompetitions,
-  pochakLiveContents,
-  pochakVodContents,
-  pochakClips,
-  pochakMatches,
-  pochakPosts,
-  pochakSubscriptionProducts,
-  pochakSportProducts,
-  pochakCompetitionProducts,
-} from '../../../../shared/mockData';
 
-// ── Internal imports for fetch-function fallbacks ──────────────────────────────
+// ── Type imports for fetch function signatures ─────────────────────────────────
 import type {
   ContentCard,
   CompetitionCard,
@@ -72,19 +43,9 @@ import type {
   WatchHistoryItem,
   PochakBanner,
   PochakMatch,
+  PochakChannel,
+  PochakContent,
 } from '../../../../shared/types';
-
-import {
-  banners as _banners,
-  liveMatches as _liveMatches,
-  competitions as _competitions,
-  popularClips as _popularClips,
-  scheduleData as _scheduleData,
-  getAllContents as _getAllContents,
-  defaultPlayerData as _defaultPlayerData,
-  defaultProfile as _defaultProfile,
-  defaultWatchHistory as _defaultWatchHistory,
-} from '../../../../shared/mockData';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -111,63 +72,92 @@ export function getStatusBadgeClass(status: string): string {
   }
 }
 
-// ── Async API-first fetch functions ───────────────────────────────────────────
-// These try the real gateway API first, falling back to mock data above.
-// TODO(Phase 4B): remove mock fallback once gateway APIs are stable.
+// ── Async API fetch functions ─────────────────────────────────────────────────
+// These call the real gateway API and return null on failure.
 
-/** Fetch home banners from API, falling back to mock banners */
-export async function fetchHomeBanners(): Promise<PochakBanner[]> {
-  return fetchApi('/home/banners', _banners);
+/** Fetch home banners from API */
+export async function fetchHomeBanners(): Promise<PochakBanner[] | null> {
+  return fetchApi('/home/banners');
 }
 
-/** Fetch live matches from API, falling back to mock liveMatches */
-export async function fetchLiveMatches(): Promise<PochakMatch[]> {
-  return fetchApi('/contents/live?status=BROADCASTING', _liveMatches);
+/** Fetch live matches from API */
+export async function fetchLiveMatches(): Promise<PochakMatch[] | null> {
+  return fetchApi('/contents/live?status=BROADCASTING');
 }
 
-/** Fetch competitions from API, falling back to mock competitions */
-export async function fetchCompetitions(): Promise<CompetitionCard[]> {
-  return fetchApi('/home/competitions', _competitions);
+/** Fetch competitions from API */
+export async function fetchCompetitions(): Promise<CompetitionCard[] | null> {
+  return fetchApi('/home/competitions');
 }
 
-/** Fetch popular clips from API, falling back to mock popularClips */
-export async function fetchPopularClips(): Promise<PopularClip[]> {
-  return fetchApi('/home/clips/popular', _popularClips);
+/** Fetch popular clips from API */
+export async function fetchPopularClips(): Promise<PopularClip[] | null> {
+  return fetchApi('/home/clips/popular');
 }
 
 /** Fetch schedule matches for a given date and optional sport filter */
-export async function fetchScheduleMatches(date: string, sport?: string): Promise<PochakMatch[]> {
-  return fetchApi(`/contents/schedule?date=${date}${sport ? `&sport=${sport}` : ''}`, _scheduleData);
+export async function fetchScheduleMatches(date: string, sport?: string): Promise<PochakMatch[] | null> {
+  return fetchApi(`/contents/schedule?date=${date}${sport ? `&sport=${sport}` : ''}`);
 }
 
 /** Fetch search results for a query string */
-export async function fetchSearchResults(query: string): Promise<ContentCard[]> {
-  return fetchApi(`/contents/search?q=${encodeURIComponent(query)}`, _getAllContents());
+export async function fetchSearchResults(query: string): Promise<ContentCard[] | null> {
+  return fetchApi(`/contents/search?q=${encodeURIComponent(query)}`);
 }
 
 /** Fetch content list with optional filters */
-export async function fetchContentList(type?: string, sport?: string, sort?: string, page?: number): Promise<ContentCard[]> {
+export async function fetchContentList(type?: string, sport?: string, sort?: string, page?: number): Promise<ContentCard[] | null> {
   const params = new URLSearchParams();
   if (type) params.set('type', type);
   if (sport) params.set('sport', sport);
   if (sort) params.set('sort', sort);
   if (page) params.set('page', String(page));
-  return fetchApi(`/contents?${params}`, _getAllContents());
+  return fetchApi(`/contents?${params}`);
 }
 
 /** Fetch player data for a specific content */
-export async function fetchPlayerData(type: string, id: string): Promise<PlayerData> {
-  return fetchApi(`/contents/${type}/${id}/player`, _defaultPlayerData);
+export async function fetchPlayerData(type: string, id: string): Promise<PlayerData | null> {
+  return fetchApi(`/contents/${type}/${id}/player`);
 }
 
 /** Fetch user profile */
-export async function fetchMyProfile(): Promise<UserProfile> {
-  return fetchApi('/users/me', _defaultProfile);
+export async function fetchMyProfile(): Promise<UserProfile | null> {
+  return fetchApi('/users/me');
 }
 
 /** Fetch user watch history */
-export async function fetchMyWatchHistory(): Promise<WatchHistoryItem[]> {
-  return fetchApi('/users/me/watch-history', _defaultWatchHistory);
+export async function fetchMyWatchHistory(): Promise<WatchHistoryItem[] | null> {
+  return fetchApi('/users/me/watch-history');
+}
+
+/** Fetch channels the current user has joined */
+export async function fetchJoinedChannels(): Promise<PochakChannel[] | null> {
+  return fetchApi('/users/me/channels');
+}
+
+/** Fetch popular channels */
+export async function fetchPopularChannels(): Promise<PochakChannel[] | null> {
+  return fetchApi('/channels/popular');
+}
+
+/** Fetch live contents (all sports) */
+export async function fetchLiveContents(): Promise<PochakContent[] | null> {
+  return fetchApi('/contents/live');
+}
+
+/** Fetch VOD contents (all sports) */
+export async function fetchVodContents(): Promise<PochakContent[] | null> {
+  return fetchApi('/contents/vod');
+}
+
+/** Fetch popular clubs */
+export async function fetchPopularClubs(): Promise<PochakChannel[] | null> {
+  return fetchApi('/clubs/popular');
+}
+
+/** Fetch trending search keywords */
+export async function fetchTrendingSearches(): Promise<string[] | null> {
+  return fetchApi('/home/trending-searches');
 }
 
 // ── Mock Timeline / Chapter Data ─────────────────────────────────────────────

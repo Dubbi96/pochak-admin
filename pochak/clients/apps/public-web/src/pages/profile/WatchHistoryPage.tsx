@@ -1,11 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import HVideoCard from '@/components/HVideoCard';
 import VClipCard from '@/components/VClipCard';
-import { pochakVodContents, pochakClips } from '@/services/webApi';
+import { fetchVodContents, fetchPopularClips } from '@/services/webApi';
+import type { PochakContent, PopularClip } from '@/services/webApi';
 import { SubTabChips, DotMenu, formatDuration } from './shared';
 
 export default function WatchHistoryPage() {
   const [sub, setSub] = useState<'video' | 'clip'>('video');
+  const [vodItems, setVodItems] = useState<PochakContent[]>([]);
+  const [clipItems, setClipItems] = useState<PopularClip[]>([]);
+
+  useEffect(() => {
+    fetchVodContents().then((data) => { if (data) setVodItems(data); });
+    fetchPopularClips().then((data) => { if (data) setClipItems(data); });
+  }, []);
 
   return (
     <div>
@@ -22,7 +30,7 @@ export default function WatchHistoryPage() {
 
       {sub === 'video' && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
-          {[...pochakVodContents, ...pochakVodContents].slice(0, 24).map((v, i) => (
+          {vodItems.slice(0, 24).map((v, i) => (
             <div key={`${v.id}-${i}`} className="relative">
               <HVideoCard
                 title={v.title}
@@ -43,11 +51,11 @@ export default function WatchHistoryPage() {
 
       {sub === 'clip' && (
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-          {[...pochakClips, ...pochakClips, ...pochakClips, ...pochakClips].slice(0, 32).map((clip, i) => (
+          {clipItems.slice(0, 32).map((clip, i) => (
             <div key={`${clip.id}-${i}`} className="relative">
               <VClipCard
                 title={clip.title}
-                viewCount={clip.viewCount}
+                thumbnailUrl={clip.thumbnail}
                 linkTo={`/clip/${clip.id}`}
                 className="w-full"
               />

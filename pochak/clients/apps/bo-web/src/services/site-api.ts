@@ -156,28 +156,28 @@ export async function getBanners(
   if (filters.status && filters.status !== "ALL") params.status = filters.status;
   if (filters.searchKeyword) params.searchKeyword = filters.searchKeyword;
 
-  return gatewayApi.get<PageResponse<Banner>>("/api/v1/admin/banners", params);
+  return gatewayApi.get<PageResponse<Banner>>("/admin/api/v1/site/banners", params);
 }
 
 export async function createBanner(data: BannerCreateRequest): Promise<Banner> {
-  return gatewayApi.post<Banner>("/api/v1/admin/banners", data);
+  return gatewayApi.post<Banner>("/admin/api/v1/site/banners", data);
 }
 
 export async function updateBanner(
   id: number,
   data: BannerCreateRequest
 ): Promise<Banner> {
-  return gatewayApi.put<Banner>(`/api/v1/admin/banners/${id}`, data);
+  return gatewayApi.put<Banner>(`/admin/api/v1/site/banners/${id}`, data);
 }
 
 export async function updateBannerOrders(
   orders: { id: number; order: number }[]
 ): Promise<void> {
-  await gatewayApi.put("/api/v1/admin/banners/order", { items: orders });
+  await gatewayApi.put("/admin/api/v1/site/banners/order", { items: orders });
 }
 
 export async function deleteBanner(id: number): Promise<void> {
-  await gatewayApi.delete(`/api/v1/admin/banners/${id}`);
+  await gatewayApi.delete(`/admin/api/v1/site/banners/${id}`);
 }
 
 // ── Notice APIs ────────────────────────────────────────────────────

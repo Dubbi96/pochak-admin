@@ -1,6 +1,9 @@
 package com.pochak.content.highlight.controller;
 
 import com.pochak.common.response.ApiResponse;
+import com.pochak.content.asset.entity.ClipAsset;
+import com.pochak.content.asset.repository.ClipAssetRepository;
+import com.pochak.content.highlight.dto.AiClipResponse;
 import com.pochak.content.highlight.dto.CreateHighlightRequest;
 import com.pochak.content.highlight.dto.HighlightResponse;
 import com.pochak.content.highlight.service.AutoClipGeneratorService;
@@ -20,6 +23,7 @@ public class HighlightController {
 
     private final HighlightService highlightService;
     private final AutoClipGeneratorService autoClipGeneratorService;
+    private final ClipAssetRepository clipAssetRepository;
 
     /**
      * List highlights for a content item, sorted by start time.
@@ -49,6 +53,27 @@ public class HighlightController {
                 "highlights", highlights,
                 "generatedClipIds", clipIds
         ));
+    }
+
+    /**
+     * List AI-generated clips for a content item, sorted by start time.
+     */
+    @GetMapping("/ai-clips")
+    public ApiResponse<List<AiClipResponse>> getAiClips(
+            @PathVariable("type") String type,
+            @PathVariable("id") Long id) {
+
+        ClipAsset.SourceType sourceType = "live".equalsIgnoreCase(type)
+                ? ClipAsset.SourceType.LIVE
+                : ClipAsset.SourceType.VOD;
+
+        List<AiClipResponse> clips = clipAssetRepository
+                .findBySourceTypeAndSourceId(sourceType, id)
+                .stream()
+                .map(AiClipResponse::from)
+                .toList();
+
+        return ApiResponse.success(clips);
     }
 
     /**

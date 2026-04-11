@@ -10,6 +10,7 @@ pochak:
     identity-url: ${SERVICES_IDENTITY_URL:http://localhost:8081}
     content-url: ${SERVICES_CONTENT_URL:http://localhost:8082}
     commerce-url: ${SERVICES_COMMERCE_URL:http://localhost:8083}
+    admin-url: ${SERVICES_ADMIN_URL:http://localhost:8085}
 
 management:
   endpoints:

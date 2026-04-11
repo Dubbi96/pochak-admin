@@ -1,7 +1,16 @@
-import axios from 'axios'
+import axios, { type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/stores/authStore'
 
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'http://localhost:8080'
+
+let _navigate: ((path: string) => void) | null = null
+export function setNavigate(nav: (path: string) => void) {
+  _navigate = nav
+}
+function navigateToLogin() {
+  if (_navigate) _navigate('/login')
+  else window.location.href = '/login'
+}
 
 export const api = axios.create({
   baseURL: GATEWAY_URL,
@@ -16,14 +25,68 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+type QueueEntry = { resolve: (token: string) => void; reject: (err: unknown) => void }
+let isRefreshing = false
+let failedQueue: QueueEntry[] = []
+
+function processQueue(error: unknown, token: string | null) {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (token) resolve(token)
+    else reject(error)
+  })
+  failedQueue = []
+}
+
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
-    if (error.response?.status === 401) {
-      useAuthStore.getState().logout()
-      window.location.href = '/login'
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
+
+    const isAuthEndpoint = originalRequest.url?.includes('/api/v1/auth/')
+    if (error.response?.status !== 401 || originalRequest._retry || isAuthEndpoint) {
+      return Promise.reject(error)
     }
-    return Promise.reject(error)
+
+    const { refreshToken, setAuth, logout } = useAuthStore.getState()
+
+    if (!refreshToken) {
+      logout()
+      navigateToLogin()
+      return Promise.reject(error)
+    }
+
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject })
+      }).then((token) => {
+        originalRequest.headers.Authorization = `Bearer ${token}`
+        return api(originalRequest)
+      })
+    }
+
+    originalRequest._retry = true
+    isRefreshing = true
+
+    try {
+      const res = await axios.post<{ data: { accessToken: string; refreshToken: string } }>(
+        `${GATEWAY_URL}/api/v1/auth/refresh`,
+        { refreshToken },
+        { headers: { 'Content-Type': 'application/json' } },
+      )
+      const { accessToken: newAccess, refreshToken: newRefresh } = res.data.data
+      const { partner } = useAuthStore.getState()
+      setAuth(newAccess, newRefresh, partner!)
+      processQueue(null, newAccess)
+      originalRequest.headers.Authorization = `Bearer ${newAccess}`
+      return api(originalRequest)
+    } catch (err) {
+      processQueue(err, null)
+      logout()
+      navigateToLogin()
+      return Promise.reject(err)
+    } finally {
+      isRefreshing = false
+    }
   },
 )
 
@@ -40,6 +103,16 @@ export async function get<T>(path: string, params?: Record<string, string>): Pro
 export async function post<T>(path: string, body?: unknown): Promise<T | null> {
   try {
     const res = await api.post<{ data: T }>(path, body)
+    const payload = res.data
+    return payload && typeof payload === 'object' && 'data' in payload ? payload.data : (res.data as unknown as T)
+  } catch {
+    return null
+  }
+}
+
+export async function put<T>(path: string, body?: unknown): Promise<T | null> {
+  try {
+    const res = await api.put<{ data: T }>(path, body)
     const payload = res.data
     return payload && typeof payload === 'object' && 'data' in payload ? payload.data : (res.data as unknown as T)
   } catch {

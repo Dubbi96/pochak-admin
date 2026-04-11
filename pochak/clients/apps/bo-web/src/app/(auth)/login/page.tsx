@@ -26,31 +26,29 @@ export default function LoginPage() {
 
     try {
       // Try real backend login first
-      const res = await fetch(`${GATEWAY_URL}/admin/api/v1/auth/login`, {
+      const res = await fetch(`${GATEWAY_URL}/api/v1/admin/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ loginId: username, password }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json();
+
+      if (res.ok && (data.success || data.data?.accessToken)) {
         const payload = data.data ?? data;
-        login(payload.token, {
-          id: payload.user?.id || "1",
-          name: payload.user?.name || username,
-          email: payload.user?.email || "",
-          role: payload.user?.role || "MASTER_BO",
+        login(payload.accessToken, {
+          id: String(payload.adminUserId || "1"),
+          name: payload.adminName || username,
+          email: "",
+          role: payload.roles?.[0] || "MASTER_BO",
         });
         router.push("/");
         return;
       }
 
-      // Non-OK response from backend (e.g. 401) — show error
-      if (res.status === 401) {
-        setError("아이디 또는 비밀번호가 올바르지 않습니다.");
-        setIsLoading(false);
-        return;
-      }
+      setError(data.message || "아이디 또는 비밀번호가 올바르지 않습니다.");
+      setIsLoading(false);
+      return;
     } catch {
       setError("서버에 연결할 수 없습니다. 네트워크를 확인해주세요.");
     }

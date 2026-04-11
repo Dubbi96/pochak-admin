@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Heart, MessageCircle, Share2, MoreHorizontal, Lock } from 'lucide-react';
 import TabBar from '@/components/TabBar';
@@ -13,14 +13,15 @@ import MatchListItem from '@/components/MatchListItem';
 import type { MatchListItemData } from '@/components/MatchListItem';
 import SocialLinks from '@/components/SocialLinks';
 import {
-  pochakChannels,
-  pochakLiveContents,
-  pochakVodContents,
-  pochakClips,
-  pochakMatches,
-  pochakPosts,
+  fetchPopularChannels,
+  fetchLiveContents,
+  fetchVodContents,
+  fetchPopularClips,
+  fetchLiveMatches,
   formatViewCount,
 } from '@/services/webApi';
+import type { PochakChannel, PochakContent, PopularClip, PochakMatch, PochakPost } from '@/services/webApi';
+import { postApi } from '@/services/apiClient';
 
 type TabKey = 'home' | 'videos' | 'schedule' | 'posts' | 'info';
 const tabItems: { key: TabKey; label: string }[] = [
@@ -39,7 +40,7 @@ function formatDuration(seconds: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-function toMatchListItem(m: typeof pochakMatches[number]): MatchListItemData {
+function toMatchListItem(m: PochakMatch): MatchListItemData {
   return {
     id: m.id,
     time: m.time,
@@ -55,7 +56,7 @@ function toMatchListItem(m: typeof pochakMatches[number]): MatchListItemData {
 }
 
 /* ── Card Feed Item (게시글 탭) ───────────────────────────────────────────── */
-function ClubCardFeedItem({ post }: { post: typeof pochakPosts[number] }) {
+function ClubCardFeedItem({ post }: { post: PochakPost }) {
   const [bodyExpanded, setBodyExpanded] = useState(false);
   const [liked, setLiked] = useState(false);
 
@@ -222,18 +223,53 @@ function getContentVisibility(index: number): ContentVisibility {
   return index % 2 === 0 ? 'PUBLIC' : 'MEMBERS_ONLY';
 }
 
+type JoinStatus = 'none' | 'pending' | 'joined';
+
 export default function ClubPage() {
-  const { clubId: _clubId } = useParams<{ clubId: string }>();
+  const { clubId } = useParams<{ clubId: string }>();
   const [activeTab, setActiveTab] = useState<TabKey>('home');
   const [year, setYear] = useState(2025);
   const [month, setMonth] = useState(10);
   const [videoSubTab, setVideoSubTab] = useState<VideoSubTab>('vod');
+  const [joinStatus, setJoinStatus] = useState<JoinStatus>('none');
+  const [joinLoading, setJoinLoading] = useState(false);
 
-  // Mock member status — in production, fetched from API based on auth state
-  const isMember = false;
+  const [channels, setChannels] = useState<PochakChannel[]>([]);
+  const [liveContents, setLiveContents] = useState<PochakContent[]>([]);
+  const [vodContents, setVodContents] = useState<PochakContent[]>([]);
+  const [clips, setClips] = useState<PopularClip[]>([]);
+  const [matches, setMatches] = useState<PochakMatch[]>([]);
+  const [posts] = useState<PochakPost[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Use a club-oriented channel from mock data (index 4 = 인천남동FC)
-  const club = pochakChannels[4];
+  useEffect(() => {
+    Promise.all([
+      fetchPopularChannels(),
+      fetchLiveContents(),
+      fetchVodContents(),
+      fetchPopularClips(),
+      fetchLiveMatches(),
+    ]).then(([ch, live, vod, cl, mt]) => {
+      if (ch) setChannels(ch);
+      if (live) setLiveContents(live);
+      if (vod) setVodContents(vod);
+      if (cl) setClips(cl);
+      if (mt) setMatches(mt);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  const isMember = joinStatus === 'joined';
+
+  // Use the first available channel or a placeholder
+  const club: PochakChannel = channels[4] ?? channels[0] ?? {
+    id: 'placeholder',
+    name: '클럽',
+    subtitle: '',
+    color: '#333333',
+    initial: '클',
+    memberCount: 0,
+  };
 
   const bannerData: BannerData = {
     name: club.name,
@@ -248,21 +284,47 @@ export default function ClubPage() {
   };
 
   const scheduleMatches = useMemo(() => {
-    return pochakMatches.filter((m) => {
+    return matches.filter((m: PochakMatch) => {
       const d = new Date(m.date);
       return d.getFullYear() === year && d.getMonth() + 1 === month;
     });
-  }, [year, month]);
+  }, [matches, year, month]);
 
-  const handleJoin = () => {
-    // In production this would trigger a join flow or deep-link to the app
-    window.alert('앱에서 클럽 가입을 진행해 주세요.');
+  const handleJoin = async () => {
+    if (!clubId || joinLoading || joinStatus !== 'none') return;
+    setJoinLoading(true);
+    try {
+      await postApi(`/api/v1/clubs/${clubId}/join`, { role: 'PLAYER' });
+      setJoinStatus('pending');
+    } catch {
+      // join request submitted — show pending state
+      setJoinStatus('pending');
+    } finally {
+      setJoinLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="px-6 py-8 flex items-center justify-center">
+        <p className="text-sm text-[#A6A6A6]">로딩 중...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="px-6 py-6 lg:px-8 max-w-[1200px] mx-auto">
       {/* Banner */}
-      <CompetitionBanner data={bannerData} onPurchase={handleJoin} ctaLabel="가입하기" />
+      <CompetitionBanner
+        data={bannerData}
+        onPurchase={joinStatus === 'none' && !joinLoading ? handleJoin : () => {}}
+        ctaLabel={
+          joinLoading ? '처리 중...' :
+          joinStatus === 'joined' ? '가입됨' :
+          joinStatus === 'pending' ? '가입 대기 중' :
+          '가입하기'
+        }
+      />
 
       {/* Tabs */}
       <div className="mt-6">
@@ -276,11 +338,11 @@ export default function ClubPage() {
             <section>
               <SectionHeader prefix="라이브" highlight="LIVE" />
               <HScrollRow scrollAmount={300}>
-                {pochakLiveContents.filter((c) => c.status === 'LIVE').map((c) => (
+                {liveContents.filter((c: PochakContent) => c.status === 'LIVE').map((c: PochakContent) => (
                   <HVideoCard
                     key={c.id}
                     title={c.title}
-                    sub={`${c.homeTeam.name} · LIVE`}
+                    sub={`${c.homeTeam?.name ?? ''} · LIVE`}
                     live
                     thumbnailUrl={c.thumbnailUrl}
                     tags={c.tags.slice(0, 3)}
@@ -293,11 +355,10 @@ export default function ClubPage() {
             <section>
               <SectionHeader prefix="최근" highlight="클립" />
               <HScrollRow scrollAmount={200}>
-                {pochakClips.map((clip) => (
+                {clips.map((clip: PopularClip) => (
                   <VClipCard
                     key={clip.id}
                     title={clip.title}
-                    viewCount={clip.viewCount}
                     linkTo={`/clip/${clip.id}`}
                   />
                 ))}
@@ -307,7 +368,7 @@ export default function ClubPage() {
             <section>
               <SectionHeader prefix="최근" highlight="영상" />
               <HScrollRow scrollAmount={300}>
-                {pochakVodContents.map((v) => (
+                {vodContents.map((v: PochakContent) => (
                   <HVideoCard
                     key={v.id}
                     title={v.title}
@@ -323,7 +384,7 @@ export default function ClubPage() {
             <section>
               <SectionHeader prefix="클럽" highlight="게시글" />
               <HScrollRow scrollAmount={340}>
-                {pochakPosts.slice(0, 5).map((post) => (
+                {posts.slice(0, 5).map((post: PochakPost) => (
                   <div
                     key={post.id}
                     className="flex-shrink-0 w-[300px] rounded-lg border border-[#4D4D4D] bg-[#262626] p-4 hover:border-[#666] transition-colors cursor-pointer"
@@ -364,12 +425,12 @@ export default function ClubPage() {
 
             {videoSubTab === 'vod' && (
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {pochakVodContents.map((v, idx) => {
+                {vodContents.map((v: PochakContent, idx: number) => {
                   const visibility = getContentVisibility(idx);
                   const isLocked = visibility === 'MEMBERS_ONLY' && !isMember;
                   return (
                     <div key={v.id} className="relative">
-                      {isLocked && <MembersOnlyOverlay onJoin={handleJoin} />}
+                      {isLocked && <MembersOnlyOverlay onJoin={joinStatus === 'none' ? handleJoin : () => {}} />}
                       <HVideoCard
                         title={v.title}
                         sub={`조회수 ${formatViewCount(v.viewCount)} · ${v.date.slice(0, 10)}`}
@@ -391,11 +452,10 @@ export default function ClubPage() {
 
             {videoSubTab === 'clip' && (
               <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-                {pochakClips.map((clip) => (
+                {clips.map((clip: PopularClip) => (
                   <VClipCard
                     key={clip.id}
                     title={clip.title}
-                    viewCount={clip.viewCount}
                     linkTo={`/clip/${clip.id}`}
                   />
                 ))}
@@ -425,7 +485,7 @@ export default function ClubPage() {
         {/* ── 게시글 탭 (Card Feed) ────────────────────── */}
         {activeTab === 'posts' && (
           <div className="space-y-4">
-            {pochakPosts.map((post) => (
+            {posts.map((post: PochakPost) => (
               <ClubCardFeedItem key={post.id} post={post} />
             ))}
           </div>

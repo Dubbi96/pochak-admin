@@ -49,6 +49,10 @@ public class Highlight {
     private LocalDateTime createdAt;
 
     public enum HighlightType {
-        GOAL, SAVE, FOUL, RALLY, DUNK, ACE, CUSTOM
+        GOAL, SAVE, FOUL, FREE_KICK,
+        DUNK, THREE_POINTER, BLOCK,
+        HOME_RUN, STRIKEOUT, DOUBLE_PLAY,
+        RALLY, ACE,
+        CUSTOM
     }
 }

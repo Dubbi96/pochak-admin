@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Heart,
@@ -25,13 +25,13 @@ import MonthSelector from '@/components/MonthSelector';
 import MatchListItem from '@/components/MatchListItem';
 import type { MatchListItemData } from '@/components/MatchListItem';
 import {
-  pochakCompetitions,
-  pochakLiveContents,
-  pochakVodContents,
-  pochakClips,
-  pochakMatches,
-  pochakPosts,
+  fetchCompetitions,
+  fetchLiveContents,
+  fetchVodContents,
+  fetchPopularClips,
+  fetchLiveMatches,
 } from '@/services/webApi';
+import type { PochakContent, PopularClip, PochakMatch, CompetitionCard } from '@/services/webApi';
 
 type TabKey = 'home' | 'videos' | 'schedule' | 'posts' | 'info';
 const tabItems: { key: TabKey; label: string }[] = [
@@ -52,7 +52,7 @@ function formatDuration(seconds: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-function toMatchListItem(m: (typeof pochakMatches)[number]): MatchListItemData {
+function toMatchListItem(m: PochakMatch): MatchListItemData {
   return {
     id: m.id,
     time: m.time,
@@ -105,17 +105,6 @@ interface PostData {
   competitionName?: string;
   isNotice?: boolean;
   commentList: PostComment[];
-}
-
-function toPostData(post: (typeof pochakPosts)[number]): PostData {
-  return {
-    ...post,
-    isNotice: post.isPinned,
-    commentList: [
-      { id: `${post.id}-c1`, nickname: '축구좋아', avatar: '⚽', date: '2025.10.21', text: '정보 감사합니다!' },
-      { id: `${post.id}-c2`, nickname: '파주맘', avatar: '🙋', date: '2025.10.21', text: '아이들 응원하러 가야겠네요~' },
-    ],
-  };
 }
 
 /* ── Image Lightbox ────────────────────────────────────────────────────────── */
@@ -518,7 +507,7 @@ function SocialLinkRow({ label, href }: { label: string; href: string }) {
 }
 
 /* ── Similar Competition Card (정보 탭) ──────────────────────────────────────── */
-function SimilarCompetitionCard({ comp }: { comp: (typeof pochakCompetitions)[number] }) {
+function SimilarCompetitionCard({ comp }: { comp: CompetitionCard }) {
   return (
     <div className="flex-shrink-0 w-[200px] rounded-xl border border-[#4D4D4D] bg-[#262626] overflow-hidden cursor-pointer hover:border-[#00CC33] transition-colors">
       <div
@@ -569,8 +558,8 @@ function PillTabs<T extends string>({
 /* ── Date grouping helper for schedule ──────────────────────────────────────── */
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
-function groupMatchesByDate(matches: typeof pochakMatches) {
-  const groups = new Map<string, (typeof pochakMatches)[number][]>();
+function groupMatchesByDate(matches: PochakMatch[]) {
+  const groups = new Map<string, PochakMatch[]>();
   for (const m of matches) {
     const key = m.date;
     if (!groups.has(key)) groups.set(key, []);
@@ -597,8 +586,32 @@ export default function CompetitionPage() {
   const [month, setMonth] = useState(10);
   const [isFavorite, setIsFavorite] = useState(false);
 
+  const [competitions, setCompetitions] = useState<CompetitionCard[]>([]);
+  const [liveContents, setLiveContents] = useState<PochakContent[]>([]);
+  const [vodContents, setVodContents] = useState<PochakContent[]>([]);
+  const [clips, setClips] = useState<PopularClip[]>([]);
+  const [matches, setMatches] = useState<PochakMatch[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetchCompetitions(),
+      fetchLiveContents(),
+      fetchVodContents(),
+      fetchPopularClips(),
+      fetchLiveMatches(),
+    ]).then(([comps, live, vod, cl, mt]) => {
+      if (comps) setCompetitions(comps);
+      if (live) setLiveContents(live);
+      if (vod) setVodContents(vod);
+      if (cl) setClips(cl);
+      if (mt) setMatches(mt);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
   /* ── Posts state ────────────────────────────────────────────────────────── */
-  const [posts, setPosts] = useState<PostData[]>(() => pochakPosts.map(toPostData));
+  const [posts, setPosts] = useState<PostData[]>([]);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(() => new Set());
   const [expandedComments, setExpandedComments] = useState<Set<string>>(() => new Set());
 
@@ -654,26 +667,42 @@ export default function CompetitionPage() {
       comments: 0,
       isPinned: isNotice,
       isNotice,
-      competitionName: pochakCompetitions[0]?.name,
+      competitionName: competitions[0]?.name,
       body: text,
       images: imageUrls.length > 0 ? imageUrls : undefined,
       commentList: [],
     };
     setPosts((prev) => [newPost, ...prev]);
-  }, []);
+  }, [competitions]);
 
-  const competition = pochakCompetitions[0];
+  const competition: CompetitionCard | undefined = competitions[0];
 
   const scheduleMatches = useMemo(() => {
-    return pochakMatches.filter((m) => {
+    return matches.filter((m: PochakMatch) => {
       const d = new Date(m.date);
       return d.getFullYear() === year && d.getMonth() + 1 === month;
     });
-  }, [year, month]);
+  }, [matches, year, month]);
 
   const dateGroupedMatches = useMemo(() => groupMatchesByDate(scheduleMatches), [scheduleMatches]);
 
-  const similarCompetitions = pochakCompetitions.filter((c) => c.id !== competition.id);
+  const similarCompetitions = competitions.filter((c: CompetitionCard) => c.id !== competition?.id);
+
+  if (loading) {
+    return (
+      <div className="px-6 py-8 flex items-center justify-center">
+        <p className="text-sm text-[#A6A6A6]">로딩 중...</p>
+      </div>
+    );
+  }
+
+  if (!competition) {
+    return (
+      <div className="px-6 py-8 flex items-center justify-center">
+        <p className="text-sm text-[#A6A6A6]">대회 정보를 불러올 수 없습니다.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="px-6 py-6 lg:px-8 max-w-[1200px] mx-auto">
@@ -752,7 +781,7 @@ export default function CompetitionPage() {
             <section>
               <SectionHeader prefix="라이브" highlight="" linkTo="/contents?type=LIVE" />
               <HScrollRow scrollAmount={300}>
-                {pochakLiveContents.map((c) => (
+                {liveContents.map((c: PochakContent) => (
                   <HVideoCard
                     key={c.id}
                     title={c.title}
@@ -772,11 +801,10 @@ export default function CompetitionPage() {
             <section>
               <SectionHeader prefix="최근" highlight="클립" linkTo="/contents?type=CLIP" />
               <HScrollRow scrollAmount={200}>
-                {pochakClips.map((clip) => (
+                {clips.map((clip: PopularClip) => (
                   <VClipCard
                     key={clip.id}
                     title={clip.title}
-                    viewCount={clip.viewCount}
                     showMoreMenu
                     linkTo={`/clip/${clip.id}`}
                   />
@@ -788,7 +816,7 @@ export default function CompetitionPage() {
             <section>
               <SectionHeader prefix="최근" highlight="영상" linkTo="/contents?type=VOD" />
               <HScrollRow scrollAmount={300}>
-                {pochakVodContents.map((v) => (
+                {vodContents.map((v: PochakContent) => (
                   <HVideoCard
                     key={v.id}
                     title={v.title}
@@ -830,16 +858,16 @@ export default function CompetitionPage() {
 
             {videoSubTab === 'videos' && (
               <div className="grid gap-5 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
-                {[...pochakLiveContents, ...pochakVodContents].slice(0, 28).map((v) => (
+                {[...liveContents, ...vodContents].slice(0, 28).map((v: PochakContent) => (
                   <HVideoCard
                     key={v.id}
                     title={v.title}
                     sub={v.competition}
-                    duration={'duration' in v && v.duration ? formatDuration(v.duration) : undefined}
+                    duration={v.duration ? formatDuration(v.duration) : undefined}
                     thumbnailUrl={v.thumbnailUrl}
                     showBookmark
                     showMoreMenu
-                    tags={'tags' in v ? v.tags.slice(0, 2) : undefined}
+                    tags={v.tags.slice(0, 2)}
                     className="w-full"
                     linkTo={`/contents/vod/${v.id}`}
                   />
@@ -849,11 +877,10 @@ export default function CompetitionPage() {
 
             {videoSubTab === 'clips' && (
               <div className="grid gap-4 grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
-                {pochakClips.slice(0, 24).map((clip) => (
+                {clips.slice(0, 24).map((clip: PopularClip) => (
                   <VClipCard
                     key={clip.id}
                     title={clip.title}
-                    viewCount={clip.viewCount}
                     showMoreMenu
                     className="w-full"
                     linkTo={`/clip/${clip.id}`}

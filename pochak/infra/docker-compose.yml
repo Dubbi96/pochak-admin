@@ -78,10 +78,12 @@ services:
       SERVICES_COMMERCE_URL: http://pochak-commerce:8083
       SERVICES_OPERATION_URL: http://pochak-operation:8084
       SERVICES_ADMIN_URL: http://pochak-admin:8085
+      SERVICES_WEB_BFF_URL: http://pochak-web-bff:9080
+      SERVICES_PARTNER_BFF_URL: http://pochak-partner-bff:9091
       JWT_SECRET: pochak-jwt-secret-key-for-development-only-minimum-256-bits-long-enough
       REDIS_HOST: pochak-redis
       REDIS_PORT: 6379
-      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3300,http://localhost:8097
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3200,http://localhost:3300,http://localhost:8097
     depends_on:
       pochak-postgres:
         condition: service_healthy
@@ -89,6 +91,10 @@ services:
         condition: service_healthy
       pochak-rabbitmq:
         condition: service_healthy
+      pochak-web-bff:
+        condition: service_started
+      pochak-partner-bff:
+        condition: service_started
     develop:
       watch:
         - action: rebuild
@@ -202,6 +208,7 @@ services:
     environment:
       <<: *service-env
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: admin
+      JWT_SECRET: pochak-jwt-secret-key-for-development-only-minimum-256-bits-long-enough
     depends_on:
       pochak-postgres:
         condition: service_healthy
@@ -213,16 +220,66 @@ services:
           path: ../services/pochak-admin-service/src
           target: /app
 
+  pochak-web-bff:
+    build:
+      context: ../services
+      dockerfile: pochak-web-bff/Dockerfile
+    container_name: pochak-web-bff
+    ports:
+      - "9080:9080"
+    environment:
+      SERVICES_IDENTITY_URL: http://pochak-identity:8081
+      SERVICES_CONTENT_URL: http://pochak-content:8082
+      SERVICES_COMMERCE_URL: http://pochak-commerce:8083
+      SERVICES_ADMIN_URL: http://pochak-admin:8085
+    depends_on:
+      pochak-postgres:
+        condition: service_healthy
+      pochak-redis:
+        condition: service_healthy
+      pochak-rabbitmq:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ../services/pochak-web-bff/src
+          target: /app
+
+  pochak-partner-bff:
+    build:
+      context: ../services
+      dockerfile: pochak-partner-bff/Dockerfile
+    container_name: pochak-partner-bff
+    ports:
+      - "9091:9091"
+    environment:
+      SERVICES_IDENTITY_URL: http://pochak-identity:8081
+      SERVICES_CONTENT_URL: http://pochak-content:8082
+      SERVICES_COMMERCE_URL: http://pochak-commerce:8083
+      SERVICES_OPERATION_URL: http://pochak-operation:8084
+    depends_on:
+      pochak-postgres:
+        condition: service_healthy
+      pochak-redis:
+        condition: service_healthy
+      pochak-rabbitmq:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ../services/pochak-partner-bff/src
+          target: /app
+
   # ── Frontend Services ─────────────────────────────────────────
   pochak-bo-web:
     build:
       context: ../clients/apps/bo-web
+      args:
+        NEXT_PUBLIC_GATEWAY_URL: http://localhost:8080
+        NEXT_PUBLIC_API_URL: http://localhost:8080/admin/api/v1
     container_name: pochak-bo-web
     ports:
       - "3000:3000"
-    environment:
-      NEXT_PUBLIC_GATEWAY_URL: http://pochak-gateway:8080
-      NEXT_PUBLIC_API_URL: http://pochak-gateway:8080/admin/api/v1
     depends_on:
       - pochak-gateway
     develop:
@@ -246,23 +303,22 @@ services:
           path: ../clients/apps/public-web/src
           target: /app
 
-  # pochak-partner-web:
-  #   build:
-  #     context: ..
-  #     dockerfile: clients/apps/partner-web/Dockerfile
-  #   container_name: pochak-partner-web
-  #   ports:
-  #     - "3200:3200"
-  #   environment:
-  #     VITE_GATEWAY_URL: http://pochak-gateway:8080
-  #   depends_on:
-  #     - pochak-gateway
-  #   develop:
-  #     watch:
-  #       - action: rebuild
-  #         path: ../clients/apps/partner-web/src
-  #         target: /app
-  # TODO: partner-web Dockerfile context 수정 후 활성화
+  pochak-partner-web:
+    build:
+      context: ..
+      dockerfile: clients/apps/partner-web/Dockerfile
+    container_name: pochak-partner-web
+    ports:
+      - "3200:3200"
+    environment:
+      VITE_GATEWAY_URL: http://localhost:8080
+    depends_on:
+      - pochak-gateway
+    develop:
+      watch:
+        - action: rebuild
+          path: ../clients/apps/partner-web/src
+          target: /app
 
 volumes:
   pochak-pg-data:

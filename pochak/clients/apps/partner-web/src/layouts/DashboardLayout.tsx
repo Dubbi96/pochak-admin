@@ -1,13 +1,14 @@
 import { Outlet, Link, useLocation, Navigate } from 'react-router-dom'
 import {
   LuLayoutDashboard, LuMapPin, LuPackage, LuCalendarCheck,
-  LuTrendingUp, LuSettings, LuLogOut, LuMenu,
+  LuTrendingUp, LuSettings, LuLogOut, LuMenu, LuUsers,
 } from 'react-icons/lu'
 import { useState } from 'react'
 import { useAuthStore } from '@/stores/authStore'
 
 const navItems = [
   { label: '대시보드', path: '/dashboard', icon: LuLayoutDashboard },
+  { label: '클럽 관리', path: '/clubs', icon: LuUsers },
   { label: '시설 관리', path: '/venues', icon: LuMapPin },
   { label: '상품 관리', path: '/products', icon: LuPackage },
   { label: '예약 관리', path: '/reservations', icon: LuCalendarCheck },
@@ -16,9 +17,13 @@ const navItems = [
 ]
 
 export default function DashboardLayout() {
-  const { partner, logout, isAuthenticated } = useAuthStore()
+  const { partner, logout, isAuthenticated, _hasHydrated } = useAuthStore()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(true)
+
+  if (!_hasHydrated) {
+    return null
+  }
 
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />

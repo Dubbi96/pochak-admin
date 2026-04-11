@@ -205,11 +205,100 @@ export function useVenues(keyword?: string, sportId?: string) {
   )
 }
 
+// ── Club Detail ───────────────────────────────────────────
+
+export interface ClubDetail {
+  teamId: number;
+  name: string;
+  nameEn?: string;
+  shortName?: string;
+  logoUrl?: string;
+  description?: string;
+  homeStadium?: string;
+  sportId?: number;
+  sportName?: string;
+  memberCount: number;
+  recentContent?: Array<{
+    id: number;
+    type: string;
+    title: string;
+    thumbnailUrl?: string;
+    createdAt?: string;
+  }>;
+  customization?: {
+    bannerUrl?: string;
+    logoUrl?: string;
+    themeColor?: string;
+    introText?: string;
+    socialLinksJson?: Record<string, string>;
+  };
+  createdAt?: string;
+}
+
+export function useClubDetail(teamId: string | number) {
+  return useFetch<ClubDetail | null>(
+    () => pochakApi.get<ClubDetail>(`/api/v1/clubs/${teamId}`),
+    null,
+    [teamId],
+  )
+}
+
+// ── Club Members ──────────────────────────────────────────
+
+export interface ClubMember {
+  membershipId: number;
+  userId: number;
+  nickname?: string;
+  role: string;
+  joinType: string;
+  approvalStatus: string;
+  joinedAt?: string;
+}
+
+export function useClubMembers(teamId: string | number) {
+  return useFetch<ClubMember[]>(
+    () => pochakApi.get<ClubMember[]>(`/api/v1/clubs/${teamId}/members`),
+    [],
+    [teamId],
+  )
+}
+
 // ── Clubs ─────────────────────────────────────────────────
 
-export function useClubs() {
-  return useFetch(
-    () => pochakApi.get('/api/v1/clubs'),
+export interface ClubItem {
+  teamId: number;
+  name: string;
+  shortName?: string;
+  logoUrl?: string;
+  sportId?: number;
+  sportName?: string;
+  memberCount: number;
+  createdAt?: string;
+}
+
+export function useClubs(sportId?: number, keyword?: string) {
+  return useFetch<ClubItem[]>(
+    () => {
+      const params: Record<string, string> = {}
+      if (sportId) params.sportId = String(sportId)
+      if (keyword?.trim()) params.keyword = keyword.trim()
+      return pochakApi.get<ClubItem[]>('/api/v1/clubs', Object.keys(params).length ? params : undefined)
+    },
+    [],
+    [sportId, keyword],
+  )
+}
+
+export function usePopularClubs() {
+  return useFetch<ClubItem[]>(
+    () => pochakApi.get<ClubItem[]>('/api/v1/clubs/popular'),
+    [],
+  )
+}
+
+export function useRecentClubs() {
+  return useFetch<ClubItem[]>(
+    () => pochakApi.get<ClubItem[]>('/api/v1/clubs/recent'),
     [],
   )
 }
