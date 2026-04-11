@@ -1,0 +1,2 @@
+ALTER TABLE content.clip_assets
+    ADD COLUMN IF NOT EXISTS aspect_ratio VARCHAR(16) NOT NULL DEFAULT 'RATIO_16_9';

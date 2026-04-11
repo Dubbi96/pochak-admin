@@ -18,6 +18,11 @@ import java.util.List;
 @Builder
 public class CreateClipFromRangeRequest {
 
+    public enum AspectRatio {
+        RATIO_16_9,
+        RATIO_9_16
+    }
+
     @NotNull(message = "sourceContentType is required")
     private ClipAsset.SourceType sourceContentType;
 
@@ -41,4 +46,7 @@ public class CreateClipFromRangeRequest {
 
     @Size(max = 20, message = "Maximum 20 tags allowed")
     private List<String> tags;
+
+    @Builder.Default
+    private AspectRatio aspectRatio = AspectRatio.RATIO_16_9;
 }

@@ -104,20 +104,26 @@ public class ClipAssetService {
     }
 
     @Transactional
-    public ClipAssetDetailResponse createFromRange(CreateClipFromRangeRequest request) {
+    public ClipAssetDetailResponse createFromRange(CreateClipFromRangeRequest request, Long creatorUserId) {
         if (request.getStartTimeSeconds() >= request.getEndTimeSeconds()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "startTimeSeconds must be less than endTimeSeconds");
         }
 
         int duration = request.getEndTimeSeconds() - request.getStartTimeSeconds();
+        ClipAsset.AspectRatio aspectRatio = request.getAspectRatio() != null
+                ? ClipAsset.AspectRatio.valueOf(request.getAspectRatio().name())
+                : ClipAsset.AspectRatio.RATIO_16_9;
+        long effectiveCreatorUserId = creatorUserId != null ? creatorUserId : 0L;
 
         ClipAsset entity = ClipAsset.builder()
                 .sourceType(request.getSourceContentType())
                 .sourceId(request.getSourceContentId())
+                .creatorUserId(effectiveCreatorUserId)
                 .title(request.getTitle())
                 .startTimeSec(request.getStartTimeSeconds())
                 .endTimeSec(request.getEndTimeSeconds())
                 .duration(duration)
+                .aspectRatio(aspectRatio)
                 .visibility(LiveAsset.Visibility.PUBLIC)
                 .build();
 

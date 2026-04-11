@@ -17,6 +17,7 @@ import type {RouteProp} from '@react-navigation/native';
 import type {RootStackParamList} from '../../navigation/types';
 import {colors} from '../../theme';
 import {analyticsService} from '../../services/analyticsService';
+import {createClipFromRange, type ClipAspectRatio} from '../../services/clipApi';
 
 const GREEN = colors.green;
 const BG = colors.bg;
@@ -75,6 +76,7 @@ export default function ClipEditScreen() {
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState<string[]>([...DEFAULT_TAGS]);
   const [visibility, setVisibility] = useState<Visibility>('public');
+  const [aspectRatio, setAspectRatio] = useState<ClipAspectRatio>('RATIO_9_16');
   const [isSaving, setIsSaving] = useState(false);
 
   const handleRemoveTag = useCallback(
@@ -92,17 +94,19 @@ export default function ClipEditScreen() {
 
     setIsSaving(true);
     try {
-      // TODO: Call clip creation API
-      // await contentService.createClip({
-      //   title, description, tags, visibility,
-      //   startTime, endTime, sourceContentType, sourceContentId
-      // });
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const created = await createClipFromRange({
+        sourceContentType: sourceContentType.toUpperCase() as 'LIVE' | 'VOD',
+        sourceContentId: Number(sourceContentId),
+        startTimeSeconds: startTime,
+        endTimeSeconds: endTime,
+        title: title.trim(),
+        description: description.trim() || undefined,
+        tags,
+        aspectRatio,
+      });
 
       // Analytics: track clip creation
-      const clipId = `clip_${Date.now()}`;
+      const clipId = `clip_${created.id}`;
       analyticsService.trackClipCreate(clipId, sourceContentId);
 
       Alert.alert('완료', '클립이 생성되었습니다.', [
@@ -119,7 +123,7 @@ export default function ClipEditScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [title, description, tags, visibility, startTime, endTime, sourceContentType, sourceContentId, navigation]);
+  }, [title, description, tags, visibility, aspectRatio, startTime, endTime, sourceContentType, sourceContentId, navigation]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -233,6 +237,33 @@ export default function ClipEditScreen() {
                       visibility === option.key && styles.radioOuterActive,
                     ]}>
                     {visibility === option.key && (
+                      <View style={styles.radioInner} />
+                    )}
+                  </View>
+                  <Text style={styles.radioLabel}>{option.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Aspect Ratio */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>클립 비율</Text>
+            <View style={styles.radioGroup}>
+              {[
+                {key: 'RATIO_9_16', label: '세로형 9:16 (권장)'},
+                {key: 'RATIO_16_9', label: '가로형 16:9'},
+              ].map(option => (
+                <TouchableOpacity
+                  key={option.key}
+                  style={styles.radioItem}
+                  onPress={() => setAspectRatio(option.key as ClipAspectRatio)}>
+                  <View
+                    style={[
+                      styles.radioOuter,
+                      aspectRatio === option.key && styles.radioOuterActive,
+                    ]}>
+                    {aspectRatio === option.key && (
                       <View style={styles.radioInner} />
                     )}
                   </View>

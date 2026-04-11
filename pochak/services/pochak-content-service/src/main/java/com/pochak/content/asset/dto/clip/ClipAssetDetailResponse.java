@@ -20,6 +20,7 @@ public class ClipAssetDetailResponse {
     private String title;
     private String clipUrl;
     private String thumbnailUrl;
+    private ClipAsset.AspectRatio aspectRatio;
     private Integer startTimeSec;
     private Integer endTimeSec;
     private Integer duration;
@@ -41,6 +42,7 @@ public class ClipAssetDetailResponse {
                 .title(entity.getTitle())
                 .clipUrl(entity.getClipUrl())
                 .thumbnailUrl(entity.getThumbnailUrl())
+                .aspectRatio(entity.getAspectRatio())
                 .startTimeSec(entity.getStartTimeSec())
                 .endTimeSec(entity.getEndTimeSec())
                 .duration(entity.getDuration())

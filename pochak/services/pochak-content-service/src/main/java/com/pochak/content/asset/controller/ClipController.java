@@ -1,5 +1,6 @@
 package com.pochak.content.asset.controller;
 
+import com.pochak.common.constant.HeaderConstants;
 import com.pochak.common.response.ApiResponse;
 import com.pochak.common.response.PageMeta;
 import com.pochak.content.asset.dto.BulkVisibilityRequest;
@@ -60,8 +61,9 @@ public class ClipController {
     @PostMapping("/create-from-range")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<ClipAssetDetailResponse> createFromRange(
+            @RequestHeader(value = HeaderConstants.X_USER_ID, required = false) Long userId,
             @Valid @RequestBody CreateClipFromRangeRequest request) {
-        return ApiResponse.success(clipAssetService.createFromRange(request));
+        return ApiResponse.success(clipAssetService.createFromRange(request, userId));
     }
 
     @PutMapping("/{id}")

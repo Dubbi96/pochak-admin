@@ -116,6 +116,7 @@ export default function ContentPlayerPage() {
   const [aiClipItems, setAiClipItems] = useState<AiClipItem[]>([]);
   const [panelTab, setPanelTab] = useState<'highlights' | 'ai-clips'>('highlights');
   const [detectingHighlights, setDetectingHighlights] = useState(false);
+  const [creatingVerticalClipId, setCreatingVerticalClipId] = useState<number | null>(null);
   const [highlightPanelOpen, setHighlightPanelOpen] = useState(false);
   const [seekToTime, setSeekToTime] = useState<number | undefined>(undefined);
   const [reelIndex, setReelIndex] = useState<number | null>(null);
@@ -226,6 +227,32 @@ export default function ContentPlayerPage() {
     setReelIndex(null);
     reelRef.current = null;
   }, []);
+
+  const handleCreateVerticalClip = useCallback(async (clip: AiClipItem) => {
+    if (!id || type === 'clip') return;
+    const sourceContentId = Number(id);
+    if (Number.isNaN(sourceContentId)) {
+      toast.show('원본 콘텐츠 ID를 확인할 수 없습니다');
+      return;
+    }
+    setCreatingVerticalClipId(clip.id);
+    try {
+      await postApi('/contents/clips/create-from-range', {
+        sourceContentType: type.toUpperCase(),
+        sourceContentId,
+        startTimeSeconds: clip.startTimeSec,
+        endTimeSeconds: clip.endTimeSec,
+        title: `${clip.title} (9:16)`,
+        tags: ['vertical', '9:16'],
+        aspectRatio: 'RATIO_9_16',
+      });
+      toast.show('9:16 클립 렌더링을 시작했습니다');
+    } catch {
+      toast.show('9:16 클립 생성에 실패했습니다');
+    } finally {
+      setCreatingVerticalClipId(null);
+    }
+  }, [id, type, toast]);
 
   const handleStartReel = useCallback(() => {
     if (highlightItems.length === 0) return;
@@ -520,6 +547,15 @@ export default function ContentPlayerPage() {
                           >
                             <Download className="w-3 h-3" />
                             저장
+                          </button>
+                          <button
+                            onClick={() => handleCreateVerticalClip(clip)}
+                            disabled={creatingVerticalClipId === clip.id}
+                            className="flex items-center gap-1 text-[11px] text-[#A6A6A6] hover:text-[#00CC33] transition-colors disabled:opacity-50"
+                            title="9:16 클립 생성"
+                          >
+                            <Scissors className="w-3 h-3" />
+                            {creatingVerticalClipId === clip.id ? '생성중...' : '9:16 생성'}
                           </button>
                         </div>
                       </div>

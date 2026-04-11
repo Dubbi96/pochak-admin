@@ -43,6 +43,11 @@ public class ClipAsset {
     @Column(name = "thumbnail_url", length = 500)
     private String thumbnailUrl;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "aspect_ratio", nullable = false, length = 16)
+    @Builder.Default
+    private AspectRatio aspectRatio = AspectRatio.RATIO_16_9;
+
     @Column(name = "start_time_sec", nullable = false)
     private Integer startTimeSec;
 
@@ -103,5 +108,10 @@ public class ClipAsset {
 
     public enum SourceType {
         LIVE, VOD
+    }
+
+    public enum AspectRatio {
+        RATIO_16_9,
+        RATIO_9_16
     }
 }

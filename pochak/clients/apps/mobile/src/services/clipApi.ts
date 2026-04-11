@@ -1,3 +1,5 @@
+import apiClient from '../api/client';
+
 // Mock data for Clip screens
 
 export interface ClipItem {
@@ -218,4 +220,38 @@ export function formatViewCount(count: number): string {
     return `${(count / 1000).toFixed(1)}천`;
   }
   return `${count}`;
+}
+
+export type ClipSourceType = 'LIVE' | 'VOD';
+export type ClipAspectRatio = 'RATIO_16_9' | 'RATIO_9_16';
+
+export interface CreateClipFromRangePayload {
+  sourceContentType: ClipSourceType;
+  sourceContentId: number;
+  startTimeSeconds: number;
+  endTimeSeconds: number;
+  title: string;
+  description?: string;
+  tags?: string[];
+  aspectRatio?: ClipAspectRatio;
+}
+
+export interface CreatedClipResult {
+  id: number;
+  title: string;
+  aspectRatio?: ClipAspectRatio;
+  encodingStatus?: string;
+}
+
+export async function createClipFromRange(
+  payload: CreateClipFromRangePayload,
+): Promise<CreatedClipResult> {
+  const res = await apiClient.post('/contents/clips/create-from-range', payload);
+  const data = res.data?.data ?? res.data;
+  return {
+    id: data.id,
+    title: data.title,
+    aspectRatio: data.aspectRatio,
+    encodingStatus: data.encodingStatus,
+  };
 }
