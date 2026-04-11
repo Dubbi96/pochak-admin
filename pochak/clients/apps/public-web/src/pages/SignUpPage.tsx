@@ -124,8 +124,7 @@ export default function SignUpPage() {
     try {
       if (oauth.isOAuth) {
         const res = await postApi<{ accessToken?: string }>('/auth/oauth2/complete-signup',
-          { signupToken: oauth.signupToken, nickname: loginId || oauth.name || 'pochak_user' },
-          null as unknown as { accessToken?: string });
+          { signupToken: oauth.signupToken, nickname: loginId || oauth.name || 'pochak_user' });
         if (res?.accessToken) {
           localStorage.setItem('pochak_token', res.accessToken);
           localStorage.setItem('pochak_user', JSON.stringify({ nickname: loginId || oauth.name, email: oauth.email }));
@@ -135,7 +134,7 @@ export default function SignUpPage() {
           loginId, password: pw, email: acctEmail + emailDom, phone,
           preferredSports: [...selSports, ...customSports], regions: selRegions,
           purposes: selPurposes, marketingConsent: mktTerm,
-        }, null);
+        });
       }
     } catch { /* mock */ }
     setSubmitting(false);

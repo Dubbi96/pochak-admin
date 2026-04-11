@@ -44,6 +44,7 @@ import type {
   PochakBanner,
   PochakMatch,
   PochakChannel,
+  PochakContent,
 } from '../../../../shared/types';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────

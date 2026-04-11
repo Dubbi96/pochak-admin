@@ -1,12 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Play, Bell, MoreHorizontal } from 'lucide-react';
 import MonthSelector from '@/components/MonthSelector';
 import TeamLogo from '@/components/TeamLogo';
 import HScrollRow from '@/components/HScrollRow';
 import {
-  pochakCompetitions,
-  pochakMatches,
-  scheduleData,
+  fetchCompetitions,
+  type CompetitionCard,
 } from '@/services/webApi';
 
 /* ── Types ──────────────────────────────────────────────────────────────────── */
@@ -30,8 +29,7 @@ function sportFromTab(tab: SportTab): string | null {
 
 /* ── Extended mock data ─────────────────────────────────────────────────────── */
 
-const extendedCompetitions = [
-  ...pochakCompetitions,
+const localExtraCompetitions = [
   {
     id: 'comp-6',
     name: '제6회 MLB컵 전국리틀야구대회 U10',
@@ -154,9 +152,8 @@ const extendedCompetitions = [
   },
 ];
 
-/** Extended matches for richer schedule data */
+/** Hardcoded matches for schedule data */
 const extendedMatches = [
-  ...pochakMatches,
   // 야구 matches
   {
     id: 'bb-1', date: '2026-01-01', time: '10:00',
@@ -378,7 +375,7 @@ function ScheduleTabBar({
 
 /* ── Competition Card (Grid) ────────────────────────────────────────────────── */
 
-function CompetitionCard({ comp }: { comp: (typeof extendedCompetitions)[number] }) {
+function CompetitionCard({ comp }: { comp: (typeof localExtraCompetitions)[number] }) {
   const yearMatch = comp.dateRange.match(/\d{4}/);
   const yearStr = yearMatch ? yearMatch[0] : '2026';
   const dateOnly = comp.dateRange
@@ -434,7 +431,7 @@ function CompetitionCarousel({
   selectedId,
   onSelect,
 }: {
-  competitions: typeof extendedCompetitions;
+  competitions: typeof localExtraCompetitions;
   selectedId: string | null;
   onSelect: (id: string) => void;
 }) {
@@ -505,66 +502,60 @@ function MatchRow({ match }: { match: (typeof extendedMatches)[number] }) {
 
   return (
     <div className="flex items-center px-4 py-3 border-b border-[#333] last:border-b-0 hover:bg-[#2a2a2a] transition-colors">
-      {/* Time */}
-      <div className="w-[60px] flex-shrink-0">
-        <span className={`text-[14px] font-bold ${timeColor}`}>
-          {match.time}
-        </span>
-      </div>
-
-      {/* Home team */}
-      <div className="flex items-center gap-2 w-[200px] flex-shrink-0 justify-end">
-        <span className="text-[13px] font-semibold text-white truncate">
-          {match.homeTeam}
-        </span>
-        <TeamLogo color={match.homeTeamColor} short={match.homeTeamShort} size="sm" />
-      </div>
-
-      {/* Score */}
-      <div className="w-[100px] flex-shrink-0 text-center">
-        <span className={`text-[18px] font-bold ${scoreColor}`}>
-          {homeScore} : {awayScore}
-        </span>
-      </div>
-
-      {/* Away team */}
-      <div className="flex items-center gap-2 w-[200px] flex-shrink-0">
-        <TeamLogo color={match.awayTeamColor} short={match.awayTeamShort} size="sm" />
-        <span className="text-[13px] font-semibold text-white truncate">
-          {match.awayTeam}
-        </span>
-      </div>
-
-      {/* Result note */}
-      <div className="flex-1 min-w-0 px-3 hidden lg:block">
+      {/* Left: time + result (stacked) — fixed width to balance right side */}
+      <div className="w-[170px] flex-shrink-0">
+        <p className={`text-[14px] font-bold ${timeColor}`}>{match.time}</p>
         {result && (
-          <span className="text-[11px] text-[#A6A6A6]">{result}</span>
+          <p className="text-[11px] text-[#A6A6A6] mt-0.5 hidden lg:block">{result}</p>
         )}
       </div>
 
-      {/* Venue */}
-      <div className="w-[200px] flex-shrink-0 text-right hidden md:block">
-        <span className={`text-[11px] ${venueColor}`}>{venue}</span>
+      {/* Center: home + score + away — symmetric between left/right */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="flex items-center">
+          <div className="flex items-center gap-2 w-[180px] justify-end">
+            <span className="text-[13px] font-semibold text-white truncate">
+              {match.homeTeam}
+            </span>
+            <TeamLogo color={match.homeTeamColor} short={match.homeTeamShort} size="sm" />
+          </div>
+
+          <div className="w-[90px] text-center">
+            <span className={`text-[18px] font-bold ${scoreColor}`}>
+              {homeScore} : {awayScore}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 w-[180px]">
+            <TeamLogo color={match.awayTeamColor} short={match.awayTeamShort} size="sm" />
+            <span className="text-[13px] font-semibold text-white truncate">
+              {match.awayTeam}
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Action button */}
-      <div className="w-[120px] flex-shrink-0 flex justify-end">
-        {isDone ? (
-          <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-[#333] text-white text-[12px] font-semibold hover:bg-[#444] transition-colors">
-            <Play className="h-3.5 w-3.5 fill-current" />
-            다시보기
-          </button>
-        ) : isLive ? (
-          <button className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-[#00CC33] text-[#00CC33] text-[12px] font-semibold hover:bg-[#00CC33]/10 transition-colors">
-            <Play className="h-3.5 w-3.5 fill-[#00CC33]" />
-            시청하기
-          </button>
-        ) : (
-          <button className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-[#4D4D4D] text-[#A6A6A6] text-[12px] font-semibold hover:border-white hover:text-white transition-colors">
-            <Bell className="h-3.5 w-3.5" />
-            시청예약
-          </button>
-        )}
+      {/* Right: venue + button — fixed width to match left */}
+      <div className="w-[170px] flex-shrink-0 flex items-center justify-end gap-3">
+        <span className={`text-[11px] ${venueColor} hidden md:block truncate max-w-[80px] text-right`}>{venue}</span>
+        <div className="flex-shrink-0">
+          {isDone ? (
+            <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-[#333] text-white text-[12px] font-semibold hover:bg-[#444] transition-colors">
+              <Play className="h-3.5 w-3.5 fill-current" />
+              다시보기
+            </button>
+          ) : isLive ? (
+            <button className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-[#00CC33] text-[#00CC33] text-[12px] font-semibold hover:bg-[#00CC33]/10 transition-colors">
+              <Play className="h-3.5 w-3.5 fill-[#00CC33]" />
+              시청하기
+            </button>
+          ) : (
+            <button className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-[#4D4D4D] text-[#A6A6A6] text-[12px] font-semibold hover:border-white hover:text-white transition-colors">
+              <Bell className="h-3.5 w-3.5" />
+              시청예약
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -577,10 +568,23 @@ export default function SchedulePage() {
   const [year, setYear] = useState(2026);
   const [month, setMonth] = useState(1);
   const [selectedCompetition, setSelectedCompetition] = useState<string | null>(null);
+  const [apiCompetitions, setApiCompetitions] = useState<CompetitionCard[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCompetitions()
+      .then((data) => { if (data) setApiCompetitions(data); })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const extendedCompetitions = useMemo(
+    () => [...(apiCompetitions as typeof localExtraCompetitions), ...localExtraCompetitions],
+    [apiCompetitions],
+  );
 
   const allMatches = useMemo(() => {
     const uniqueIds = new Set<string>();
-    return [...extendedMatches, ...scheduleData].filter((m) => {
+    return extendedMatches.filter((m) => {
       if (uniqueIds.has(m.id)) return false;
       uniqueIds.add(m.id);
       return true;
@@ -630,6 +634,14 @@ export default function SchedulePage() {
     }
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   }, [filteredMatches]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 text-[#A6A6A6]">
+        <p className="text-base">불러오는 중...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="py-6">

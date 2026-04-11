@@ -25,8 +25,7 @@ export default function AuthLinkPage() {
     try {
       const res = await postApi<{ accessToken?: string; refreshToken?: string }>(
         '/auth/oauth2/link',
-        { signupToken },
-        null as unknown as { accessToken?: string; refreshToken?: string }
+        { signupToken }
       );
       if (res?.accessToken) {
         localStorage.setItem('pochak_token', res.accessToken);

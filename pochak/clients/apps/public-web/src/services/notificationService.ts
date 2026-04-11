@@ -98,7 +98,7 @@ export async function registerPushSubscription(subscription: PushSubscription): 
       auth: arrayBufferToBase64(subscription.getKey('auth')),
     },
     platform: 'web',
-  }, {});
+  });
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer | null): string {

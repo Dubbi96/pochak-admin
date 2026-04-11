@@ -2,12 +2,11 @@ import { useState } from 'react';
 import TabBar from '@/components/TabBar';
 import SportFilterTags from '@/components/SportFilterTags';
 import { Gift } from 'lucide-react';
-import {
-  pochakSubscriptionProducts,
-  pochakSportProducts,
-  pochakCompetitionProducts,
-} from '@/services/webApi';
 import type { ProductData } from '@/components/ProductCard';
+
+const pochakSubscriptionProducts: ProductData[] = [];
+const pochakSportProducts: ProductData[] = [];
+const pochakCompetitionProducts: ProductData[] = [];
 
 type StoreTab = 'all' | 'affiliate' | 'subscription' | 'sport' | 'competition';
 const tabItems: { key: StoreTab; label: string }[] = [
