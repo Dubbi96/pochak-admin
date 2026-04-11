@@ -8,7 +8,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClient;
 
+import java.util.function.Function;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -25,6 +28,12 @@ class PartnerVenueControllerTest {
     private RestClient.RequestHeadersSpec requestHeadersSpec;
 
     @Mock
+    private RestClient.RequestBodyUriSpec requestBodyUriSpec;
+
+    @Mock
+    private RestClient.RequestBodySpec requestBodySpec;
+
+    @Mock
     private RestClient.ResponseSpec responseSpec;
 
     private PartnerVenueController controller;
@@ -35,87 +44,42 @@ class PartnerVenueControllerTest {
     }
 
     @Test
-    @DisplayName("getMyVenues should proxy GET with ownerId query param and X-User-Id header")
-    void getMyVenues_success() {
-        // given
+    @DisplayName("getPartnerVenues should proxy GET with ownerId")
+    @SuppressWarnings("unchecked")
+    void getPartnerVenues_success() {
         Long userId = 10L;
-        String expectedResponse = "[{\"id\":1,\"name\":\"Venue A\"}]";
+        String expectedResponse = "[{\"id\":1}]";
 
         given(operationClient.get()).willReturn(requestHeadersUriSpec);
-        given(requestHeadersUriSpec.uri("/venues?ownerId={userId}", userId)).willReturn(requestHeadersSpec);
+        given(requestHeadersUriSpec.uri(any(Function.class))).willReturn(requestHeadersSpec);
         given(requestHeadersSpec.header("X-User-Id", "10")).willReturn(requestHeadersSpec);
         given(requestHeadersSpec.retrieve()).willReturn(responseSpec);
         given(responseSpec.body(String.class)).willReturn(expectedResponse);
 
-        // when
-        String result = controller.getMyVenues(userId);
+        String result = controller.getPartnerVenues(userId);
 
-        // then
         assertThat(result).isEqualTo(expectedResponse);
         verify(operationClient).get();
     }
 
     @Test
-    @DisplayName("getMyVenues should return empty list when no venues found")
-    void getMyVenues_emptyList() {
-        // given
-        Long userId = 999L;
-        String expectedResponse = "[]";
-
-        given(operationClient.get()).willReturn(requestHeadersUriSpec);
-        given(requestHeadersUriSpec.uri("/venues?ownerId={userId}", userId)).willReturn(requestHeadersSpec);
-        given(requestHeadersSpec.header("X-User-Id", "999")).willReturn(requestHeadersSpec);
-        given(requestHeadersSpec.retrieve()).willReturn(responseSpec);
-        given(responseSpec.body(String.class)).willReturn(expectedResponse);
-
-        // when
-        String result = controller.getMyVenues(userId);
-
-        // then
-        assertThat(result).isEqualTo("[]");
-    }
-
-    @Test
-    @DisplayName("getVenueDetail should proxy GET with venueId path variable and X-User-Id header")
-    void getVenueDetail_success() {
-        // given
+    @DisplayName("updateVenueSchedule should proxy PUT with request body")
+    void updateVenueSchedule_success() {
         Long userId = 10L;
-        Long venueId = 5L;
-        String expectedResponse = "{\"id\":5,\"name\":\"Venue Detail\"}";
+        Long venueId = 3L;
+        String body = "{\"timeSlots\":[]}";
+        String expectedResponse = "{\"success\":true}";
 
-        given(operationClient.get()).willReturn(requestHeadersUriSpec);
-        given(requestHeadersUriSpec.uri("/venues/{venueId}", venueId)).willReturn(requestHeadersSpec);
-        given(requestHeadersSpec.header("X-User-Id", "10")).willReturn(requestHeadersSpec);
-        given(requestHeadersSpec.retrieve()).willReturn(responseSpec);
+        given(operationClient.put()).willReturn(requestBodyUriSpec);
+        given(requestBodyUriSpec.uri("/api/v1/venues/{venueId}/schedule", venueId)).willReturn(requestBodySpec);
+        given(requestBodySpec.header("X-User-Id", "10")).willReturn(requestBodySpec);
+        given(requestBodySpec.header("Content-Type", "application/json")).willReturn(requestBodySpec);
+        given(requestBodySpec.body(body)).willReturn(requestBodySpec);
+        given(requestBodySpec.retrieve()).willReturn(responseSpec);
         given(responseSpec.body(String.class)).willReturn(expectedResponse);
 
-        // when
-        String result = controller.getVenueDetail(userId, venueId);
+        String result = controller.updateVenueSchedule(userId, venueId, body);
 
-        // then
         assertThat(result).isEqualTo(expectedResponse);
-        verify(operationClient).get();
-    }
-
-    @Test
-    @DisplayName("getVenueDetail should forward correct venueId to backend")
-    void getVenueDetail_correctVenueId() {
-        // given
-        Long userId = 1L;
-        Long venueId = 42L;
-        String expectedResponse = "{\"id\":42}";
-
-        given(operationClient.get()).willReturn(requestHeadersUriSpec);
-        given(requestHeadersUriSpec.uri("/venues/{venueId}", venueId)).willReturn(requestHeadersSpec);
-        given(requestHeadersSpec.header("X-User-Id", "1")).willReturn(requestHeadersSpec);
-        given(requestHeadersSpec.retrieve()).willReturn(responseSpec);
-        given(responseSpec.body(String.class)).willReturn(expectedResponse);
-
-        // when
-        String result = controller.getVenueDetail(userId, venueId);
-
-        // then
-        assertThat(result).isEqualTo(expectedResponse);
-        verify(requestHeadersUriSpec).uri("/venues/{venueId}", venueId);
     }
 }

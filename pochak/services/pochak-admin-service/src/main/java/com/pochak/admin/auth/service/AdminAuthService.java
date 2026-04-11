@@ -122,6 +122,7 @@ public class AdminAuthService {
                 .subject(adminUser.getId().toString())
                 .claim("loginId", adminUser.getLoginId())
                 .claim("name", adminUser.getName())
+                .claim("role", roles.isEmpty() ? "ADMIN" : roles.get(0))
                 .claim("roles", roles)
                 .claim("permissions", permissions)
                 .issuedAt(now)

@@ -1,3 +1,5 @@
+import { GATEWAY_URL } from "@/api/client";
+import { useAuthStore } from "@/stores/authStore";
 /**
  * Push notification service - extensible for FCM/APNs.
  * Current: stub that logs to console.
@@ -52,8 +54,25 @@ class StubPushService implements IPushService {
   }
 
   async registerToken(userId: string, token: string): Promise<void> {
-    console.log(`[PushService] registerToken() called (stub) userId=${userId} token=${token}`);
-    // TODO: POST to /api/v1/users/${userId}/push-token with { token, platform }
+    const accessToken = useAuthStore.getState().accessToken;
+    if (!accessToken) {
+      throw new Error("No access token available for push token registration");
+    }
+    const res = await fetch(`${GATEWAY_URL}/api/v1/users/me/push-tokens`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+        "X-User-Id": userId,
+      },
+      body: JSON.stringify({
+        pushToken: token,
+        platform: "mobile",
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(`Push token registration failed: HTTP ${res.status}`);
+    }
   }
 
   onNotificationReceived(handler: NotificationHandler): () => void {

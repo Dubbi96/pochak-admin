@@ -24,7 +24,7 @@ public class CommerceServiceClient {
                     .body(JsonNode.class);
         } catch (RestClientException e) {
             log.warn("Commerce service revenue stats call failed: {}", e.getMessage());
-            return null;
+            throw e;
         }
     }
 
@@ -42,7 +42,7 @@ public class CommerceServiceClient {
                     .body(JsonNode.class);
         } catch (RestClientException e) {
             log.warn("Commerce service list products call failed: {}", e.getMessage());
-            return null;
+            throw e;
         }
     }
 
@@ -54,7 +54,7 @@ public class CommerceServiceClient {
                     .body(JsonNode.class);
         } catch (RestClientException e) {
             log.warn("Commerce service get product/{} call failed: {}", id, e.getMessage());
-            return null;
+            throw e;
         }
     }
 
@@ -95,7 +95,7 @@ public class CommerceServiceClient {
                     .body(JsonNode.class);
         } catch (RestClientException e) {
             log.warn("Commerce service list refunds call failed: {}", e.getMessage());
-            return null;
+            throw e;
         }
     }
 
@@ -107,13 +107,13 @@ public class CommerceServiceClient {
                     .body(JsonNode.class);
         } catch (RestClientException e) {
             log.warn("Commerce service get refund/{} call failed: {}", id, e.getMessage());
-            return null;
+            throw e;
         }
     }
 
-    public JsonNode updateRefund(Long id, Map<String, Object> body) {
+    public JsonNode processRefund(Long id, Map<String, Object> body) {
         return commerceClient.put()
-                .uri("/refunds/{id}", id)
+                .uri("/refunds/{id}/process", id)
                 .body(body)
                 .retrieve()
                 .body(JsonNode.class);

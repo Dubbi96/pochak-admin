@@ -124,21 +124,21 @@ export async function getInquiries(
   if (filters.dateFrom) params.dateFrom = filters.dateFrom;
   if (filters.dateTo) params.dateTo = filters.dateTo;
 
-  return gatewayApi.get<PageResponse<Inquiry>>("/api/v1/admin/inquiries", params);
+  return gatewayApi.get<PageResponse<Inquiry>>("/api/v1/admin/cs/inquiries", params);
 }
 
 export async function replyToInquiry(
-  id: number,
-  req: InquiryReplyRequest
+  _id: number,
+  _req: InquiryReplyRequest
 ): Promise<Inquiry> {
-  return gatewayApi.post<Inquiry>(`/api/v1/admin/inquiries/${id}/reply`, req);
+  throw new Error("문의 답변 API는 백엔드에 아직 구현되지 않았습니다.");
 }
 
 export async function updateInquiryStatus(
-  id: number,
-  status: InquiryStatus
+  _id: number,
+  _status: InquiryStatus
 ): Promise<Inquiry> {
-  return gatewayApi.put<Inquiry>(`/api/v1/admin/inquiries/${id}/status`, { status });
+  throw new Error("문의 상태변경 API는 백엔드에 아직 구현되지 않았습니다.");
 }
 
 // ── Report APIs ─────────────────────────────────────────────────────
@@ -156,12 +156,12 @@ export async function getReports(
   if (filters.dateFrom) params.dateFrom = filters.dateFrom;
   if (filters.dateTo) params.dateTo = filters.dateTo;
 
-  return gatewayApi.get<PageResponse<Report>>("/api/v1/admin/reports", params);
+  return gatewayApi.get<PageResponse<Report>>("/api/v1/admin/cs/reports", params);
 }
 
 export async function actionReport(
-  id: number,
-  req: ReportActionRequest
+  _id: number,
+  _req: ReportActionRequest
 ): Promise<Report> {
-  return gatewayApi.put<Report>(`/api/v1/admin/reports/${id}/action`, req);
+  throw new Error("신고 조치 API는 백엔드에 아직 구현되지 않았습니다.");
 }

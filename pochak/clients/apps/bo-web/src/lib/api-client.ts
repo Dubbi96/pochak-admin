@@ -124,6 +124,25 @@ export const adminApi = {
     return request<T>(GATEWAY_URL, path, { method: "DELETE" });
   },
 
+  async deleteWithBody(path: string, body?: unknown): Promise<void> {
+    const url = new URL(path, GATEWAY_URL);
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    const token = getAdminToken();
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    const res = await fetch(url.toString(), {
+      method: "DELETE",
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+  },
+
   async patch<T>(path: string, body?: unknown): Promise<T> {
     return request<T>(GATEWAY_URL, path, {
       method: "PATCH",

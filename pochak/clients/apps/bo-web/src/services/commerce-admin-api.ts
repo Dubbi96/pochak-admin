@@ -278,19 +278,22 @@ export async function getRefunds(
   if (filters.status !== "ALL") params.status = filters.status;
   if (filters.searchKeyword) params.searchKeyword = filters.searchKeyword;
 
-  return gatewayApi.get<PageResponse<Refund>>("/api/v1/admin/commerce/refunds", params);
+  return gatewayApi.get<PageResponse<Refund>>("/admin/bff/refunds", params);
 }
 
 export async function approveRefund(id: number): Promise<Refund> {
-  return gatewayApi.put<Refund>(`/api/v1/admin/commerce/refunds/${id}/approve`);
+  return gatewayApi.put<Refund>(`/admin/bff/refunds/${id}/process`, { approved: true });
 }
 
 export async function rejectRefund(id: number, reason?: string): Promise<Refund> {
-  return gatewayApi.put<Refund>(`/api/v1/admin/commerce/refunds/${id}/reject`, { reason });
+  return gatewayApi.put<Refund>(`/admin/bff/refunds/${id}/process`, {
+    approved: false,
+    adminNote: reason,
+  });
 }
 
 export async function getRefundById(id: number): Promise<Refund> {
-  return gatewayApi.get<Refund>(`/api/v1/admin/commerce/refunds/${id}`);
+  return gatewayApi.get<Refund>(`/admin/bff/refunds/${id}`);
 }
 
 // ── Bulk Ball Grant APIs ────────────────────────────────────────────

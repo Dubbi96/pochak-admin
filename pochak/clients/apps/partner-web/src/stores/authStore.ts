@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { api } from '@/lib/api'
+import { post } from '@/lib/api'
 
 interface LoginResponse {
   accessToken: string
@@ -34,9 +34,7 @@ export const useAuthStore = create<AuthState>()(
       setHasHydrated: (value) => set({ _hasHydrated: value }),
       login: async (email: string, password: string): Promise<LoginResult> => {
         try {
-          const res = await api.post<LoginResponse>('/api/v1/auth/login', { email, password })
-          const payload = res.data
-          const tokens = payload && typeof payload === 'object' && 'data' in payload ? payload.data! : payload
+          const tokens = await post<LoginResponse>('/api/v1/auth/login', { email, password })
           if (!tokens?.accessToken) return { ok: false, errorCode: 'server_error' }
           set({
             token: tokens.accessToken,

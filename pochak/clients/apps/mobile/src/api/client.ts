@@ -40,8 +40,9 @@ apiClient.interceptors.response.use(
       if (refreshToken) {
         try {
           const res = await axios.post(`${GATEWAY_URL}/api/v1/auth/refresh`, { refreshToken });
-          useAuthStore.getState().setTokens(res.data.accessToken, res.data.refreshToken);
-          originalRequest.headers.Authorization = `Bearer ${res.data.accessToken}`;
+          const payload = res.data?.data ?? res.data;
+          useAuthStore.getState().setTokens(payload.accessToken, payload.refreshToken);
+          originalRequest.headers.Authorization = `Bearer ${payload.accessToken}`;
           return apiClient(originalRequest);
         } catch {
           useAuthStore.getState().logout();

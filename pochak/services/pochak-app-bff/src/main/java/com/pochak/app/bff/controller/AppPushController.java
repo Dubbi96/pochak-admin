@@ -33,14 +33,14 @@ public class AppPushController {
     }
 
     @DeleteMapping("/unregister")
-    public ResponseEntity<JsonNode> unregisterPushToken() {
+    public ResponseEntity<JsonNode> unregisterPushToken(@RequestBody Map<String, Object> body) {
         Long userId = UserContextHolder.getUserId();
         if (userId == null) {
             return ResponseEntity.status(401).build();
         }
 
         log.debug("Unregistering push token for userId={}", userId);
-        JsonNode result = identityClient.unregisterPushToken(userId);
+        JsonNode result = identityClient.unregisterPushToken(userId, body);
         return ResponseEntity.ok(result);
     }
 }

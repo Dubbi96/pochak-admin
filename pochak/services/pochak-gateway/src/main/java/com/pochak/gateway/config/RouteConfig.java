@@ -27,7 +27,10 @@ public class RouteConfig {
     @Value("${services.web-bff-url:http://localhost:9080}")
     private String webBffUrl;
 
-    @Value("${services.bo-bff-url:http://localhost:9081}")
+    @Value("${services.app-bff-url:http://localhost:9081}")
+    private String appBffUrl;
+
+    @Value("${services.bo-bff-url:http://localhost:9090}")
     private String boBffUrl;
 
     @Value("${services.partner-bff-url:http://localhost:9091}")
@@ -46,6 +49,16 @@ public class RouteConfig {
                         .path("/api/v1/web/**")
                         .filters(f -> f.stripPrefix(3))
                         .uri(webBffUrl))
+                // 0b. app-bff route (/api/v1/app/** → app-bff root)
+                .route("app-bff-service", r -> r
+                        .path("/api/v1/app/**")
+                        .filters(f -> f.stripPrefix(3))
+                        .uri(appBffUrl))
+                // 0c. bo-bff route (/admin/bff/** → bo-bff root)
+                .route("bo-bff-service", r -> r
+                        .path("/admin/bff/**")
+                        .filters(f -> f.stripPrefix(2))
+                        .uri(boBffUrl))
                 // 1. content-user-routes (FIRST - resolves ISSUE-004 /users/** path conflict)
                 .route("content-user-routes", r -> r
                         .path("/api/v1/users/me/watch-history/**",

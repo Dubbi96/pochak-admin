@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 
 @Component
 public class JwtValidationFilter implements GlobalFilter, Ordered {
@@ -151,9 +152,16 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
 
         String userId = claims.getSubject();
         String role = claims.get("role", String.class);
+        @SuppressWarnings("unchecked")
+        List<String> roles = claims.get("roles", List.class);
+        String resolvedRole = role;
+        if ((resolvedRole == null || resolvedRole.isBlank()) && roles != null && !roles.isEmpty()) {
+            resolvedRole = roles.get(0);
+        }
+        final String roleHeaderValue = resolvedRole != null ? resolvedRole : "";
 
         // SEC-004: Admin endpoints require ADMIN role
-        if (path.startsWith("/api/v1/admin") && !"ADMIN".equalsIgnoreCase(role)) {
+        if (requiresAdminRole(path) && !hasAdminRole(resolvedRole, roles)) {
             throw new SecurityException("Forbidden: ADMIN role required");
         }
 
@@ -168,7 +176,7 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
 
                     ServerHttpRequest mutatedRequest = request.mutate()
                             .header(X_USER_ID, userId)
-                            .header(X_USER_ROLE, role)
+                            .header(X_USER_ROLE, roleHeaderValue)
                             .build();
 
                     return Mono.just(exchange.mutate().request(mutatedRequest).build());
@@ -186,6 +194,41 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
 
     private boolean isPublicPath(String path) {
         return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
+    }
+
+    private static boolean requiresAdminRole(String path) {
+        if (path.startsWith("/admin/bff")) {
+            return true;
+        }
+        if (path.startsWith("/admin/api/v1/") && !path.startsWith("/admin/api/v1/auth")) {
+            return true;
+        }
+        if (path.startsWith("/api/v1/admin/") && !path.startsWith("/api/v1/admin/auth")) {
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean hasAdminRole(String role, List<String> roles) {
+        if (isAdminLikeRole(role)) {
+            return true;
+        }
+        if (roles == null || roles.isEmpty()) {
+            return false;
+        }
+        return roles.stream()
+                .filter(r -> r != null)
+                .anyMatch(JwtValidationFilter::isAdminLikeRole);
+    }
+
+    private static boolean isAdminLikeRole(String role) {
+        if (role == null || role.isBlank()) {
+            return false;
+        }
+        String normalized = role.toUpperCase(Locale.ROOT);
+        return normalized.contains("ADMIN")
+                || "MASTER_BO".equals(normalized)
+                || "BO_ADMIN".equals(normalized);
     }
 
     @Override

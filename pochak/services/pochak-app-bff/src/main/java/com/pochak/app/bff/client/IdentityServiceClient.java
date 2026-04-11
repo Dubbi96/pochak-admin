@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.pochak.common.constant.HeaderConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -76,8 +77,11 @@ public class IdentityServiceClient {
 
     public JsonNode verifyGuardian(String token) {
         try {
-            return identityClient.get()
-                    .uri("/guardians/verify?token={token}", token)
+            return identityClient.post()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/auth/guardian/verify")
+                            .queryParam("guardianVerifiedToken", token)
+                            .build())
                     .retrieve()
                     .body(JsonNode.class);
         } catch (RestClientException e) {
@@ -89,7 +93,7 @@ public class IdentityServiceClient {
     public JsonNode registerPushToken(Long userId, Map<String, Object> pushRequest) {
         try {
             return identityClient.post()
-                    .uri("/users/me/push-token")
+                    .uri("/users/me/push-tokens")
                     .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
                     .body(pushRequest)
                     .retrieve()
@@ -100,11 +104,12 @@ public class IdentityServiceClient {
         }
     }
 
-    public JsonNode unregisterPushToken(Long userId) {
+    public JsonNode unregisterPushToken(Long userId, Map<String, Object> body) {
         try {
-            return identityClient.delete()
-                    .uri("/users/me/push-token")
+            return identityClient.method(HttpMethod.DELETE)
+                    .uri("/users/me/push-tokens")
                     .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
+                    .body(body)
                     .retrieve()
                     .body(JsonNode.class);
         } catch (RestClientException e) {

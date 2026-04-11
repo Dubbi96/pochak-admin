@@ -34,6 +34,23 @@ public class TermController {
         return ResponseEntity.created(URI.create("/admin/api/v1/cs/terms/" + saved.getId())).body(saved);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Term> updateTerm(@PathVariable Long id, @RequestBody Term patch) {
+        Term existing = termRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Term not found: " + id));
+        Term updated = Term.builder()
+                .id(existing.getId())
+                .termType(patch.getTermType() != null ? patch.getTermType() : existing.getTermType())
+                .title(patch.getTitle() != null ? patch.getTitle() : existing.getTitle())
+                .content(patch.getContent() != null ? patch.getContent() : existing.getContent())
+                .version(patch.getVersion() != null ? patch.getVersion() : existing.getVersion())
+                .isRequired(patch.getIsRequired() != null ? patch.getIsRequired() : existing.getIsRequired())
+                .isActive(patch.getIsActive() != null ? patch.getIsActive() : existing.getIsActive())
+                .effectiveAt(patch.getEffectiveAt() != null ? patch.getEffectiveAt() : existing.getEffectiveAt())
+                .build();
+        return ResponseEntity.ok(termRepository.save(updated));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTerm(@PathVariable Long id) {
         termRepository.deleteById(id);

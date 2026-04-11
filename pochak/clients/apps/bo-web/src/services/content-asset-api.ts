@@ -155,7 +155,7 @@ export async function getVenueOptions(): Promise<
   { id: number; name: string }[]
 > {
   return gatewayApi.get<{ id: number; name: string }[]>(
-    "/api/v1/admin/venues/options"
+    "/api/v1/venues/options"
   );
 }
 

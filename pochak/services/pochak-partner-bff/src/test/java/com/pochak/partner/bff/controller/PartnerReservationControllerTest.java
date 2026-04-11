@@ -93,18 +93,18 @@ class PartnerReservationControllerTest {
     }
 
     @Test
-    @DisplayName("approveReservation should send PARTNER_APPROVED status to backend")
+    @DisplayName("approveReservation should send CONFIRMED status to backend")
     void approveReservation_success() {
         // given
         Long userId = 10L;
         Long id = 7L;
-        String expectedResponse = "{\"id\":7,\"status\":\"PARTNER_APPROVED\"}";
+        String expectedResponse = "{\"id\":7,\"status\":\"CONFIRMED\"}";
 
         given(operationClient.put()).willReturn(requestBodyUriSpec);
         given(requestBodyUriSpec.uri("/reservations/{id}/status", id)).willReturn(requestBodySpec);
         given(requestBodySpec.header("X-User-Id", "10")).willReturn(requestBodySpec);
         given(requestBodySpec.header("Content-Type", "application/json")).willReturn(requestBodySpec);
-        given(requestBodySpec.body("{\"status\":\"PARTNER_APPROVED\"}")).willReturn(requestBodySpec);
+        given(requestBodySpec.body("{\"status\":\"CONFIRMED\"}")).willReturn(requestBodySpec);
         given(requestBodySpec.retrieve()).willReturn(responseSpec);
         given(responseSpec.body(String.class)).willReturn(expectedResponse);
 
@@ -113,7 +113,7 @@ class PartnerReservationControllerTest {
 
         // then
         assertThat(result).isEqualTo(expectedResponse);
-        verify(requestBodySpec).body("{\"status\":\"PARTNER_APPROVED\"}");
+        verify(requestBodySpec).body("{\"status\":\"CONFIRMED\"}");
     }
 
     @Test
@@ -151,7 +151,7 @@ class PartnerReservationControllerTest {
         given(requestBodyUriSpec.uri("/reservations/{id}/status", id)).willReturn(requestBodySpec);
         given(requestBodySpec.header("X-User-Id", "55")).willReturn(requestBodySpec);
         given(requestBodySpec.header("Content-Type", "application/json")).willReturn(requestBodySpec);
-        given(requestBodySpec.body("{\"status\":\"PARTNER_APPROVED\"}")).willReturn(requestBodySpec);
+        given(requestBodySpec.body("{\"status\":\"CONFIRMED\"}")).willReturn(requestBodySpec);
         given(requestBodySpec.retrieve()).willReturn(responseSpec);
         given(responseSpec.body(String.class)).willReturn("{}");
 

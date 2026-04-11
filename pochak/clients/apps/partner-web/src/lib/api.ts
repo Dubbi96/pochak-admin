@@ -68,12 +68,16 @@ api.interceptors.response.use(
     isRefreshing = true
 
     try {
-      const res = await axios.post<{ data: { accessToken: string; refreshToken: string } }>(
+      const res = await axios.post<{ data?: { accessToken: string; refreshToken: string }; accessToken?: string; refreshToken?: string }>(
         `${GATEWAY_URL}/api/v1/auth/refresh`,
         { refreshToken },
         { headers: { 'Content-Type': 'application/json' } },
       )
-      const { accessToken: newAccess, refreshToken: newRefresh } = res.data.data
+      const payload = res.data.data ?? res.data
+      if (!payload.accessToken || !payload.refreshToken) {
+        throw new Error('Invalid refresh token response')
+      }
+      const { accessToken: newAccess, refreshToken: newRefresh } = payload
       const { partner } = useAuthStore.getState()
       setAuth(newAccess, newRefresh, partner!)
       processQueue(null, newAccess)

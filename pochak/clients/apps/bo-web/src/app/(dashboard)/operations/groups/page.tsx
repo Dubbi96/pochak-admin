@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { adminApi as adminRbacApi, type GroupNode, type GroupDetail, type AdminMember, type RoleItem } from "@/services/admin-api";
-import { adminApi } from "@/lib/api-client";
 import { ChevronDown, ChevronRight, FolderOpen, Folder, Plus, Save, Trash2, Search } from "lucide-react";
 
 // ── Tree Item ───────────────────────────────────────────────────────
@@ -83,10 +82,8 @@ export default function GroupsPage() {
 
   const loadTree = useCallback(async () => {
     try {
-      const apiResult = await adminApi.get<GroupNode[]>("/admin/api/v1/operations/groups/tree");
-      if (apiResult) {
-        setTree(apiResult);
-      }
+      const apiResult = await adminRbacApi.groups.tree();
+      setTree(apiResult);
     } catch {
       /* API error */
     }
@@ -114,8 +111,19 @@ export default function GroupsPage() {
   const handleSave = async () => {
     if (!detail) return;
     await adminRbacApi.groups.update(detail.id, form);
-    await adminRbacApi.groups.assignMembers(detail.id, Array.from(assignedMemberIds));
-    await adminRbacApi.groups.assignRoles(detail.id, Array.from(assignedRoleIds));
+    const prevMembers = new Set(detail.memberIds);
+    const nextMembers = assignedMemberIds;
+    const removeMembers = [...prevMembers].filter((id) => !nextMembers.has(id));
+    const addMembers = [...nextMembers].filter((id) => !prevMembers.has(id));
+    await adminRbacApi.groups.removeMembers(detail.id, removeMembers);
+    await adminRbacApi.groups.assignMembers(detail.id, addMembers);
+
+    const prevRoles = new Set(detail.roleIds);
+    const nextRoles = assignedRoleIds;
+    const removeRoles = [...prevRoles].filter((id) => !nextRoles.has(id));
+    const addRoles = [...nextRoles].filter((id) => !prevRoles.has(id));
+    await adminRbacApi.groups.removeRoles(detail.id, removeRoles);
+    await adminRbacApi.groups.assignRoles(detail.id, addRoles);
     alert("저장되었습니다.");
     loadTree();
   };

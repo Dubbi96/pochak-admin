@@ -69,9 +69,14 @@ public class VenueScheduleController {
             for (VenueScheduleRequest.TimeSlotItem item : request.getTimeSlots()) {
                 venueTimeSlotRepository.findByVenueProductIdAndDayOfWeek(item.getVenueProductId(), item.getDayOfWeek())
                         .ifPresentOrElse(
-                                slot -> {
-                                    // update existing
-                                },
+                                slot -> venueTimeSlotRepository.save(VenueTimeSlot.builder()
+                                        .id(slot.getId())
+                                        .venueProductId(slot.getVenueProductId())
+                                        .dayOfWeek(slot.getDayOfWeek())
+                                        .startTime(item.getStartTime() != null ? item.getStartTime() : slot.getStartTime())
+                                        .endTime(item.getEndTime() != null ? item.getEndTime() : slot.getEndTime())
+                                        .isAvailable(item.getIsAvailable() != null ? item.getIsAvailable() : slot.getIsAvailable())
+                                        .build()),
                                 () -> venueTimeSlotRepository.save(VenueTimeSlot.builder()
                                         .venueProductId(item.getVenueProductId())
                                         .dayOfWeek(item.getDayOfWeek())

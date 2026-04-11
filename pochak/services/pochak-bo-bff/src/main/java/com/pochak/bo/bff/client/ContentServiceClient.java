@@ -16,16 +16,16 @@ public class ContentServiceClient {
 
     private final RestClient contentClient;
 
-    public JsonNode getAssetStats() {
-        try {
-            return contentClient.get()
-                    .uri("/admin/assets/stats")
-                    .retrieve()
-                    .body(JsonNode.class);
-        } catch (RestClientException e) {
-            log.warn("Content service asset stats call failed: {}", e.getMessage());
-            return null;
+    private static String resourceBasePath(String resource) {
+        if (resource == null || resource.isBlank()) {
+            return "/";
         }
+        return switch (resource) {
+            case "vod" -> "/contents/vod";
+            case "live" -> "/contents/live";
+            case "clips" -> "/contents/clips";
+            default -> "/" + resource;
+        };
     }
 
     // --- Generic CRUD pass-through ---
@@ -34,7 +34,7 @@ public class ContentServiceClient {
         try {
             return contentClient.get()
                     .uri(uriBuilder -> {
-                        var builder = uriBuilder.path("/" + resource);
+                        var builder = uriBuilder.path(resourceBasePath(resource));
                         params.forEach(builder::queryParam);
                         return builder.build();
                     })
@@ -42,41 +42,45 @@ public class ContentServiceClient {
                     .body(JsonNode.class);
         } catch (RestClientException e) {
             log.warn("Content service list {} call failed: {}", resource, e.getMessage());
-            return null;
+            throw e;
         }
     }
 
     public JsonNode get(String resource, Long id) {
         try {
+            String base = resourceBasePath(resource);
             return contentClient.get()
-                    .uri("/{resource}/{id}", resource, id)
+                    .uri(base + "/" + id)
                     .retrieve()
                     .body(JsonNode.class);
         } catch (RestClientException e) {
             log.warn("Content service get {}/{} call failed: {}", resource, id, e.getMessage());
-            return null;
+            throw e;
         }
     }
 
     public JsonNode create(String resource, Map<String, Object> body) {
+        String base = resourceBasePath(resource);
         return contentClient.post()
-                .uri("/{resource}", resource)
+                .uri(base)
                 .body(body)
                 .retrieve()
                 .body(JsonNode.class);
     }
 
     public JsonNode update(String resource, Long id, Map<String, Object> body) {
+        String base = resourceBasePath(resource);
         return contentClient.put()
-                .uri("/{resource}/{id}", resource, id)
+                .uri(base + "/" + id)
                 .body(body)
                 .retrieve()
                 .body(JsonNode.class);
     }
 
     public void delete(String resource, Long id) {
+        String base = resourceBasePath(resource);
         contentClient.delete()
-                .uri("/{resource}/{id}", resource, id)
+                .uri(base + "/" + id)
                 .retrieve()
                 .toBodilessEntity();
     }

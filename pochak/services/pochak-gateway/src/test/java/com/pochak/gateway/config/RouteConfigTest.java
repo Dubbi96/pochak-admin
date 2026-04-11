@@ -171,12 +171,12 @@ class RouteConfigTest {
         }
 
         @Test
-        @DisplayName("RouteConfig has 8 URL fields for all downstream services")
-        void routeConfig_has8UrlFields() {
+        @DisplayName("RouteConfig has 9 URL fields for all downstream services")
+        void routeConfig_has9UrlFields() {
             long urlFieldCount = java.util.Arrays.stream(RouteConfig.class.getDeclaredFields())
                     .filter(f -> f.getName().endsWith("Url"))
                     .count();
-            assertThat(urlFieldCount).isEqualTo(8);
+            assertThat(urlFieldCount).isEqualTo(9);
         }
     }
 }

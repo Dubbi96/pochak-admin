@@ -70,11 +70,11 @@ public class BoCommerceController {
         return ResponseEntity.ok(commerceClient.getRefund(id));
     }
 
-    @PutMapping("/refunds/{id}")
-    public ResponseEntity<JsonNode> updateRefund(
+    @PutMapping("/refunds/{id}/process")
+    public ResponseEntity<JsonNode> processRefund(
             @PathVariable Long id,
             @RequestBody Map<String, Object> body) {
-        log.debug("BO updating refund/{}", id);
-        return ResponseEntity.ok(commerceClient.updateRefund(id, body));
+        log.debug("BO processing refund/{}", id);
+        return ResponseEntity.ok(commerceClient.processRefund(id, body));
     }
 }

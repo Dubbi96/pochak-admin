@@ -11,7 +11,6 @@ import {
   type MenuNode,
   type FunctionItem,
 } from "@/services/admin-api";
-import { adminApi } from "@/lib/api-client";
 import { Shield, Plus, Save, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 
 // ── Menu Tree Checkbox ──────────────────────────────────────────────
@@ -92,10 +91,8 @@ export default function PermissionsPage() {
 
   const loadRoles = useCallback(async () => {
     try {
-      const apiResult = await adminApi.get<RoleItem[]>("/admin/api/v1/operations/roles");
-      if (apiResult) {
-        setRoles(apiResult);
-      }
+      const apiResult = await adminRbacApi.roles.list();
+      setRoles(apiResult);
     } catch {
       /* API error */
     }

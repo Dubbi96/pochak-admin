@@ -36,7 +36,7 @@ public class PartnerReservationController {
     public String approveReservation(
             @RequestHeader(HeaderConstants.X_USER_ID) Long userId,
             @PathVariable Long id) {
-        String body = "{\"status\":\"PARTNER_APPROVED\"}";
+        String body = "{\"status\":\"CONFIRMED\"}";
         return operationClient.put()
                 .uri("/reservations/{id}/status", id)
                 .header(HeaderConstants.X_USER_ID, userId.toString())

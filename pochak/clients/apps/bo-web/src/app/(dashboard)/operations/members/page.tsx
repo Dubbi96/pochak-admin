@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { adminApi as adminRbacApi, type AdminMember } from "@/services/admin-api";
-import { adminApi } from "@/lib/api-client";
 import { Plus, Search, Pencil, Trash2, ShieldOff, ShieldCheck } from "lucide-react";
 
 // ── Modal ───────────────────────────────────────────────────────────
@@ -106,16 +105,8 @@ export default function MembersPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const apiParams: Record<string, string> = {};
-      if (search) apiParams.keyword = search;
-
-      const apiResult = await adminApi.get<AdminMember[]>(
-        "/admin/api/v1/operations/members",
-        apiParams
-      );
-      if (apiResult) {
-        setMembers(apiResult);
-      }
+      const apiResult = await adminRbacApi.members.list(search);
+      setMembers(apiResult);
     } catch {
       /* API error - data remains in initial empty state */
     } finally {
@@ -137,12 +128,24 @@ export default function MembersPage() {
     setModalOpen(true);
   };
 
-  const handleSave = async (data: { loginId: string; name: string; phone: string; email: string }) => {
+  const handleSave = async (data: { loginId: string; name: string; phone: string; email: string; password?: string }) => {
     try {
       if (editTarget) {
-        await adminRbacApi.members.update(editTarget.id, data);
+        await adminRbacApi.members.update(editTarget.id, {
+          name: data.name,
+          phone: data.phone,
+          email: data.email,
+          ...(data.password ? { password: data.password } : {}),
+        });
       } else {
-        await adminRbacApi.members.create(data);
+        if (!data.password) return;
+        await adminRbacApi.members.create({
+          loginId: data.loginId,
+          name: data.name,
+          phone: data.phone,
+          email: data.email,
+          password: data.password,
+        });
       }
       setModalOpen(false);
       setEditTarget(null);

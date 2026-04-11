@@ -4,7 +4,6 @@ import com.pochak.common.constant.HeaderConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 
 /**
  * Aggregated partner "me" endpoints.
@@ -24,17 +23,13 @@ public class PartnerMeController {
      */
     @GetMapping("/venues")
     public String getMyVenues(@RequestHeader(HeaderConstants.X_USER_ID) Long userId) {
-        try {
-            return operationClient.get()
-                    .uri(uriBuilder -> uriBuilder.path("/api/v1/venues")
-                            .queryParam("ownerId", userId)
-                            .build())
-                    .header(HeaderConstants.X_USER_ID, userId.toString())
-                    .retrieve()
-                    .body(String.class);
-        } catch (RestClientException e) {
-            return "{\"data\":[],\"success\":true}";
-        }
+        return operationClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/venues")
+                        .queryParam("ownerId", userId)
+                        .build())
+                .header(HeaderConstants.X_USER_ID, userId.toString())
+                .retrieve()
+                .body(String.class);
     }
 
     /**
@@ -44,17 +39,13 @@ public class PartnerMeController {
      */
     @GetMapping("/products")
     public String getMyProducts(@RequestHeader(HeaderConstants.X_USER_ID) Long userId) {
-        try {
-            return operationClient.get()
-                    .uri(uriBuilder -> uriBuilder.path("/api/v1/venues/products/owner")
-                            .queryParam("ownerId", userId)
-                            .build())
-                    .header(HeaderConstants.X_USER_ID, userId.toString())
-                    .retrieve()
-                    .body(String.class);
-        } catch (RestClientException e) {
-            return "{\"data\":[],\"success\":true}";
-        }
+        return operationClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/api/v1/venues/products/owner")
+                        .queryParam("ownerId", userId)
+                        .build())
+                .header(HeaderConstants.X_USER_ID, userId.toString())
+                .retrieve()
+                .body(String.class);
     }
 
     /**
@@ -63,16 +54,6 @@ public class PartnerMeController {
      */
     @GetMapping("/dashboard-stats")
     public String getDashboardStats(@RequestHeader(HeaderConstants.X_USER_ID) Long userId) {
-        try {
-            return operationClient.get()
-                    .uri(uriBuilder -> uriBuilder.path("/api/v1/partner/dashboard-stats")
-                            .queryParam("userId", userId)
-                            .build())
-                    .header(HeaderConstants.X_USER_ID, userId.toString())
-                    .retrieve()
-                    .body(String.class);
-        } catch (RestClientException e) {
-            return "{\"data\":{\"venueCount\":0,\"productCount\":0,\"monthlyReservations\":0,\"monthlyRevenue\":0},\"success\":true}";
-        }
+        throw new IllegalStateException("Partner dashboard stats API is not implemented in downstream operation-service.");
     }
 }

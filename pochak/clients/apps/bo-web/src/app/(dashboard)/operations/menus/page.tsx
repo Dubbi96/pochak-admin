@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { adminApi as adminRbacApi, type MenuNode, type MenuDetail } from "@/services/admin-api";
-import { adminApi } from "@/lib/api-client";
 import { ChevronDown, ChevronRight, FolderOpen, Folder, FileText, Plus, Save, Trash2 } from "lucide-react";
 
 // ── Tree Item ───────────────────────────────────────────────────────
@@ -94,10 +93,8 @@ export default function MenusPage() {
 
   const loadTree = useCallback(async () => {
     try {
-      const apiResult = await adminApi.get<MenuNode[]>("/admin/api/v1/operations/menus/tree");
-      if (apiResult) {
-        setTree(apiResult);
-      }
+      const apiResult = await adminRbacApi.menus.tree();
+      setTree(apiResult);
     } catch {
       /* API error */
     }

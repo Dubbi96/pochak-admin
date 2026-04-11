@@ -192,22 +192,22 @@ export async function getNotices(
   if (filters.category && filters.category !== "ALL") params.category = filters.category;
   if (filters.searchKeyword) params.searchKeyword = filters.searchKeyword;
 
-  return gatewayApi.get<PageResponse<Notice>>("/api/v1/admin/notices", params);
+  return gatewayApi.get<PageResponse<Notice>>("/api/v1/admin/site/notices", params);
 }
 
 export async function createNotice(data: NoticeCreateRequest): Promise<Notice> {
-  return gatewayApi.post<Notice>("/api/v1/admin/notices", data);
+  return gatewayApi.post<Notice>("/api/v1/admin/site/notices", data);
 }
 
 export async function updateNotice(
   id: number,
   data: NoticeCreateRequest
 ): Promise<Notice> {
-  return gatewayApi.put<Notice>(`/api/v1/admin/notices/${id}`, data);
+  return gatewayApi.put<Notice>(`/api/v1/admin/site/notices/${id}`, data);
 }
 
 export async function deleteNotice(id: number): Promise<void> {
-  await gatewayApi.delete(`/api/v1/admin/notices/${id}`);
+  await gatewayApi.delete(`/api/v1/admin/site/notices/${id}`);
 }
 
 // ── Terms APIs ─────────────────────────────────────────────────────
@@ -221,22 +221,22 @@ export async function getTermsList(
   if (filters.category && filters.category !== "ALL") params.category = filters.category;
   if (filters.searchKeyword) params.searchKeyword = filters.searchKeyword;
 
-  return gatewayApi.get<PageResponse<Terms>>("/api/v1/admin/terms", params);
+  return gatewayApi.get<PageResponse<Terms>>("/api/v1/admin/cs/terms", params);
 }
 
 export async function createTerms(data: TermsCreateRequest): Promise<Terms> {
-  return gatewayApi.post<Terms>("/api/v1/admin/terms", data);
+  return gatewayApi.post<Terms>("/api/v1/admin/cs/terms", data);
 }
 
 export async function updateTerms(
   id: number,
   data: TermsCreateRequest
 ): Promise<Terms> {
-  return gatewayApi.put<Terms>(`/api/v1/admin/terms/${id}`, data);
+  return gatewayApi.put<Terms>(`/api/v1/admin/cs/terms/${id}`, data);
 }
 
 export async function deleteTerms(id: number): Promise<void> {
-  await gatewayApi.delete(`/api/v1/admin/terms/${id}`);
+  await gatewayApi.delete(`/api/v1/admin/cs/terms/${id}`);
 }
 
 // ── CS: 1:1 문의 Types ────────────────────────────────────────────
@@ -417,8 +417,8 @@ export async function getInquiries(
   return gatewayApi.get<PageResponse<Inquiry>>("/api/v1/admin/cs/inquiries", params);
 }
 
-export async function answerInquiry(id: number, answer: string): Promise<Inquiry> {
-  return gatewayApi.post<Inquiry>(`/api/v1/admin/cs/inquiries/${id}/answer`, { answer });
+export async function answerInquiry(_id: number, _answer: string): Promise<Inquiry> {
+  throw new Error("문의 답변 API는 백엔드에 아직 구현되지 않았습니다.");
 }
 
 // ── CS: Report APIs ───────────────────────────────────────────────
@@ -438,11 +438,11 @@ export async function getReports(
 }
 
 export async function resolveReport(
-  id: number,
-  action: "RESOLVED" | "REJECTED",
-  comment: string
+  _id: number,
+  _action: "RESOLVED" | "REJECTED",
+  _comment: string
 ): Promise<Report> {
-  return gatewayApi.put<Report>(`/api/v1/admin/cs/reports/${id}/resolve`, { action, comment });
+  throw new Error("신고 조치 API는 백엔드에 아직 구현되지 않았습니다.");
 }
 
 // ── App Version APIs ──────────────────────────────────────────────
@@ -452,7 +452,7 @@ export async function getAppVersions(
   size = 20
 ): Promise<PageResponse<AppVersion>> {
   const params: Record<string, string> = { page: String(page), size: String(size) };
-  return gatewayApi.get<PageResponse<AppVersion>>("/api/v1/admin/app-versions", params);
+  return gatewayApi.get<PageResponse<AppVersion>>("/api/v1/admin/app/versions", params);
 }
 
 export async function getLatestVersions(): Promise<{
@@ -460,22 +460,22 @@ export async function getLatestVersions(): Promise<{
   ios: AppVersion | null;
 }> {
   return gatewayApi.get<{ aos: AppVersion | null; ios: AppVersion | null }>(
-    "/api/v1/admin/app-versions/latest"
+    "/api/v1/admin/app/versions/latest"
   );
 }
 
 export async function createAppVersion(
   data: AppVersionCreateRequest
 ): Promise<AppVersion> {
-  return gatewayApi.post<AppVersion>("/api/v1/admin/app-versions", data);
+  return gatewayApi.post<AppVersion>("/api/v1/admin/app/versions", data);
 }
 
-export async function toggleForceUpdate(id: number): Promise<AppVersion> {
-  return gatewayApi.put<AppVersion>(`/api/v1/admin/app-versions/${id}/toggle-force-update`);
+export async function toggleForceUpdate(_id: number): Promise<AppVersion> {
+  throw new Error("앱 버전 강제업데이트 토글 API는 백엔드에 아직 구현되지 않았습니다.");
 }
 
 export async function deleteAppVersion(id: number): Promise<void> {
-  await gatewayApi.delete(`/api/v1/admin/app-versions/${id}`);
+  await gatewayApi.delete(`/api/v1/admin/app/versions/${id}`);
 }
 
 // ── Advertisement APIs ────────────────────────────────────────────
@@ -509,15 +509,15 @@ export async function getPushCampaigns(
   if (filters.status && filters.status !== "ALL") params.status = filters.status;
   if (filters.searchKeyword) params.searchKeyword = filters.searchKeyword;
 
-  return gatewayApi.get<PageResponse<PushCampaign>>("/api/v1/admin/push-campaigns", params);
+  return gatewayApi.get<PageResponse<PushCampaign>>("/api/v1/admin/site/push-campaigns", params);
 }
 
 export async function createPushCampaign(
   data: PushCampaignCreateRequest
 ): Promise<PushCampaign> {
-  return gatewayApi.post<PushCampaign>("/api/v1/admin/push-campaigns", data);
+  return gatewayApi.post<PushCampaign>("/api/v1/admin/site/push-campaigns", data);
 }
 
-export async function cancelPushCampaign(id: number): Promise<PushCampaign> {
-  return gatewayApi.put<PushCampaign>(`/api/v1/admin/push-campaigns/${id}/cancel`);
+export async function cancelPushCampaign(_id: number): Promise<PushCampaign> {
+  throw new Error("푸시 캠페인 취소 API는 백엔드에 아직 구현되지 않았습니다.");
 }

@@ -25,6 +25,7 @@ import { Search, CheckCircle, XCircle, Eye } from "lucide-react";
 import type { PageResponse } from "@/types/common";
 import {
   approveRefund,
+  getRefunds,
   rejectRefund,
   REFUND_CATEGORY_LABELS,
   REFUND_KIND_LABELS,
@@ -35,7 +36,6 @@ import {
   type RefundKind,
   type RefundStatus,
 } from "@/services/commerce-admin-api";
-import { adminApi } from "@/lib/api-client";
 
 const STATUS_BADGE_VARIANT: Record<string, "warning" | "success" | "destructive"> = {
   REQUESTED: "warning",
@@ -75,15 +75,15 @@ export default function RefundsPage() {
         searchKeyword: searchKeyword || undefined,
       };
 
-      const apiParams: Record<string, string> = { page: String(page) };
-      if (category !== "ALL") apiParams.category = category;
-      if (kind !== "ALL") apiParams.kind = kind;
-      if (status !== "ALL") apiParams.status = status;
-      if (filters.searchKeyword) apiParams.searchKeyword = filters.searchKeyword;
-
-      const apiResult = await adminApi.get<PageResponse<Refund>>(
-        "/admin/api/v1/commerce/refunds",
-        apiParams
+      const apiResult = await getRefunds(
+        {
+          category,
+          kind,
+          status,
+          searchKeyword: filters.searchKeyword,
+        },
+        page,
+        20
       );
       setData(apiResult);
     } finally {

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { adminApi as adminRbacApi, type FunctionItem } from "@/services/admin-api";
-import { adminApi } from "@/lib/api-client";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 
 // ── Modal ───────────────────────────────────────────────────────────
@@ -94,16 +93,8 @@ export default function FeaturesPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const apiParams: Record<string, string> = {};
-      if (search) apiParams.keyword = search;
-
-      const apiResult = await adminApi.get<FunctionItem[]>(
-        "/admin/api/v1/operations/functions",
-        apiParams
-      );
-      if (apiResult) {
-        setItems(apiResult);
-      }
+      const apiResult = await adminRbacApi.functions.list(search);
+      setItems(apiResult);
     } catch {
       /* API error - data remains in initial empty state */
     } finally {

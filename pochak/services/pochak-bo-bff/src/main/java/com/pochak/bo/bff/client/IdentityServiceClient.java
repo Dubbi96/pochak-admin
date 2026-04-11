@@ -25,7 +25,7 @@ public class IdentityServiceClient {
                     .body(JsonNode.class);
         } catch (RestClientException e) {
             log.warn("Identity service member stats call failed: {}", e.getMessage());
-            return null;
+            throw e;
         }
     }
 
@@ -41,7 +41,7 @@ public class IdentityServiceClient {
                     .body(JsonNode.class);
         } catch (RestClientException e) {
             log.warn("Identity service members call failed: {}", e.getMessage());
-            return null;
+            throw e;
         }
     }
 
@@ -53,7 +53,7 @@ public class IdentityServiceClient {
                     .body(JsonNode.class);
         } catch (RestClientException e) {
             log.warn("Identity service member detail call failed: {}", e.getMessage());
-            return null;
+            throw e;
         }
     }
 

@@ -137,11 +137,9 @@ export async function getBlacklist(
     params.search = filters.searchKeyword;
     params.searchType = filters.searchType || "name";
   }
+  params.status = "SUSPENDED";
 
-  return gatewayApi.get<PageResponse<BlacklistMember>>(
-    "/api/v1/admin/members/blacklist",
-    params
-  );
+  return gatewayApi.get<PageResponse<BlacklistMember>>("/api/v1/admin/members", params);
 }
 
 export async function unblockMember(id: number): Promise<void> {

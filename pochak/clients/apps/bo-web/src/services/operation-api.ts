@@ -25,24 +25,24 @@ export async function getVenues(
   if (filters.cameraName) params.cameraName = filters.cameraName;
 
   return gatewayApi.get<PageResponse<Venue>>(
-    "/api/v1/admin/venues",
+    "/api/v1/venues",
     params
   );
 }
 
 export async function createVenue(data: VenueCreateRequest): Promise<Venue> {
-  return gatewayApi.post<Venue>("/api/v1/admin/venues", data);
+  return gatewayApi.post<Venue>("/api/v1/venues", data);
 }
 
 export async function updateVenue(
   id: number,
   data: VenueCreateRequest
 ): Promise<Venue> {
-  return gatewayApi.put<Venue>(`/api/v1/admin/venues/${id}`, data);
+  return gatewayApi.put<Venue>(`/api/v1/venues/${id}`, data);
 }
 
 export async function deleteVenue(id: number): Promise<void> {
-  await gatewayApi.delete(`/api/v1/admin/venues/${id}`);
+  await gatewayApi.delete(`/api/v1/venues/${id}`);
 }
 
 // ── Camera APIs ────────────────────────────────────────────────────────────────
@@ -60,32 +60,32 @@ export async function getCameras(
   if (filters.keyword) params.keyword = filters.keyword;
 
   return gatewayApi.get<PageResponse<Camera>>(
-    "/api/v1/admin/cameras",
+    "/api/v1/cameras",
     params
   );
 }
 
 export async function createCamera(data: CameraCreateRequest): Promise<Camera> {
-  return gatewayApi.post<Camera>("/api/v1/admin/cameras", data);
+  return gatewayApi.post<Camera>("/api/v1/cameras", data);
 }
 
 export async function linkCameraToVenue(
   cameraId: number,
   venueId: number
 ): Promise<void> {
-  await gatewayApi.post(`/api/v1/admin/cameras/${cameraId}/link`, { venueId });
+  await gatewayApi.post(`/api/v1/venues/${venueId}/cameras`, { cameraId });
 }
 
 export async function unlinkCamera(cameraId: number): Promise<void> {
-  await gatewayApi.post(`/api/v1/admin/cameras/${cameraId}/unlink`);
+  throw new Error(`카메라 단독 unlink API 미구현: venueId가 필요합니다 (cameraId=${cameraId})`);
 }
 
 export async function getUnlinkedCameras(): Promise<Camera[]> {
-  return gatewayApi.get<Camera[]>("/api/v1/admin/cameras/unlinked");
+  throw new Error("미연결 카메라 조회 API는 현재 백엔드에 구현되지 않았습니다.");
 }
 
 export async function getCamerasByVenue(venueId: number): Promise<Camera[]> {
   return gatewayApi.get<Camera[]>(
-    `/api/v1/admin/venues/${venueId}/cameras`
+    `/api/v1/venues/${venueId}/cameras`
   );
 }

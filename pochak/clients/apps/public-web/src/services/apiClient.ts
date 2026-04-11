@@ -67,8 +67,9 @@ async function handleUnauthorized(): Promise<boolean> {
       });
       if (refreshRes.ok) {
         const data = await refreshRes.json();
-        setAuthToken(data.accessToken);
-        localStorage.setItem("pochak_refresh_token", data.refreshToken);
+        const payload = data.data ?? data;
+        setAuthToken(payload.accessToken);
+        localStorage.setItem("pochak_refresh_token", payload.refreshToken);
         return true; // caller should retry
       }
     } catch {
