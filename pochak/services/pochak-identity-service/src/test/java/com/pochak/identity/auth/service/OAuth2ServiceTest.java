@@ -76,6 +76,7 @@ class OAuth2ServiceTest {
         existingUser = User.builder()
                 .id(1L)
                 .email("user@kakao.com")
+                .phoneNumber("01012345678")
                 .nickname("kakaouser")
                 .name("카카오유저")
                 .status(User.UserStatus.ACTIVE)
@@ -331,6 +332,39 @@ class OAuth2ServiceTest {
     }
 
     // ==================== Unknown Provider Tests ====================
+
+    @Test
+    @DisplayName("OAuth user with same phone number → LINK_EXISTING result")
+    void oauthCallback_existingPhone_returnsLinkExisting() throws Exception {
+        // Mock Naver token exchange
+        JsonNode tokenResponse = objectMapper.readTree(
+                "{\"access_token\":\"naver-access-token\",\"token_type\":\"bearer\"}");
+        given(restTemplate.exchange(
+                eq("https://nid.naver.com/oauth2.0/token"),
+                eq(HttpMethod.POST), any(HttpEntity.class), eq(JsonNode.class)))
+                .willReturn(new ResponseEntity<>(tokenResponse, HttpStatus.OK));
+
+        // Mock Naver user info with no email but same phone number
+        JsonNode userInfo = objectMapper.readTree(
+                "{\"response\":{\"id\":\"naver-123\",\"name\":\"네이버유저\",\"mobile\":\"010-1234-5678\"}}");
+        given(restTemplate.exchange(
+                eq("https://openapi.naver.com/v1/nid/me"),
+                eq(HttpMethod.GET), any(HttpEntity.class), eq(JsonNode.class)))
+                .willReturn(new ResponseEntity<>(userInfo, HttpStatus.OK));
+
+        given(authAccountRepository.findByProviderAndProviderUserId("NAVER", "naver-123"))
+                .willReturn(Optional.empty());
+        given(userRepository.findByPhoneNumber("01012345678")).willReturn(Optional.of(existingUser));
+        given(jwtTokenProvider.generateSignupToken(anyString(), anyString(), anyString(), anyString(), any()))
+                .willReturn("phone-link-token");
+
+        OAuthCallbackResult result = oAuth2Service.processOAuthCallbackWithResult("naver", "auth-code");
+
+        assertThat(result.getType()).isEqualTo(OAuthCallbackResult.Type.LINK_EXISTING);
+        assertThat(result.getSignupToken()).isEqualTo("phone-link-token");
+        assertThat(result.getExistingUserId()).isEqualTo(1L);
+        assertThat(result.getEmail()).isEqualTo("user@kakao.com");
+    }
 
     @Test
     @DisplayName("Unknown OAuth provider → throws BusinessException")

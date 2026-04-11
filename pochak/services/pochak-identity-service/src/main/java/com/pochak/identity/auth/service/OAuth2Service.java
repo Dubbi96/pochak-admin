@@ -23,6 +23,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -128,7 +130,28 @@ public class OAuth2Service {
             }
         }
 
-        // 3. Completely new user → SIGNUP_REQUIRED
+        // 3. Check if phone number exists → LINK_EXISTING
+        Optional<User> userByPhone = findExistingUserByPhoneNumber(userInfo.getPhoneNumber());
+        if (userByPhone.isPresent()) {
+            User existingUser = userByPhone.get();
+            String existingEmail = existingUser.getEmail();
+            String signupToken = jwtTokenProvider.generateSignupToken(
+                    providerUpper, userInfo.getProviderId(), existingEmail,
+                    userInfo.getName(), userInfo.getProfileImageUrl());
+            log.info("[OAuth] Phone exists, no OAuth link → LINK_EXISTING. userId={}", existingUser.getId());
+            return OAuthCallbackResult.builder()
+                    .type(OAuthCallbackResult.Type.LINK_EXISTING)
+                    .signupToken(signupToken)
+                    .provider(providerUpper)
+                    .providerId(userInfo.getProviderId())
+                    .email(existingEmail)
+                    .name(userInfo.getName())
+                    .profileImageUrl(userInfo.getProfileImageUrl())
+                    .existingUserId(existingUser.getId())
+                    .build();
+        }
+
+        // 4. Completely new user → SIGNUP_REQUIRED
         String signupToken = jwtTokenProvider.generateSignupToken(
                 providerUpper, userInfo.getProviderId(), userInfo.getEmail(),
                 userInfo.getName(), userInfo.getProfileImageUrl());
@@ -250,6 +273,7 @@ public class OAuth2Service {
 
     private OAuthUserInfo processKakao(String code) {
         log.info("[Kakao] Token exchange: redirect_uri={}", kakaoRedirectUri);
+        validateOAuthConfig("Kakao", kakaoRestApiKey, kakaoClientSecret, kakaoRedirectUri);
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
@@ -268,6 +292,7 @@ public class OAuth2Service {
 
         JsonNode kakaoAccount = body.path("kakao_account");
         String email = kakaoAccount.has("email") ? kakaoAccount.get("email").asText() : null;
+        String phoneNumber = normalizePhoneNumber(kakaoAccount.path("phone_number").asText(null));
 
         JsonNode profile = kakaoAccount.path("profile");
         String nickname = profile.has("nickname") ? profile.get("nickname").asText() : null;
@@ -278,6 +303,7 @@ public class OAuth2Service {
         return OAuthUserInfo.builder()
                 .providerId(providerId)
                 .email(email)
+                .phoneNumber(phoneNumber)
                 .name(nickname)
                 .profileImageUrl(profileImage)
                 .provider("KAKAO")
@@ -290,6 +316,7 @@ public class OAuth2Service {
 
     private OAuthUserInfo processGoogle(String code) {
         log.info("[Google] Token exchange: redirect_uri={}", googleRedirectUri);
+        validateOAuthConfig("Google", googleClientId, googleClientSecret, googleRedirectUri);
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("code", code);
@@ -308,6 +335,7 @@ public class OAuth2Service {
         return OAuthUserInfo.builder()
                 .providerId(body.get("id").asText())
                 .email(body.has("email") ? body.get("email").asText() : null)
+                .phoneNumber(null)
                 .name(body.has("name") ? body.get("name").asText() : null)
                 .profileImageUrl(body.has("picture") ? body.get("picture").asText() : null)
                 .provider("GOOGLE")
@@ -320,6 +348,7 @@ public class OAuth2Service {
 
     private OAuthUserInfo processNaver(String code) {
         log.info("[Naver] Token exchange: redirect_uri={}", naverRedirectUri);
+        validateOAuthConfig("Naver", naverClientId, naverClientSecret, naverRedirectUri);
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
@@ -334,10 +363,16 @@ public class OAuth2Service {
 
         JsonNode body = fetchUserInfo("https://openapi.naver.com/v1/nid/me", accessToken, "Naver");
         JsonNode responseNode = body.get("response");
+        String phoneNumber = normalizePhoneNumber(
+                responseNode.has("mobile_e164")
+                        ? responseNode.get("mobile_e164").asText()
+                        : responseNode.path("mobile").asText(null)
+        );
 
         return OAuthUserInfo.builder()
                 .providerId(responseNode.get("id").asText())
                 .email(responseNode.has("email") ? responseNode.get("email").asText() : null)
+                .phoneNumber(phoneNumber)
                 .name(responseNode.has("name") ? responseNode.get("name").asText() : null)
                 .profileImageUrl(responseNode.has("profile_image") ? responseNode.get("profile_image").asText() : null)
                 .provider("NAVER")
@@ -378,12 +413,84 @@ public class OAuth2Service {
             return response.getBody();
         } catch (HttpClientErrorException e) {
             log.error("[{}] Token exchange FAILED: status={}, body={}", provider, e.getStatusCode(), e.getResponseBodyAsString());
+            String body = e.getResponseBodyAsString();
+            if (body != null && body.contains("wrong client id / client secret pair")) {
+                throw new BusinessException(ErrorCode.INTERNAL_ERROR,
+                        provider + " OAuth configuration mismatch: check client id/secret pair");
+            }
             throw new BusinessException(ErrorCode.INTERNAL_ERROR,
-                    provider + " token exchange failed: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+                    provider + " token exchange failed: " + e.getStatusCode() + " - " + body);
         } catch (Exception e) {
             log.error("[{}] Token exchange ERROR: {}", provider, e.getMessage(), e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR,
                     provider + " token exchange failed: " + e.getMessage());
+        }
+    }
+
+    private Optional<User> findExistingUserByPhoneNumber(String phoneNumber) {
+        List<String> candidates = buildPhoneCandidates(phoneNumber);
+        for (String candidate : candidates) {
+            Optional<User> found = userRepository.findByPhoneNumber(candidate);
+            if (found.isPresent()) {
+                return found;
+            }
+        }
+        return Optional.empty();
+    }
+
+    private List<String> buildPhoneCandidates(String rawPhone) {
+        List<String> candidates = new ArrayList<>();
+        String normalized = normalizePhoneNumber(rawPhone);
+        if (normalized == null || normalized.isBlank()) {
+            return candidates;
+        }
+        candidates.add(normalized);
+        String hyphenated = hyphenateKoreanMobile(normalized);
+        if (hyphenated != null) {
+            candidates.add(hyphenated);
+        }
+        return candidates;
+    }
+
+    private String normalizePhoneNumber(String rawPhone) {
+        if (rawPhone == null || rawPhone.isBlank()) {
+            return null;
+        }
+        String digits = rawPhone.replaceAll("\\D", "");
+        if (digits.startsWith("82")) {
+            digits = "0" + digits.substring(2);
+        }
+        if (digits.startsWith("0082")) {
+            digits = "0" + digits.substring(4);
+        }
+        return digits;
+    }
+
+    private String hyphenateKoreanMobile(String digits) {
+        if (digits == null || !digits.startsWith("01")) {
+            return null;
+        }
+        if (digits.length() == 11) {
+            return digits.substring(0, 3) + "-" + digits.substring(3, 7) + "-" + digits.substring(7);
+        }
+        if (digits.length() == 10) {
+            return digits.substring(0, 3) + "-" + digits.substring(3, 6) + "-" + digits.substring(6);
+        }
+        return null;
+    }
+
+    private void validateOAuthConfig(String provider, String clientId, String clientSecret, String redirectUri) {
+        if (clientId == null || clientId.isBlank()) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR,
+                    provider + " OAuth is not configured: missing client id");
+        }
+        if (clientSecret == null || clientSecret.isBlank()) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR,
+                    provider + " OAuth is not configured: missing client secret");
+        }
+        if (redirectUri == null || redirectUri.isBlank()) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR,
+                    provider + " OAuth is not configured: missing redirect uri");
         }
     }
 

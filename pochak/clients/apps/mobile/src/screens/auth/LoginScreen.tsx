@@ -29,6 +29,9 @@ const GRAY = '#A6A6A6';
 const GRAY_LIGHT = '#A6A6A6';
 const BORDER = '#4D4D4D';
 const ERROR_RED = '#E51728';
+const KAKAO_REST_KEY = process.env.EXPO_PUBLIC_KAKAO_REST_KEY || '';
+const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '';
+const NAVER_CLIENT_ID = process.env.EXPO_PUBLIC_NAVER_CLIENT_ID || '';
 
 const LoginScreen: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -48,23 +51,32 @@ const LoginScreen: React.FC = () => {
   };
 
   const handleKakaoLogin = async () => {
-    const kakaoRestKey = '<REDACTED_KAKAO_REST_KEY>';
+    if (!KAKAO_REST_KEY) {
+      Alert.alert('설정 필요', 'EXPO_PUBLIC_KAKAO_REST_KEY가 설정되지 않았습니다.');
+      return;
+    }
     const redirectUri = encodeURIComponent(`${GATEWAY_URL}/api/v1/auth/oauth2/callback/kakao`);
-    const url = `https://kauth.kakao.com/oauth/authorize?client_id=${kakaoRestKey}&redirect_uri=${redirectUri}&response_type=code`;
+    const url = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_KEY}&redirect_uri=${redirectUri}&response_type=code`;
     await Linking.openURL(url);
   };
 
   const handleGoogleLogin = async () => {
-    const clientId = '<REDACTED_GOOGLE_CLIENT_ID>';
+    if (!GOOGLE_CLIENT_ID) {
+      Alert.alert('설정 필요', 'EXPO_PUBLIC_GOOGLE_CLIENT_ID가 설정되지 않았습니다.');
+      return;
+    }
     const redirectUri = encodeURIComponent(`${GATEWAY_URL}/api/v1/auth/oauth2/callback/google`);
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20email%20profile`;
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20email%20profile`;
     await Linking.openURL(url);
   };
 
   const handleNaverLogin = async () => {
-    const clientId = '<REDACTED_NAVER_CLIENT_ID>';
+    if (!NAVER_CLIENT_ID) {
+      Alert.alert('설정 필요', 'EXPO_PUBLIC_NAVER_CLIENT_ID가 설정되지 않았습니다.');
+      return;
+    }
     const redirectUri = encodeURIComponent(`${GATEWAY_URL}/api/v1/auth/oauth2/callback/naver`);
-    const url = `https://nid.naver.com/oauth2.0/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`;
+    const url = `https://nid.naver.com/oauth2.0/authorize?client_id=${NAVER_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code`;
     await Linking.openURL(url);
   };
 

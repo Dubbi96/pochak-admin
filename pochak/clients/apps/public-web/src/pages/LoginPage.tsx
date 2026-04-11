@@ -3,22 +3,8 @@ import { useState, useEffect } from 'react';
 
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'http://localhost:8080';
 
-const KAKAO_REST_KEY = '<REDACTED_KAKAO_REST_KEY>';
-const GOOGLE_CLIENT_ID = '<REDACTED_GOOGLE_CLIENT_ID>';
-
 function buildOAuthUrl(provider: 'kakao' | 'google' | 'naver'): string {
-  const redirectUri = encodeURIComponent(`${GATEWAY_URL}/api/v1/auth/oauth2/callback/${provider}`);
-  const state = 'web';
-  switch (provider) {
-    case 'kakao':
-      return `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_KEY}&redirect_uri=${redirectUri}&response_type=code&state=${state}`;
-    case 'google':
-      return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20email%20profile&state=${state}`;
-    case 'naver':
-      return `https://nid.naver.com/oauth2.0/authorize?client_id=<REDACTED_NAVER_CLIENT_ID>&redirect_uri=${redirectUri}&response_type=code&state=${state}`;
-    default:
-      return '#';
-  }
+  return `${GATEWAY_URL}/api/v1/auth/oauth2/authorize/${provider}?platform=web`;
 }
 
 export default function LoginPage() {

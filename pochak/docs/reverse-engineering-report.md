@@ -57,7 +57,7 @@
 | **Google Tag Manager** | 태그 관리 | GTM-TV72J8TV |
 | **Google Analytics** | 웹 분석 | G-1309EXWYC7 |
 | **Google Ads (DFP)** | 광고 | securepubads.g.doubleclick.net |
-| **Google Maps** | 지도 | API Key: <REDACTED_GOOGLE_MAPS_API_KEY> |
+| **Google Maps** | 지도 | API Key: `<REDACTED_GOOGLE_MAPS_API_KEY>` |
 | **Google Cast** | Chromecast 지원 | cast_sender.js |
 | **Naver Maps** | 지도 | NCP Client ID: p4d2ac47ht |
 | **Naver OAuth** | 네이버 로그인 | nid.naver.com/oauth2.0/authorize |
