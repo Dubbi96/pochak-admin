@@ -44,7 +44,7 @@ public class ClipAsset {
     private String thumbnailUrl;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "aspect_ratio", nullable = false, length = 16)
+    @Column(name = "aspect_ratio", length = 16)
     @Builder.Default
     private AspectRatio aspectRatio = AspectRatio.RATIO_16_9;
 
