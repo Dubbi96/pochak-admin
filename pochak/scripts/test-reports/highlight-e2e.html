@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>하이라이트 기능 E2E 테스트 리포트</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f3f4f6; color: #111827; }
+    .header { background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%); color: #fff; padding: 32px 40px; }
+    .header h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .header .meta { font-size: 13px; opacity: 0.8; }
+    .container { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+    .card { background: #fff; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .card .value { font-size: 36px; font-weight: 800; }
+    .card .label { font-size: 13px; color: #6b7280; margin-top: 4px; }
+    .section { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .section h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
+    .blocker { border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; border: 1px solid #e5e7eb; }
+    .blocker.critical { border-left: 4px solid #dc2626; background: #fff1f1; }
+    .blocker.high { border-left: 4px solid #ea580c; background: #fff7ed; }
+    .blocker-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+    .blocker-title { font-size: 14px; font-weight: 600; }
+    .blocker-desc { font-size: 13px; color: #374151; line-height: 1.5; }
+    .blocker-impact { font-size: 12px; color: #b91c1c; margin-top: 5px; font-style: italic; }
+    .badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .badge-critical { background: #dc2626; color: #fff; }
+    .badge-high { background: #ea580c; color: #fff; }
+    .badge-svc { background: #eff6ff; color: #2563eb; }
+    .test-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+    .test-row:last-child { border-bottom: none; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .dot-fail { background: #dc2626; }
+    .test-info { flex: 1; }
+    .test-suite { font-size: 11px; color: #9ca3af; }
+    .test-title { font-size: 13px; color: #374151; }
+    .test-error { font-size: 12px; color: #dc2626; margin-top: 4px; background: #fef2f2; padding: 5px 8px; border-radius: 4px; font-family: monospace; }
+    .test-cause { font-size: 12px; color: #ea580c; margin-top: 3px; }
+    .test-duration { font-size: 11px; color: #9ca3af; flex-shrink: 0; }
+    .recommendations { background: #fffbeb; border: 1px solid #fbbf24; border-radius: 8px; padding: 16px; }
+    .recommendations ul { padding-left: 20px; }
+    .recommendations li { font-size: 13px; color: #374151; margin-bottom: 8px; line-height: 1.5; }
+    .footer { text-align: center; font-size: 12px; color: #9ca3af; padding: 24px; }
+    .svc-status { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .svc { padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; }
+    .svc.up { background: #dcfce7; color: #166534; }
+    .svc.down { background: #fee2e2; color: #991b1b; }
+    .svc.cors { background: #fff7ed; color: #9a3412; }
+  </style>
+</head>
+<body>
+<div class="header">
+  <h1>🎬 하이라이트 기능 E2E 테스트 리포트</h1>
+  <div class="meta">실행일시: 2026-04-09 &nbsp;|&nbsp; 브라우저: Chromium (headless) &nbsp;|&nbsp; QA Agent: qa-engineer (POC-125)</div>
+</div>
+
+<div class="container">
+
+  <div class="summary">
+    <div class="card"><div class="value">6</div><div class="label">전체 테스트</div></div>
+    <div class="card"><div class="value" style="color:#16a34a">0</div><div class="label">통과</div></div>
+    <div class="card"><div class="value" style="color:#dc2626">6</div><div class="label">실패</div></div>
+    <div class="card"><div class="value" style="color:#f59e0b">2</div><div class="label">블로커 버그</div></div>
+  </div>
+
+  <!-- 서비스 상태 -->
+  <div class="section">
+    <h2>🖥 서비스 가용성</h2>
+    <div class="svc-status">
+      <div class="svc up">✔ BO (localhost:3000) 실행 중</div>
+      <div class="svc cors">⚠ Partner (localhost:3200) — CORS 차단</div>
+      <div class="svc down">✘ Web (localhost:3300) 미실행</div>
+    </div>
+    <p style="font-size:13px;color:#6b7280">하이라이트 기능(영상 플레이어, 마커, 사이드패널)은 Web 서비스가 필수입니다. Web 미실행과 BO 로그인 버그로 인해 전체 검증이 차단됩니다.</p>
+  </div>
+
+  <!-- 블로커 -->
+  <div class="section">
+    <h2>🚧 블로커 버그</h2>
+
+    <div class="blocker critical">
+      <div class="blocker-header">
+        <span class="badge badge-critical">BUG-001 CRITICAL</span>
+        <span class="badge badge-svc">Web (localhost:3300)</span>
+      </div>
+      <div class="blocker-title">Web 서비스 미실행</div>
+      <div class="blocker-desc">public-web(포트 3300) 미실행. 하이라이트 감지, API 호출, 마커 표시, 마커 클릭, 사이드패널 등 Web 5개 테스트 전체 차단.</div>
+      <div class="blocker-impact">차단된 테스트 5개: 영상 플레이어 하이라이트 감지 / API 호출 mock 생성 / 시크바 마커 표시 / 마커 클릭 시점 이동 / 사이드패널 목록</div>
+    </div>
+
+    <div class="blocker high">
+      <div class="blocker-header">
+        <span class="badge badge-high">BUG-002 HIGH</span>
+        <span class="badge badge-svc">BO (localhost:3000)</span>
+      </div>
+      <div class="blocker-title">BO 로그인 API 빈 응답 — 토큰 미발급</div>
+      <div class="blocker-desc">BO 로그인 submit 후 auth/login API 응답 body 없음. 대시보드 진입 불가로 하이라이트 관리 페이지 접근 차단.</div>
+      <div class="blocker-impact">차단된 테스트 1개: BO 하이라이트 관리 페이지 접근 확인</div>
+    </div>
+  </div>
+
+  <!-- 테스트 결과 -->
+  <div class="section">
+    <h2>📋 테스트 결과 상세</h2>
+
+    <div class="test-row">
+      <div class="dot dot-fail"></div>
+      <div class="test-info">
+        <div class="test-suite">Web 하이라이트 기능 (localhost:3300)</div>
+        <div class="test-title">영상 플레이어에서 하이라이트 감지 버튼 클릭</div>
+        <div class="test-error">Web 서비스(localhost:3300)가 실행되지 않음 — ERR_CONNECTION_REFUSED</div>
+        <div class="test-cause">→ BUG-001: Web 서비스 미실행</div>
+      </div>
+      <div class="test-duration">0.4s</div>
+    </div>
+
+    <div class="test-row">
+      <div class="dot dot-fail"></div>
+      <div class="test-info">
+        <div class="test-suite">Web 하이라이트 기능 (localhost:3300)</div>
+        <div class="test-title">API 호출 → mock 하이라이트 생성 확인</div>
+        <div class="test-error">Web 서비스(localhost:3300)가 실행되지 않음 — ERR_CONNECTION_REFUSED</div>
+        <div class="test-cause">→ BUG-001: Web 서비스 미실행</div>
+      </div>
+      <div class="test-duration">0.2s</div>
+    </div>
+
+    <div class="test-row">
+      <div class="dot dot-fail"></div>
+      <div class="test-info">
+        <div class="test-suite">Web 하이라이트 기능 (localhost:3300)</div>
+        <div class="test-title">시크바에 하이라이트 마커 표시 확인</div>
+        <div class="test-error">Web 서비스(localhost:3300)가 실행되지 않음 — ERR_CONNECTION_REFUSED</div>
+        <div class="test-cause">→ BUG-001: Web 서비스 미실행</div>
+      </div>
+      <div class="test-duration">0.2s</div>
+    </div>
+
+    <div class="test-row">
+      <div class="dot dot-fail"></div>
+      <div class="test-info">
+        <div class="test-suite">Web 하이라이트 기능 (localhost:3300)</div>
+        <div class="test-title">마커 클릭 → 해당 시점 이동 확인</div>
+        <div class="test-error">Web 서비스(localhost:3300)가 실행되지 않음 — ERR_CONNECTION_REFUSED</div>
+        <div class="test-cause">→ BUG-001: Web 서비스 미실행</div>
+      </div>
+      <div class="test-duration">0.2s</div>
+    </div>
+
+    <div class="test-row">
+      <div class="dot dot-fail"></div>
+      <div class="test-info">
+        <div class="test-suite">Web 하이라이트 기능 (localhost:3300)</div>
+        <div class="test-title">사이드패널 하이라이트 목록 표시 확인</div>
+        <div class="test-error">Web 서비스(localhost:3300)가 실행되지 않음 — ERR_CONNECTION_REFUSED</div>
+        <div class="test-cause">→ BUG-001: Web 서비스 미실행</div>
+      </div>
+      <div class="test-duration">0.2s</div>
+    </div>
+
+    <div class="test-row">
+      <div class="dot dot-fail"></div>
+      <div class="test-info">
+        <div class="test-suite">BO 하이라이트 관리 (localhost:3000)</div>
+        <div class="test-title">BO 하이라이트 관리 페이지 접근 확인</div>
+        <div class="test-error">[BUG-002] BO 로그인 실패 — auth/login API 빈 응답 (토큰 미발급). 대시보드 진입 불가로 /highlights, /ai-highlights 페이지 접근 차단.</div>
+        <div class="test-cause">→ BUG-002: BO 로그인 API 토큰 미발급</div>
+      </div>
+      <div class="test-duration">3.4s</div>
+    </div>
+  </div>
+
+  <!-- 조치 권고 -->
+  <div class="section">
+    <h2>💡 조치 권고사항</h2>
+    <div class="recommendations">
+      <ul>
+        <li><strong>[P0 / BUG-001]</strong> Web 서비스(localhost:3300) 기동 후 하이라이트 E2E 재실행. <code>clients/apps/public-web</code> 또는 <code>web-front</code> 실행 확인.</li>
+        <li><strong>[P0 / BUG-002]</strong> BO <code>/admin/api/v1/auth/login</code> 응답에 JWT 포함되도록 백엔드 수정. 로그인 성공 후 하이라이트 관리 페이지 재접근 테스트 필요.</li>
+        <li>3개 서비스 정상화 후: <code>npx playwright test --config=scripts/playwright-highlight.config.js</code> 재실행.</li>
+        <li>하이라이트 기능 UI 구현 확인 사항: 영상 플레이어 내 감지 버튼 존재 여부, 시크바 마커 컴포넌트, 사이드패널 하이라이트 목록 컴포넌트.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+<div class="footer">Generated by POCHAK QA Agent &middot; 2026-04-09 &middot; POC-125</div>
+</body>
+</html>

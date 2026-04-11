@@ -7,8 +7,10 @@ RUN npm ci
 
 COPY . .
 
-ENV NEXT_PUBLIC_GATEWAY_URL=http://pochak-gateway:8080
-ENV NEXT_PUBLIC_API_URL=http://pochak-gateway:8080/admin/api/v1
+ARG NEXT_PUBLIC_GATEWAY_URL=http://localhost:8080
+ARG NEXT_PUBLIC_API_URL=http://localhost:8080/admin/api/v1
+ENV NEXT_PUBLIC_GATEWAY_URL=$NEXT_PUBLIC_GATEWAY_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 RUN npm run build
 

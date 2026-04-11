@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "detector": "pochak-ai-highlight",
+  "highlights": [
+    {
+      "timestamp": 25.0,
+      "duration": 5.0,
+      "event_type": "HOME_RUN",
+      "confidence": 0.944,
+      "description": "홈런!",
+      "sport": "baseball"
+    },
+    {
+      "timestamp": 80.0,
+      "duration": 5.0,
+      "event_type": "HOME_RUN",
+      "confidence": 0.853,
+      "description": "홈런!",
+      "sport": "baseball"
+    },
+    {
+      "timestamp": 140.0,
+      "duration": 5.0,
+      "event_type": "HOME_RUN",
+      "confidence": 0.991,
+      "description": "홈런!",
+      "sport": "baseball"
+    }
+  ]
+}

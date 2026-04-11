@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "detector": "pochak-ai-highlight",
+  "highlights": [
+    {
+      "timestamp": 35.0,
+      "duration": 5.0,
+      "event_type": "PENALTY",
+      "confidence": 0.875,
+      "description": "페널티킥",
+      "sport": "soccer"
+    },
+    {
+      "timestamp": 95.0,
+      "duration": 5.0,
+      "event_type": "PENALTY",
+      "confidence": 0.886,
+      "description": "페널티킥",
+      "sport": "soccer"
+    },
+    {
+      "timestamp": 155.0,
+      "duration": 5.0,
+      "event_type": "PENALTY",
+      "confidence": 0.894,
+      "description": "페널티킥",
+      "sport": "soccer"
+    }
+  ]
+}

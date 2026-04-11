@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 const months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 function EventIndicator({ count, isActive }: { count: number; isActive: boolean }) {
-  const dotColor = isActive ? 'bg-[#1A1A1A]' : 'bg-[#00CC33]';
-  const textColor = isActive ? 'text-[#1A1A1A]' : 'text-[#00CC33]';
+  const dotColor = isActive ? 'bg-white' : 'bg-[#00CC33]';
+  const textColor = isActive ? 'text-white' : 'text-[#00CC33]';
 
   if (count === 0) return null;
 
@@ -44,7 +44,19 @@ export default function MonthSelector({
   eventCounts?: Map<number, number>;
 }) {
   const [yearOpen, setYearOpen] = useState(false);
+  const yearRef = useRef<HTMLDivElement>(null);
   const years = [year - 1, year, year + 1];
+
+  useEffect(() => {
+    if (!yearOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (yearRef.current && !yearRef.current.contains(e.target as Node)) {
+        setYearOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [yearOpen]);
 
   const getEventCount = (m: number): number => {
     if (eventCounts) return eventCounts.get(m) ?? 0;
@@ -54,21 +66,21 @@ export default function MonthSelector({
 
   return (
     <div className="flex items-center gap-4">
-      <div className="relative">
+      <div className="relative" ref={yearRef}>
         <button
           onClick={() => setYearOpen(!yearOpen)}
-          className="flex items-center gap-1 text-[15px] font-bold text-white hover:text-[#00CC33] transition-colors"
+          className="flex items-center gap-1 text-[15px] font-bold text-white hover:text-[#00CC33] transition-colors whitespace-nowrap"
         >
           {year}년
           <ChevronDown className="h-4 w-4" />
         </button>
         {yearOpen && (
-          <div className="absolute top-full mt-1 bg-[#262626] border border-[#4D4D4D] rounded-lg shadow-xl z-20 overflow-hidden">
+          <div className="absolute top-full mt-1 bg-[#262626] border border-[#4D4D4D] rounded-lg shadow-xl z-20 overflow-hidden min-w-[80px]">
             {years.map((y) => (
               <button
                 key={y}
                 onClick={() => { onYearChange(y); setYearOpen(false); }}
-                className={`block w-full px-4 py-2 text-[13px] text-left transition-colors ${
+                className={`block w-full px-4 py-2 text-[13px] text-left whitespace-nowrap transition-colors ${
                   y === year ? 'text-[#00CC33] bg-[#404040]' : 'text-[#A6A6A6] hover:bg-[#404040]'
                 }`}
               >
@@ -87,10 +99,10 @@ export default function MonthSelector({
             <button
               key={m}
               onClick={() => onMonthChange(m)}
-              className={`flex-shrink-0 flex flex-col items-center gap-0.5 rounded-full px-3 py-1 text-[13px] font-medium transition-colors min-w-[40px] ${
+              className={`flex-shrink-0 flex flex-col items-center justify-center gap-1 rounded-full w-[48px] py-3 text-[13px] font-medium transition-all ${
                 isActive
-                  ? 'bg-[#00CC33] text-[#1A1A1A]'
-                  : 'bg-[#262626] text-[#A6A6A6] hover:text-white hover:bg-[#404040]'
+                  ? 'border-2 border-white text-white'
+                  : 'border-2 border-transparent text-[#A6A6A6] hover:text-white'
               }`}
             >
               <span className="text-center">{m}월</span>

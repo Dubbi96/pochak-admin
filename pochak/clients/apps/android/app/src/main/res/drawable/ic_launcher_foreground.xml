@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Green "P" shape representing POCHAK logo -->
+    <path
+        android:fillColor="#00CC33"
+        android:pathData="M44,36 L64,36 L64,44 L52,44 L52,52 L64,52 L64,60 L52,60 L52,72 L44,72 Z" />
+    <path
+        android:fillColor="#00CC33"
+        android:pathData="M52,40 L68,40 L68,48 L52,48 Z" />
+</vector>

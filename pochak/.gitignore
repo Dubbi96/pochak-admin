@@ -38,3 +38,15 @@ docker-compose.override.yml
 # ── Logs ────────────────────────────────────────────────────
 *.log
 logs/
+
+# ── Build artifacts / Reports ───────────────────────────────
+bin/
+coverage/
+test-results/
+playwright-report/
+.codex-backups/
+
+# ── Local Claude settings ───────────────────────────────────
+.claude/settings.local.json
+.claude/skills/
+.claude/agents/

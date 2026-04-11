@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>클럽 기능 E2E 테스트 리포트</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f3f4f6; color: #111827; }
+    .header { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color: #fff; padding: 32px 40px; }
+    .header h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .header .meta { font-size: 13px; opacity: 0.8; }
+    .container { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+    .card { background: #fff; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .card .value { font-size: 36px; font-weight: 800; }
+    .card .label { font-size: 13px; color: #6b7280; margin-top: 4px; }
+    .pass-color { color: #16a34a; }
+    .fail-color { color: #dc2626; }
+    .warn-color { color: #f59e0b; }
+    .section { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .section h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
+    .blocker-item { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .blocker-item.critical { border-left: 4px solid #dc2626; }
+    .blocker-item.high { border-left: 4px solid #ea580c; }
+    .blocker-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .blocker-id { font-size: 11px; font-weight: 600; color: #6b7280; }
+    .blocker-title { font-size: 14px; font-weight: 600; color: #111827; }
+    .badge-critical { background: #dc2626; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .badge-high { background: #ea580c; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .badge-service { font-size: 12px; color: #2563eb; background: #eff6ff; padding: 2px 8px; border-radius: 4px; }
+    .blocker-desc { font-size: 13px; color: #374151; line-height: 1.5; margin-top: 8px; }
+    .blocker-impact { font-size: 12px; color: #dc2626; margin-top: 6px; font-style: italic; }
+    .test-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+    .test-row:last-child { border-bottom: none; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .dot-fail { background: #dc2626; }
+    .dot-pass { background: #16a34a; }
+    .test-info { flex: 1; }
+    .test-suite { font-size: 11px; color: #9ca3af; }
+    .test-title { font-size: 13px; color: #374151; margin-top: 1px; }
+    .test-error { font-size: 12px; color: #dc2626; margin-top: 4px; background: #fef2f2; padding: 6px 8px; border-radius: 4px; font-family: monospace; }
+    .test-root-cause { font-size: 12px; color: #ea580c; margin-top: 4px; background: #fff7ed; padding: 5px 8px; border-radius: 4px; }
+    .test-duration { font-size: 11px; color: #9ca3af; flex-shrink: 0; }
+    .recommendations { background: #fffbeb; border: 1px solid #fbbf24; border-radius: 8px; padding: 16px; }
+    .recommendations ul { padding-left: 20px; }
+    .recommendations li { font-size: 13px; color: #374151; margin-bottom: 8px; line-height: 1.5; }
+    .footer { text-align: center; font-size: 12px; color: #9ca3af; padding: 24px; }
+    .service-status { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .svc { padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; }
+    .svc.up { background: #dcfce7; color: #166534; }
+    .svc.down { background: #fee2e2; color: #991b1b; }
+    .svc.cors { background: #fff7ed; color: #9a3412; }
+  </style>
+</head>
+<body>
+<div class="header">
+  <h1>🏛 클럽 기능 E2E 테스트 리포트</h1>
+  <div class="meta">실행일시: 2026-04-09 &nbsp;|&nbsp; 브라우저: Chromium (headless) &nbsp;|&nbsp; QA Agent: qa-engineer (POC-124)</div>
+</div>
+
+<div class="container">
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card"><div class="value">8</div><div class="label">전체 테스트</div></div>
+    <div class="card"><div class="value pass-color">0</div><div class="label">통과</div></div>
+    <div class="card"><div class="value fail-color">8</div><div class="label">실패</div></div>
+    <div class="card"><div class="value warn-color">3</div><div class="label">블로커 버그</div></div>
+  </div>
+
+  <!-- 서비스 상태 -->
+  <div class="section">
+    <h2>🖥 서비스 가용성</h2>
+    <div class="service-status">
+      <div class="svc up">✔ BO (localhost:3000) 실행 중</div>
+      <div class="svc cors">⚠ Partner (localhost:3200) 실행 중 — CORS 차단</div>
+      <div class="svc down">✘ Web (localhost:3300) 미실행</div>
+    </div>
+    <p style="font-size:13px;color:#6b7280">클럽 기능 E2E 검증은 3개 서비스가 모두 정상 동작해야 합니다. 현재 Web 미실행 + Partner CORS + BO 로그인 버그로 인해 전체 플로우 검증이 불가능합니다.</p>
+  </div>
+
+  <!-- 블로커 버그 -->
+  <div class="section">
+    <h2>🚧 블로커 버그 (클럽 테스트 차단 원인)</h2>
+
+    <div class="blocker-item critical">
+      <div class="blocker-header">
+        <span class="blocker-id">BUG-001</span>
+        <span class="badge-critical">CRITICAL</span>
+        <span class="badge-service">Web (localhost:3300)</span>
+      </div>
+      <div class="blocker-title">Web 서비스 미실행</div>
+      <div class="blocker-desc">public-web(포트 3300)이 실행되지 않아 클럽 목록, 상세, 가입 신청, 상태 변경 Web 반영 확인 등 모든 Web 측 테스트 차단.</div>
+      <div class="blocker-impact">차단된 테스트: 클럽 목록 표시 / 클럽 상세 진입 / 클럽 가입 신청 / Web 멤버 목록 반영 / Web 공지 표시 / BO 상태 변경 Web 반영 (6개)</div>
+    </div>
+
+    <div class="blocker-item high">
+      <div class="blocker-header">
+        <span class="blocker-id">BUG-003</span>
+        <span class="badge-high">HIGH</span>
+        <span class="badge-service">Partner (localhost:3200)</span>
+      </div>
+      <div class="blocker-title">CORS 차단 — Partner 로그인 불가</div>
+      <div class="blocker-desc">localhost:3200 → localhost:8080/api/v1/auth/partner/login CORS 정책 차단. <code>Access-Control-Allow-Origin</code> 헤더 없음. 로그인 자체가 불가하여 클럽 관리, 가입 승인, 공지 작성 전체 차단.</div>
+      <div class="blocker-impact">차단된 테스트: 클럽 관리 페이지 접근 / 가입 승인 → Web 멤버 반영 / 공지 작성 → Web 표시 (3개)</div>
+    </div>
+
+    <div class="blocker-item high">
+      <div class="blocker-header">
+        <span class="blocker-id">BUG-002</span>
+        <span class="badge-high">HIGH</span>
+        <span class="badge-service">BO (localhost:3000)</span>
+      </div>
+      <div class="blocker-title">BO 로그인 API 빈 응답 — 토큰 미발급</div>
+      <div class="blocker-desc">BO 로그인 submit 후 auth/login API 응답 body가 없어 프론트에서 토큰 파싱 실패. 대시보드 진입 불가로 BO 클럽 관리 테스트 차단.</div>
+      <div class="blocker-impact">차단된 테스트: BO 클럽 목록 실제 데이터 표시 / BO 클럽 상태 변경 Web 반영 (2개)</div>
+    </div>
+  </div>
+
+  <!-- 테스트 결과 상세 -->
+  <div class="section">
+    <h2>📋 테스트 결과 상세</h2>
+
+    <!-- Web -->
+    <div class="test-row">
+      <div class="status-dot dot-fail"></div>
+      <div class="test-info">
+        <div class="test-suite">Web 클럽 기능 (localhost:3300)</div>
+        <div class="test-title">클럽 목록 표시 확인 (실제 데이터)</div>
+        <div class="test-error">Web 서비스(localhost:3300)가 실행되지 않음 — ERR_CONNECTION_REFUSED</div>
+        <div class="test-root-cause">루트 원인: BUG-001 — Web 서비스 미실행</div>
+      </div>
+      <div class="test-duration">0.4s</div>
+    </div>
+
+    <div class="test-row">
+      <div class="status-dot dot-fail"></div>
+      <div class="test-info">
+        <div class="test-suite">Web 클럽 기능 (localhost:3300)</div>
+        <div class="test-title">클럽 상세 페이지 진입 확인</div>
+        <div class="test-error">Web 서비스(localhost:3300)가 실행되지 않음 — ERR_CONNECTION_REFUSED</div>
+        <div class="test-root-cause">루트 원인: BUG-001 — Web 서비스 미실행</div>
+      </div>
+      <div class="test-duration">0.4s</div>
+    </div>
+
+    <div class="test-row">
+      <div class="status-dot dot-fail"></div>
+      <div class="test-info">
+        <div class="test-suite">Web 클럽 기능 (localhost:3300)</div>
+        <div class="test-title">클럽 가입 신청</div>
+        <div class="test-error">Web 서비스(localhost:3300)가 실행되지 않음 — ERR_CONNECTION_REFUSED</div>
+        <div class="test-root-cause">루트 원인: BUG-001 — Web 서비스 미실행</div>
+      </div>
+      <div class="test-duration">0.2s</div>
+    </div>
+
+    <!-- Partner -->
+    <div class="test-row">
+      <div class="status-dot dot-fail"></div>
+      <div class="test-info">
+        <div class="test-suite">Partner 클럽 관리 (localhost:3200)</div>
+        <div class="test-title">클럽 관리 페이지 접근</div>
+        <div class="test-error">CORS 에러 없이 로그인 가능해야 함 (받은 CORS 에러: 1건)
+Access to XMLHttpRequest at 'http://localhost:8080/api/v1/auth/partner/login'
+from origin 'http://localhost:3200' — No 'Access-Control-Allow-Origin' header</div>
+        <div class="test-root-cause">루트 원인: BUG-003 — Partner CORS 차단</div>
+      </div>
+      <div class="test-duration">3.4s</div>
+    </div>
+
+    <div class="test-row">
+      <div class="status-dot dot-fail"></div>
+      <div class="test-info">
+        <div class="test-suite">Partner 클럽 관리 (localhost:3200)</div>
+        <div class="test-title">가입 승인 → Web 멤버 목록 반영 확인</div>
+        <div class="test-error">Partner CORS 에러로 로그인 불가 — 가입 승인 테스트 블로킹</div>
+        <div class="test-root-cause">루트 원인: BUG-003 — Partner CORS 차단</div>
+      </div>
+      <div class="test-duration">3.3s</div>
+    </div>
+
+    <div class="test-row">
+      <div class="status-dot dot-fail"></div>
+      <div class="test-info">
+        <div class="test-suite">Partner 클럽 관리 (localhost:3200)</div>
+        <div class="test-title">공지 작성 → Web 공지 표시 확인</div>
+        <div class="test-error">Partner CORS 에러로 공지 작성 테스트 블로킹</div>
+        <div class="test-root-cause">루트 원인: BUG-003 — Partner CORS 차단</div>
+      </div>
+      <div class="test-duration">3.3s</div>
+    </div>
+
+    <!-- BO -->
+    <div class="test-row">
+      <div class="status-dot dot-fail"></div>
+      <div class="test-info">
+        <div class="test-suite">BO 클럽 관리 (localhost:3000)</div>
+        <div class="test-title">클럽 목록 실제 데이터 표시 확인</div>
+        <div class="test-error">BO 로그인 실패 — 클럽 목록 테스트 블로킹 (auth/login API 빈 응답)</div>
+        <div class="test-root-cause">루트 원인: BUG-002 — BO 로그인 API 토큰 미발급</div>
+      </div>
+      <div class="test-duration">3.3s</div>
+    </div>
+
+    <div class="test-row">
+      <div class="status-dot dot-fail"></div>
+      <div class="test-info">
+        <div class="test-suite">BO 클럽 관리 (localhost:3000)</div>
+        <div class="test-title">클럽 상태 변경 → Web 반영 확인</div>
+        <div class="test-error">BO 로그인 실패 — 클럽 상태 변경 테스트 블로킹</div>
+        <div class="test-root-cause">루트 원인: BUG-002 — BO 로그인 API 토큰 미발급</div>
+      </div>
+      <div class="test-duration">3.4s</div>
+    </div>
+  </div>
+
+  <!-- 조치 권고 -->
+  <div class="section">
+    <h2>💡 조치 권고사항</h2>
+    <div class="recommendations">
+      <ul>
+        <li><strong>[BUG-001 / CRITICAL]</strong> Web 서비스(localhost:3300) 기동 필요. <code>clients/apps/public-web</code> 또는 <code>clients/apps/web-front</code> 빌드 및 실행 확인.</li>
+        <li><strong>[BUG-002 / HIGH]</strong> BO 백엔드 <code>/admin/api/v1/auth/login</code> 응답 body에 JWT 토큰이 없는 버그 수정. identity-service 또는 gateway의 admin 로그인 핸들러 응답 직렬화 확인.</li>
+        <li><strong>[BUG-003 / HIGH]</strong> Partner API 서버(8080)의 CORS 허용 목록에 <code>http://localhost:3200</code> 추가. Gateway CORS 설정 점검.</li>
+        <li>3개 버그 수정 후 클럽 E2E 재실행 필요. <code>npx playwright test --config=scripts/playwright-club.config.js</code></li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+<div class="footer">Generated by POCHAK QA Agent &middot; 2026-04-09 &middot; POC-124</div>
+</body>
+</html>

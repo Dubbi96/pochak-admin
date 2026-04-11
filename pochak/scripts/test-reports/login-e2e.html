@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>POCHAK 로그인 E2E 테스트 리포트</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f3f4f6; color: #111827; }
+    .header { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color: #fff; padding: 32px 40px; }
+    .header h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .header .meta { font-size: 13px; opacity: 0.8; }
+    .container { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+    .card { background: #fff; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .card .value { font-size: 36px; font-weight: 800; }
+    .card .label { font-size: 13px; color: #6b7280; margin-top: 4px; }
+    .pass { color: #16a34a; }
+    .fail { color: #dc2626; }
+    .section { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .section h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
+    .bug-item { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .bug-item.critical { border-left: 4px solid #dc2626; }
+    .bug-item.high { border-left: 4px solid #ea580c; }
+    .bug-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .bug-id { font-size: 11px; font-weight: 600; color: #6b7280; }
+    .bug-title { font-size: 14px; font-weight: 600; color: #111827; }
+    .bug-service { font-size: 12px; color: #2563eb; background: #eff6ff; padding: 2px 8px; border-radius: 4px; }
+    .bug-desc { font-size: 13px; color: #374151; line-height: 1.5; margin-top: 8px; }
+    .test-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+    .test-row:last-child { border-bottom: none; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .status-dot.pass { background: #16a34a; }
+    .status-dot.fail { background: #dc2626; }
+    .test-title { font-size: 13px; color: #374151; flex: 1; }
+    .test-suite { font-size: 11px; color: #9ca3af; }
+    .test-error { font-size: 12px; color: #dc2626; margin-top: 4px; background: #fef2f2; padding: 6px 8px; border-radius: 4px; font-family: monospace; white-space: pre-wrap; word-break: break-all; }
+    .test-duration { font-size: 11px; color: #9ca3af; flex-shrink: 0; }
+    .recommendations { background: #fffbeb; border: 1px solid #fbbf24; border-radius: 8px; padding: 16px; }
+    .recommendations ul { padding-left: 20px; }
+    .recommendations li { font-size: 13px; color: #374151; margin-bottom: 6px; line-height: 1.5; }
+    .footer { text-align: center; font-size: 12px; color: #9ca3af; padding: 24px; }
+  </style>
+</head>
+<body>
+<div class="header">
+  <h1>POCHAK 로그인 E2E 테스트 리포트</h1>
+  <div class="meta">실행일시: 2026. 4. 9. 오후 1:08:27 &nbsp;|&nbsp; 실행 시간: 13.6초 &nbsp;|&nbsp; QA Agent: qa-engineer (POC-104)</div>
+</div>
+
+<div class="container">
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="card">
+      <div class="value">7</div>
+      <div class="label">전체 테스트</div>
+    </div>
+    <div class="card">
+      <div class="value pass">0</div>
+      <div class="label">통과</div>
+    </div>
+    <div class="card">
+      <div class="value fail">7</div>
+      <div class="label">실패</div>
+    </div>
+    <div class="card">
+      <div class="value" style="color:#f59e0b">3</div>
+      <div class="label">발견된 버그</div>
+    </div>
+  </div>
+
+  <!-- Bugs Found -->
+  <div class="section">
+    <h2>🐛 발견된 버그</h2>
+    
+    <div class="bug-item critical">
+      <div class="bug-header">
+        <span class="bug-id">BUG-001</span>
+        <span style="background:#dc2626;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">CRITICAL</span>
+        <span class="bug-service">Web (localhost:3300)</span>
+      </div>
+      <div class="bug-title">Web 서비스 미실행</div>
+      <div class="bug-desc">localhost:3300 포트에서 Web 서비스(public-web)가 실행되지 않음. 모든 웹 로그인 테스트 블로킹.</div>
+    </div>
+    
+    <div class="bug-item high">
+      <div class="bug-header">
+        <span class="bug-id">BUG-002</span>
+        <span style="background:#ea580c;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">HIGH</span>
+        <span class="bug-service">BO (localhost:3000)</span>
+      </div>
+      <div class="bug-title">로그인 API 빈 응답 반환 (토큰 없음)</div>
+      <div class="bug-desc">GET /admin/api/v1/auth/login → HTTP 200 응답이지만 body가 비어있음 (content-length: 0). 프론트엔드에서 JSON 파싱 실패로 "서버에 연결할 수 없습니다." 에러 표시. 관리자 로그인 불가.</div>
+    </div>
+    
+    <div class="bug-item high">
+      <div class="bug-header">
+        <span class="bug-id">BUG-003</span>
+        <span style="background:#ea580c;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">HIGH</span>
+        <span class="bug-service">Partner (localhost:3200)</span>
+      </div>
+      <div class="bug-title">CORS 정책 위반 - 파트너 로그인 엔드포인트</div>
+      <div class="bug-desc">브라우저에서 localhost:3200 → localhost:8080/api/v1/auth/partner/login 요청 시 CORS 정책 차단. 'Access-Control-Allow-Origin' 헤더 없음. 파트너 로그인 불가.</div>
+    </div>
+    
+  </div>
+
+  <!-- Test Results -->
+  <div class="section">
+    <h2>📋 테스트 결과 상세</h2>
+    
+    <div class="test-row">
+      <div class="status-dot fail"></div>
+      <div style="flex:1">
+        <div class="test-suite">BO 로그인 (localhost:3000)</div>
+        <div class="test-title">정상 로그인 시 토큰 반환 및 대시보드 진입 확인</div>
+        <div class="test-error">Error: 로그인 API 호출되어야 함
+
+expect(received).toBeTruthy()
+
+Received: undefined</div>
+      </div>
+      <div class="test-duration">3.6s</div>
+    </div>
+    
+    <div class="test-row">
+      <div class="status-dot fail"></div>
+      <div style="flex:1">
+        <div class="test-suite">BO 로그인 (localhost:3000)</div>
+        <div class="test-title">API 401 에러 없음 (로그인 후 인증 토큰 유효성)</div>
+        
+      </div>
+      <div class="test-duration">3.3s</div>
+    </div>
+    
+    <div class="test-row">
+      <div class="status-dot fail"></div>
+      <div style="flex:1">
+        <div class="test-suite">BO 로그인 (localhost:3000)</div>
+        <div class="test-title">잘못된 비밀번호 → 에러 메시지 표시</div>
+        <div class="test-error">Error: 에러 메시지가 표시되어야 함
+
+expect(received).toBe(expected) // Object.is equality
+
+Expected: true
+Received: false</div>
+      </div>
+      <div class="test-duration">2.3s</div>
+    </div>
+    
+    <div class="test-row">
+      <div class="status-dot fail"></div>
+      <div style="flex:1">
+        <div class="test-suite">Partner 로그인 (localhost:3200)</div>
+        <div class="test-title">정상 로그인 → 대시보드 진입, CORS 에러 없음</div>
+        <div class="test-error">Error: CORS 에러가 없어야 함
+
+expect(received).toHaveLength(expected)
+
+Expected length: 0
+Received length: 1
+Received array:  ["Access to XMLHttpRequest at 'http://localhost:8080/api/v1/auth/partner/login' from origin 'http://localhost:3200' has been blocked by CORS policy: Response to preflight request do</div>
+      </div>
+      <div class="test-duration">3.3s</div>
+    </div>
+    
+    <div class="test-row">
+      <div class="status-dot fail"></div>
+      <div style="flex:1">
+        <div class="test-suite">Web 서비스 (localhost:3300)</div>
+        <div class="test-title">서비스 가용성 확인</div>
+        <div class="test-error">Error: Web 서비스(localhost:3300)가 실행 중이어야 함
+
+expect(received).toBe(expected) // Object.is equality
+
+Expected: true
+Received: false</div>
+      </div>
+      <div class="test-duration">0.2s</div>
+    </div>
+    
+    <div class="test-row">
+      <div class="status-dot fail"></div>
+      <div style="flex:1">
+        <div class="test-suite">Web 서비스 (localhost:3300)</div>
+        <div class="test-title">정상 로그인 → 메인 페이지(/home) 진입</div>
+        <div class="test-error">Error: Web 서비스(localhost:3300)가 실행되지 않음 - 로그인 테스트 불가
+
+expect(received).toBe(expected) // Object.is equality
+
+Expected: true
+Received: false</div>
+      </div>
+      <div class="test-duration">0.2s</div>
+    </div>
+    
+    <div class="test-row">
+      <div class="status-dot fail"></div>
+      <div style="flex:1">
+        <div class="test-suite">Web 서비스 (localhost:3300)</div>
+        <div class="test-title">미인증 상태에서 /my 접근 시 /login으로 리다이렉트</div>
+        <div class="test-error">Error: Web 서비스(localhost:3300)가 실행되지 않음 - 리다이렉트 테스트 불가
+
+expect(received).toBe(expected) // Object.is equality
+
+Expected: true
+Received: false</div>
+      </div>
+      <div class="test-duration">0.2s</div>
+    </div>
+    
+  </div>
+
+  <!-- Recommendations -->
+  <div class="section">
+    <h2>💡 조치 권고사항</h2>
+    <div class="recommendations">
+      <ul>
+        <li><strong>[BUG-001 / CRITICAL]</strong> Web 서비스(localhost:3300) 실행 확인 및 재시작 필요. public-web 또는 web-front 앱 기동 절차 점검 요망.</li>
+        <li><strong>[BUG-002 / HIGH]</strong> 백엔드 <code>/admin/api/v1/auth/login</code> 엔드포인트가 HTTP 200 응답 시 JWT 토큰을 응답 body에 포함하지 않음. identity-service 또는 gateway의 admin 로그인 핸들러에서 응답 직렬화 로직 확인 필요.</li>
+        <li><strong>[BUG-003 / HIGH]</strong> Gateway에서 <code>/api/v1/auth/partner/login</code> 엔드포인트에 대한 CORS 헤더(<code>Access-Control-Allow-Origin: http://localhost:3200</code>) 누락. Gateway CORS 설정에서 partner 도메인(3200) 허용 추가 필요.</li>
+        <li>추가 확인: Partner LoginPage가 최근 <code>/api/v1/auth/partner/login</code>에서 <code>/api/v1/auth/login</code>으로 변경되었으나 현재 실행 중인 dev server에 반영되지 않았을 수 있음. 서버 재기동 후 재테스트 권고.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+<div class="footer">Generated by POCHAK QA Agent &middot; 2026-04-09T04:08:27.620Z (POC-104 재실행)</div>
+</body>
+</html>
