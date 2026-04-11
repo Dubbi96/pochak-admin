@@ -1,7 +1,7 @@
 -- POC-223/224/225: 테스트 계정 seed
 -- BO 관리자: login_id='admin' / 'test_admin', password='admin1234!' / 'Pochak2026!'
 -- Web/App 유저: email='user@pochak.live', password='Pochak2026!'
--- Partner: email='partner@pochak.live', password='Pochak2026!'
+-- Partner: email='partner@pochak.live', password='partner1234!'
 -- 해시: Spring BCryptPasswordEncoder($2a$10$) 형식으로 생성
 
 INSERT INTO admin.admin_users (login_id, password_hash, name, email, is_blocked, fail_count, is_active, created_at, updated_at)
@@ -43,9 +43,9 @@ WHERE u.email = 'user@pochak.live'
 ON CONFLICT (user_id) DO NOTHING;
 
 -- POC-225: Partner 테스트 계정 비밀번호 설정 + 클럽 배정
--- partner@pochak.live / Pochak2026!  hash: $2a$10$ (Spring BCryptPasswordEncoder 생성)
+-- partner@pochak.live / partner1234!  hash: $2a$10$ (Spring BCryptPasswordEncoder 생성)
 UPDATE identity.users
-SET password_hash = '$2a$10$7gwdpTkcLUC5vES9QUM3bOJzq0jUzYdr7hZrnngtWge2W1hF.qxdm',
+SET password_hash = '$2a$10$BWxsh6Lx/sb.jnXOKRcDB.yPWvDThzmbV23P2PdPKSyJ51KEkfJOC',
     updated_at = NOW()
 WHERE email = 'partner@pochak.live';
 

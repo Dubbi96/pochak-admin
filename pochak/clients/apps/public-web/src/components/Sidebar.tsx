@@ -40,9 +40,14 @@ export default function Sidebar() {
   const [popularChannels, setPopularChannels] = useState<PochakChannel[]>([]);
 
   useEffect(() => {
+    // Avoid unnecessary API calls on auth pages.
+    if (location.pathname === "/login" || location.pathname === "/signup") {
+      return;
+    }
+
     fetchJoinedChannels().then((data) => { if (data) setJoinedTeams(data.slice(0, 6)); });
     fetchPopularChannels().then((data) => { if (data) setPopularChannels(data); });
-  }, []);
+  }, [location.pathname]);
 
 
   return (

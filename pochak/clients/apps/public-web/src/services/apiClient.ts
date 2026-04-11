@@ -77,7 +77,10 @@ async function handleUnauthorized(): Promise<boolean> {
     }
   }
   clearAuthToken();
-  window.location.href = "/login";
+  // Prevent redirect/reload loops when already on login page.
+  if (window.location.pathname !== "/login") {
+    window.location.href = "/login";
+  }
   return false;
 }
 

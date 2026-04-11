@@ -132,12 +132,14 @@ export async function fetchMyWatchHistory(): Promise<WatchHistoryItem[] | null> 
 
 /** Fetch channels the current user has joined */
 export async function fetchJoinedChannels(): Promise<PochakChannel[] | null> {
-  return fetchApi('/users/me/channels');
+  // NOTE: Backend endpoint `/users/me/channels` is not implemented yet.
+  // Keep sidebar stable without emitting repeated 404s.
+  return null;
 }
 
 /** Fetch popular channels */
 export async function fetchPopularChannels(): Promise<PochakChannel[] | null> {
-  return fetchApi('/channels/popular');
+  return fetchApi('/clubs/popular');
 }
 
 /** Fetch live contents (all sports) */
