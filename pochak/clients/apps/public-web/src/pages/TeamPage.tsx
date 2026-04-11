@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Heart, MessageCircle, Share2, MoreHorizontal } from 'lucide-react';
 import TabBar from '@/components/TabBar';
@@ -13,14 +13,14 @@ import MatchListItem from '@/components/MatchListItem';
 import type { MatchListItemData } from '@/components/MatchListItem';
 import SocialLinks from '@/components/SocialLinks';
 import {
-  pochakChannels,
-  pochakLiveContents,
-  pochakVodContents,
-  pochakClips,
-  pochakMatches,
-  pochakPosts,
+  fetchPopularChannels,
+  fetchLiveContents,
+  fetchVodContents,
+  fetchPopularClips,
+  fetchLiveMatches,
   formatViewCount,
 } from '@/services/webApi';
+import type { PochakChannel, PochakContent, PopularClip, PochakMatch, PochakPost } from '@/services/webApi';
 
 type TabKey = 'home' | 'videos' | 'schedule' | 'posts' | 'info';
 const tabItems: { key: TabKey; label: string }[] = [
@@ -39,7 +39,7 @@ function formatDuration(seconds: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-function toMatchListItem(m: typeof pochakMatches[number]): MatchListItemData {
+function toMatchListItem(m: PochakMatch): MatchListItemData {
   return {
     id: m.id,
     time: m.time,
@@ -55,7 +55,7 @@ function toMatchListItem(m: typeof pochakMatches[number]): MatchListItemData {
 }
 
 /* ── Card Feed Item (게시글 탭) ───────────────────────────────────────────── */
-function TeamCardFeedItem({ post }: { post: typeof pochakPosts[number] }) {
+function TeamCardFeedItem({ post }: { post: PochakPost }) {
   const [bodyExpanded, setBodyExpanded] = useState(false);
   const [liked, setLiked] = useState(false);
 
@@ -164,13 +164,35 @@ function TeamCardFeedItem({ post }: { post: typeof pochakPosts[number] }) {
   );
 }
 
+const fallbackTeam: PochakChannel = {
+  id: 'team-default',
+  name: '경기용인YSFC',
+  subtitle: '경기도 용인시 유소년 축구클럽',
+  color: '#4CAF50',
+  initial: '용',
+  memberCount: 48,
+};
+
 export default function TeamPage() {
   const { teamId: _teamId } = useParams<{ teamId: string }>();
   const [activeTab, setActiveTab] = useState<TabKey>('home');
   const [year, setYear] = useState(2025);
   const [month, setMonth] = useState(10);
+  const [liveContents, setLiveContents] = useState<PochakContent[]>([]);
+  const [vodContents, setVodContents] = useState<PochakContent[]>([]);
+  const [clips, setClips] = useState<PopularClip[]>([]);
+  const [matches, setMatches] = useState<PochakMatch[]>([]);
+  const [posts] = useState<PochakPost[]>([]);
 
-  const team = pochakChannels[2]; // 경기용인YSFC
+  useEffect(() => {
+    fetchPopularChannels().then(() => {});
+    fetchLiveContents().then((data) => { if (data) setLiveContents(data); });
+    fetchVodContents().then((data) => { if (data) setVodContents(data); });
+    fetchPopularClips().then((data) => { if (data) setClips(data); });
+    fetchLiveMatches().then((data) => { if (data) setMatches(data); });
+  }, []);
+
+  const team = fallbackTeam;
 
   const bannerData: BannerData = {
     name: team.name,
@@ -185,11 +207,11 @@ export default function TeamPage() {
   };
 
   const scheduleMatches = useMemo(() => {
-    return pochakMatches.filter((m) => {
+    return matches.filter((m) => {
       const d = new Date(m.date);
       return d.getFullYear() === year && d.getMonth() + 1 === month;
     });
-  }, [year, month]);
+  }, [matches, year, month]);
 
   return (
     <div className="px-6 py-6 lg:px-8 max-w-[1200px] mx-auto">
@@ -208,7 +230,7 @@ export default function TeamPage() {
             <section>
               <SectionHeader prefix="팀" highlight="LIVE" />
               <HScrollRow scrollAmount={300}>
-                {pochakLiveContents.filter((c) => c.status === 'LIVE').map((c) => (
+                {liveContents.filter((c) => c.status === 'LIVE').map((c) => (
                   <HVideoCard
                     key={c.id}
                     title={c.title}
@@ -225,7 +247,7 @@ export default function TeamPage() {
             <section>
               <SectionHeader prefix="최신" highlight="영상" />
               <HScrollRow scrollAmount={300}>
-                {pochakVodContents.map((v) => (
+                {vodContents.map((v) => (
                   <HVideoCard
                     key={v.id}
                     title={v.title}
@@ -241,11 +263,10 @@ export default function TeamPage() {
             <section>
               <SectionHeader prefix="팀" highlight="클립" />
               <HScrollRow scrollAmount={200}>
-                {pochakClips.map((clip) => (
+                {clips.map((clip) => (
                   <VClipCard
                     key={clip.id}
                     title={clip.title}
-                    viewCount={clip.viewCount}
                     linkTo={`/clip/${clip.id}`}
                   />
                 ))}
@@ -260,7 +281,7 @@ export default function TeamPage() {
             <section>
               <SectionHeader prefix="LIVE" highlight="중계" />
               <HScrollRow scrollAmount={300}>
-                {pochakLiveContents.map((c) => (
+                {liveContents.map((c) => (
                   <HVideoCard
                     key={c.id}
                     title={c.title}
@@ -276,7 +297,7 @@ export default function TeamPage() {
             <section>
               <SectionHeader prefix="다시보기" highlight="VOD" />
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {pochakVodContents.map((v) => (
+                {vodContents.map((v) => (
                   <HVideoCard
                     key={v.id}
                     title={v.title}
@@ -293,11 +314,10 @@ export default function TeamPage() {
             <section>
               <SectionHeader prefix="팀" highlight="클립" />
               <HScrollRow scrollAmount={200}>
-                {pochakClips.map((clip) => (
+                {clips.map((clip) => (
                   <VClipCard
                     key={clip.id}
                     title={clip.title}
-                    viewCount={clip.viewCount}
                     linkTo={`/clip/${clip.id}`}
                   />
                 ))}
@@ -327,7 +347,11 @@ export default function TeamPage() {
         {/* ── 게시글 탭 (Card Feed) ────────────────────── */}
         {activeTab === 'posts' && (
           <div className="space-y-4">
-            {pochakPosts.map((post) => (
+            {posts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-[#A6A6A6]">
+                <p className="text-base">게시글이 없습니다.</p>
+              </div>
+            ) : posts.map((post) => (
               <TeamCardFeedItem key={post.id} post={post} />
             ))}
           </div>

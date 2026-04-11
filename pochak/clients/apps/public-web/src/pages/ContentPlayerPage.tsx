@@ -2,13 +2,13 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   fetchPlayerData,
-  pochakLiveContents,
-  pochakVodContents,
-  pochakClips,
+  fetchLiveContents,
+  fetchVodContents,
+  fetchPopularClips,
   formatViewCount,
   mockChapters,
 } from '@/services/webApi';
-import type { PlayerData } from '@/services/webApi';
+import type { PlayerData, PochakContent, PopularClip } from '@/services/webApi';
 import WebVideoPlayer from '@/components/WebVideoPlayer';
 import type { TimelineEvent } from '@/components/WebVideoPlayer';
 import CommentSection from '@/components/CommentSection';
@@ -122,6 +122,10 @@ export default function ContentPlayerPage() {
   const reelRef = useRef<number | null>(null);
   const toast = useToast();
 
+  const [liveContents, setLiveContents] = useState<PochakContent[]>([]);
+  const [vodContents, setVodContents] = useState<PochakContent[]>([]);
+  const [clips, setClips] = useState<PopularClip[]>([]);
+
   const highlights: TimelineEvent[] = highlightItems.map((h) => ({
     id: String(h.id),
     time: h.startTimeSeconds,
@@ -132,6 +136,12 @@ export default function ContentPlayerPage() {
   const isClipView = type === 'clip';
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
+
+  useEffect(() => {
+    fetchLiveContents().then((data) => { if (data) setLiveContents(data); });
+    fetchVodContents().then((data) => { if (data) setVodContents(data); });
+    fetchPopularClips().then((data) => { if (data) setClips(data); });
+  }, []);
 
   useEffect(() => {
     fetchPlayerData(type, id)
@@ -173,7 +183,7 @@ export default function ContentPlayerPage() {
         `/contents/${type}/${id}/highlights/detect`,
         {},
       );
-      if (result?.highlights?.length > 0) {
+      if (result && result.highlights && result.highlights.length > 0) {
         const sorted = [...result.highlights].sort((a, b) => a.startTimeSeconds - b.startTimeSeconds);
         setHighlightItems(sorted);
         setHighlightPanelOpen(true);
@@ -345,11 +355,10 @@ export default function ContentPlayerPage() {
             <div className="mt-8">
               <h2 className="text-lg font-bold text-white mb-4">추천 클립</h2>
               <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
-                {pochakClips.slice(0, 6).map((clip) => (
+                {clips.slice(0, 6).map((clip: PopularClip) => (
                   <VClipCard
                     key={clip.id}
                     title={clip.title}
-                    viewCount={clip.viewCount}
                     className="w-full"
                     linkTo={`/clip/${clip.id}`}
                   />
@@ -554,11 +563,10 @@ export default function ContentPlayerPage() {
           <div className="mt-8">
             <h2 className="text-lg font-bold text-white mb-4">클립</h2>
             <HScrollRow scrollAmount={200}>
-              {pochakClips.map((clip) => (
+              {clips.map((clip: PopularClip) => (
                 <VClipCard
                   key={clip.id}
                   title={clip.title}
-                  viewCount={clip.viewCount}
                   linkTo={`/clip/${clip.id}`}
                 />
               ))}
@@ -569,7 +577,7 @@ export default function ContentPlayerPage() {
           <div className="mt-8">
             <h2 className="text-lg font-bold text-white mb-4">관련 VOD</h2>
             <HScrollRow scrollAmount={300}>
-              {pochakVodContents.map((v) => (
+              {vodContents.map((v: PochakContent) => (
                 <HVideoCard
                   key={v.id}
                   title={v.title}
@@ -592,11 +600,10 @@ export default function ContentPlayerPage() {
           {/* ── Section 1: 이 영상의 내 클립 ──────────── */}
           <CollapsibleSection title="이 영상의 내 클립">
             <HScrollRow scrollAmount={160}>
-              {pochakClips.slice(0, 4).map((clip) => (
+              {clips.slice(0, 4).map((clip: PopularClip) => (
                 <VClipCard
                   key={clip.id}
                   title={clip.title}
-                  viewCount={clip.viewCount}
                   linkTo={`/clip/${clip.id}`}
                   className="w-[110px]"
                   showMoreMenu
@@ -608,7 +615,7 @@ export default function ContentPlayerPage() {
           {/* ── Section 2: 이 대회의 라이브 ──────────── */}
           <CollapsibleSection title="이 대회의 라이브">
             <HScrollRow scrollAmount={200}>
-              {pochakLiveContents.slice(0, 5).map((c) => (
+              {liveContents.slice(0, 5).map((c: PochakContent) => (
                 <HVideoCard
                   key={c.id}
                   title={c.title}
@@ -633,11 +640,10 @@ export default function ContentPlayerPage() {
             {/* Recommended clips (9:16 horizontal scroll) */}
             <div className="mb-4">
               <HScrollRow scrollAmount={140}>
-                {pochakClips.slice(0, 6).map((clip) => (
+                {clips.slice(0, 6).map((clip: PopularClip) => (
                   <VClipCard
                     key={clip.id}
                     title={clip.title}
-                    viewCount={clip.viewCount}
                     linkTo={`/clip/${clip.id}`}
                     className="w-[100px]"
                   />
@@ -647,7 +653,7 @@ export default function ContentPlayerPage() {
 
             {/* Recommended video vertical list */}
             <div className="space-y-5">
-              {pochakVodContents.slice(0, 6).map((v) => (
+              {vodContents.slice(0, 6).map((v: PochakContent) => (
                 <RecommendedVideoItem
                   key={v.id}
                   title={v.title}
