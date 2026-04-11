@@ -51,7 +51,9 @@ export default function HVideoCard({
   const content = (
     <div className={`flex-shrink-0 ${className} cursor-pointer group`}>
       <div className="relative">
-        <ThumbPlaceholder thumbnailUrl={thumbnailUrl} className="aspect-video rounded-lg overflow-hidden group-hover:ring-1 group-hover:ring-[#00CC33] transition-all" />
+        <ThumbPlaceholder thumbnailUrl={thumbnailUrl} className="aspect-video rounded-lg overflow-hidden" />
+        {/* Hover border overlay — avoids clipping by ancestor overflow:hidden */}
+        <div className="absolute inset-0 rounded-lg pointer-events-none ring-2 ring-transparent group-hover:ring-[#00CC33] transition-all" />
         {live && (
           <span className="absolute top-2 left-2 flex items-center gap-1 bg-[#E51728] text-white text-[11px] font-bold px-2 py-0.5 rounded">
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />LIVE
@@ -65,9 +67,9 @@ export default function HVideoCard({
         {showBookmark && (
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setBookmarked((v) => !v); }}
-            className="absolute top-2 right-2 text-white/80 hover:text-white transition-colors z-10"
+            className="absolute top-2 right-2 transition-colors z-10"
           >
-            <Bookmark className={`h-4 w-4 ${bookmarked ? 'fill-[#00CC33] text-[#00CC33]' : ''}`} />
+            <Bookmark className={`h-4 w-4 transition-all duration-200 ${bookmarked ? 'fill-[#00CC33] text-[#00CC33]' : 'fill-none text-white/80 hover:text-white'}`} />
           </button>
         )}
         {(freeBadge || commentaryBadge) && !showBookmark && (

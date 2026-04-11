@@ -1,0 +1,656 @@
+{
+  "config": {
+    "configFile": "/Users/gangjong-won/Dubbi/pochak/scripts/playwright-club.config.js",
+    "rootDir": "/Users/gangjong-won/Dubbi/pochak/scripts",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/gangjong-won/Dubbi/pochak/scripts",
+        "testIgnore": [],
+        "testMatch": [
+          "**/club-e2e.spec.js"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/Users/gangjong-won/Dubbi/pochak/scripts/test-reports/club-e2e-results.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 4,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "club-e2e.spec.js",
+      "file": "club-e2e.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Web 클럽 기능 (localhost:3300)",
+          "file": "club-e2e.spec.js",
+          "line": 7,
+          "column": 6,
+          "specs": [
+            {
+              "title": "클럽 목록 표시 확인 (실제 데이터)",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 421,
+                      "error": {
+                        "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 클럽 목록 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 클럽 목록 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js:14:83",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                          "column": 83,
+                          "line": 14
+                        },
+                        "snippet": "  12 |     } catch {\n  13 |       serviceAvailable = false;\n> 14 |       expect(serviceAvailable, 'Web 서비스(localhost:3300)가 실행되지 않음 - 클럽 목록 테스트 불가').toBe(true);\n     |                                                                                   ^\n  15 |       return;\n  16 |     }\n  17 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                            "column": 83,
+                            "line": 14
+                          },
+                          "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 클럽 목록 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  12 |     } catch {\n  13 |       serviceAvailable = false;\n> 14 |       expect(serviceAvailable, 'Web 서비스(localhost:3300)가 실행되지 않음 - 클럽 목록 테스트 불가').toBe(true);\n     |                                                                                   ^\n  15 |       return;\n  16 |     }\n  17 |\n    at /Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js:14:83"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:13:45.378Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/club-e2e-Web-클럽-기능-localhost-3300-클럽-목록-표시-확인-실제-데이터--chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/club-e2e-Web-클럽-기능-localhost-3300-클럽-목록-표시-확인-실제-데이터--chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                        "column": 83,
+                        "line": 14
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c8b497cd60bea912c4fa-42ad0674a732c74571d6",
+              "file": "club-e2e.spec.js",
+              "line": 8,
+              "column": 3
+            },
+            {
+              "title": "클럽 상세 페이지 진입 확인",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 365,
+                      "error": {
+                        "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 클럽 상세 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 클럽 상세 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js:47:83",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                          "column": 83,
+                          "line": 47
+                        },
+                        "snippet": "  45 |     } catch {\n  46 |       serviceAvailable = false;\n> 47 |       expect(serviceAvailable, 'Web 서비스(localhost:3300)가 실행되지 않음 - 클럽 상세 테스트 불가').toBe(true);\n     |                                                                                   ^\n  48 |       return;\n  49 |     }\n  50 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                            "column": 83,
+                            "line": 47
+                          },
+                          "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 클럽 상세 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  45 |     } catch {\n  46 |       serviceAvailable = false;\n> 47 |       expect(serviceAvailable, 'Web 서비스(localhost:3300)가 실행되지 않음 - 클럽 상세 테스트 불가').toBe(true);\n     |                                                                                   ^\n  48 |       return;\n  49 |     }\n  50 |\n    at /Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js:47:83"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:13:46.741Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/club-e2e-Web-클럽-기능-localhost-3300-클럽-상세-페이지-진입-확인-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/club-e2e-Web-클럽-기능-localhost-3300-클럽-상세-페이지-진입-확인-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                        "column": 83,
+                        "line": 47
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c8b497cd60bea912c4fa-d5d3e3245e03197d952d",
+              "file": "club-e2e.spec.js",
+              "line": 41,
+              "column": 3
+            },
+            {
+              "title": "클럽 가입 신청",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 240,
+                      "error": {
+                        "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 클럽 가입 신청 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 클럽 가입 신청 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js:76:86",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                          "column": 86,
+                          "line": 76
+                        },
+                        "snippet": "  74 |     } catch {\n  75 |       serviceAvailable = false;\n> 76 |       expect(serviceAvailable, 'Web 서비스(localhost:3300)가 실행되지 않음 - 클럽 가입 신청 테스트 불가').toBe(true);\n     |                                                                                      ^\n  77 |       return;\n  78 |     }\n  79 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                            "column": 86,
+                            "line": 76
+                          },
+                          "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 클럽 가입 신청 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  74 |     } catch {\n  75 |       serviceAvailable = false;\n> 76 |       expect(serviceAvailable, 'Web 서비스(localhost:3300)가 실행되지 않음 - 클럽 가입 신청 테스트 불가').toBe(true);\n     |                                                                                      ^\n  77 |       return;\n  78 |     }\n  79 |\n    at /Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js:76:86"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:13:48.567Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/club-e2e-Web-클럽-기능-localhost-3300-클럽-가입-신청-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/club-e2e-Web-클럽-기능-localhost-3300-클럽-가입-신청-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                        "column": 86,
+                        "line": 76
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c8b497cd60bea912c4fa-f34506624d486796f60f",
+              "file": "club-e2e.spec.js",
+              "line": 70,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Partner 클럽 관리 (localhost:3200)",
+          "file": "club-e2e.spec.js",
+          "line": 123,
+          "column": 6,
+          "specs": [
+            {
+              "title": "클럽 관리 페이지 접근",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3364,
+                      "error": {
+                        "message": "Error: CORS 에러 없이 로그인 가능해야 함\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m",
+                        "stack": "Error: CORS 에러 없이 로그인 가능해야 함\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js:146:63",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                          "column": 63,
+                          "line": 146
+                        },
+                        "snippet": "  144 |     if (!loginSuccess) {\n  145 |       // CORS 에러로 인해 로그인 불가 - 이미 POC-104에서 확인된 버그\n> 146 |       expect.soft(corsErrors.length, 'CORS 에러 없이 로그인 가능해야 함').toBe(0);\n      |                                                               ^\n  147 |       return;\n  148 |     }\n  149 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                            "column": 63,
+                            "line": 146
+                          },
+                          "message": "Error: CORS 에러 없이 로그인 가능해야 함\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m\n\n  144 |     if (!loginSuccess) {\n  145 |       // CORS 에러로 인해 로그인 불가 - 이미 POC-104에서 확인된 버그\n> 146 |       expect.soft(corsErrors.length, 'CORS 에러 없이 로그인 가능해야 함').toBe(0);\n      |                                                               ^\n  147 |       return;\n  148 |     }\n  149 |\n    at /Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js:146:63"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:13:49.709Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/club-e2e-Partner-클럽-관리-localhost-3200-클럽-관리-페이지-접근-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/club-e2e-Partner-클럽-관리-localhost-3200-클럽-관리-페이지-접근-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                        "column": 63,
+                        "line": 146
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c8b497cd60bea912c4fa-45630b9f47d0beebdb40",
+              "file": "club-e2e.spec.js",
+              "line": 124,
+              "column": 3
+            },
+            {
+              "title": "가입 승인 → Web 멤버 목록 반영 확인",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3322,
+                      "error": {
+                        "message": "Error: [BUG-003] Partner CORS 에러로 로그인 불가 - 가입 승인 테스트 블로킹\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m",
+                        "stack": "Error: [BUG-003] Partner CORS 에러로 로그인 불가 - 가입 승인 테스트 블로킹\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js:184:91",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                          "column": 91,
+                          "line": 184
+                        },
+                        "snippet": "  182 |\n  183 |     if (!partnerLoggedIn) {\n> 184 |       expect.soft(corsErrors.length, '[BUG-003] Partner CORS 에러로 로그인 불가 - 가입 승인 테스트 블로킹').toBe(0);\n      |                                                                                           ^\n  185 |       await partnerContext.close();\n  186 |       return;\n  187 |     }"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                            "column": 91,
+                            "line": 184
+                          },
+                          "message": "Error: [BUG-003] Partner CORS 에러로 로그인 불가 - 가입 승인 테스트 블로킹\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m\n\n  182 |\n  183 |     if (!partnerLoggedIn) {\n> 184 |       expect.soft(corsErrors.length, '[BUG-003] Partner CORS 에러로 로그인 불가 - 가입 승인 테스트 블로킹').toBe(0);\n      |                                                                                           ^\n  185 |       await partnerContext.close();\n  186 |       return;\n  187 |     }\n    at /Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js:184:91"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:13:53.830Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/club-e2e-Partner-클럽-관리-loc-3fc8c-200-가입-승인-→-Web-멤버-목록-반영-확인-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/club-e2e-Partner-클럽-관리-loc-3fc8c-200-가입-승인-→-Web-멤버-목록-반영-확인-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                        "column": 91,
+                        "line": 184
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c8b497cd60bea912c4fa-60b5ba4fa74c28b72737",
+              "file": "club-e2e.spec.js",
+              "line": 159,
+              "column": 3
+            },
+            {
+              "title": "공지 작성 → Web 공지 표시 확인",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3323,
+                      "error": {
+                        "message": "Error: [BUG-003] Partner CORS 에러로 공지 작성 테스트 블로킹\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m",
+                        "stack": "Error: [BUG-003] Partner CORS 에러로 공지 작성 테스트 블로킹\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js:246:82",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                          "column": 82,
+                          "line": 246
+                        },
+                        "snippet": "  244 |\n  245 |     if (!partnerLoggedIn) {\n> 246 |       expect.soft(corsErrors.length, '[BUG-003] Partner CORS 에러로 공지 작성 테스트 블로킹').toBe(0);\n      |                                                                                  ^\n  247 |       await partnerContext.close();\n  248 |       return;\n  249 |     }"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                            "column": 82,
+                            "line": 246
+                          },
+                          "message": "Error: [BUG-003] Partner CORS 에러로 공지 작성 테스트 블로킹\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m\n\n  244 |\n  245 |     if (!partnerLoggedIn) {\n> 246 |       expect.soft(corsErrors.length, '[BUG-003] Partner CORS 에러로 공지 작성 테스트 블로킹').toBe(0);\n      |                                                                                  ^\n  247 |       await partnerContext.close();\n  248 |       return;\n  249 |     }\n    at /Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js:246:82"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:13:58.062Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/club-e2e-Partner-클럽-관리-localhost-3200-공지-작성-→-Web-공지-표시-확인-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/club-e2e-Partner-클럽-관리-localhost-3200-공지-작성-→-Web-공지-표시-확인-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                        "column": 82,
+                        "line": 246
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c8b497cd60bea912c4fa-a8b79d1fcf7085cab31c",
+              "file": "club-e2e.spec.js",
+              "line": 222,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "BO 클럽 관리 (localhost:3000)",
+          "file": "club-e2e.spec.js",
+          "line": 291,
+          "column": 6,
+          "specs": [
+            {
+              "title": "클럽 목록 실제 데이터 표시 확인",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3322,
+                      "error": {
+                        "message": "Error: [BUG-002] BO 로그인 실패 - 클럽 목록 테스트 블로킹\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: [BUG-002] BO 로그인 실패 - 클럽 목록 테스트 블로킹\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js:313:68",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                          "column": 68,
+                          "line": 313
+                        },
+                        "snippet": "  311 |     if (!loggedIn) {\n  312 |       // BUG-002: BO 로그인 API 빈 응답 이슈\n> 313 |       expect.soft(loggedIn, '[BUG-002] BO 로그인 실패 - 클럽 목록 테스트 블로킹').toBe(true);\n      |                                                                    ^\n  314 |       return;\n  315 |     }\n  316 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                            "column": 68,
+                            "line": 313
+                          },
+                          "message": "Error: [BUG-002] BO 로그인 실패 - 클럽 목록 테스트 블로킹\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  311 |     if (!loggedIn) {\n  312 |       // BUG-002: BO 로그인 API 빈 응답 이슈\n> 313 |       expect.soft(loggedIn, '[BUG-002] BO 로그인 실패 - 클럽 목록 테스트 블로킹').toBe(true);\n      |                                                                    ^\n  314 |       return;\n  315 |     }\n  316 |\n    at /Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js:313:68"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:14:02.126Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/club-e2e-BO-클럽-관리-localhost-3000-클럽-목록-실제-데이터-표시-확인-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/club-e2e-BO-클럽-관리-localhost-3000-클럽-목록-실제-데이터-표시-확인-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                        "column": 68,
+                        "line": 313
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c8b497cd60bea912c4fa-c2db53dc1d216c744e64",
+              "file": "club-e2e.spec.js",
+              "line": 292,
+              "column": 3
+            },
+            {
+              "title": "클럽 상태 변경 → Web 반영 확인",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3433,
+                      "error": {
+                        "message": "Error: [BUG-002] BO 로그인 실패 - 클럽 상태 변경 테스트 블로킹\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: [BUG-002] BO 로그인 실패 - 클럽 상태 변경 테스트 블로킹\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js:342:73",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                          "column": 73,
+                          "line": 342
+                        },
+                        "snippet": "  340 |     const boLoggedIn = !boPage.url().includes('/login');\n  341 |     if (!boLoggedIn) {\n> 342 |       expect.soft(boLoggedIn, '[BUG-002] BO 로그인 실패 - 클럽 상태 변경 테스트 블로킹').toBe(true);\n      |                                                                         ^\n  343 |       await boContext.close();\n  344 |       return;\n  345 |     }"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                            "column": 73,
+                            "line": 342
+                          },
+                          "message": "Error: [BUG-002] BO 로그인 실패 - 클럽 상태 변경 테스트 블로킹\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  340 |     const boLoggedIn = !boPage.url().includes('/login');\n  341 |     if (!boLoggedIn) {\n> 342 |       expect.soft(boLoggedIn, '[BUG-002] BO 로그인 실패 - 클럽 상태 변경 테스트 블로킹').toBe(true);\n      |                                                                         ^\n  343 |       await boContext.close();\n  344 |       return;\n  345 |     }\n    at /Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js:342:73"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:14:06.233Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/club-e2e-BO-클럽-관리-localhost-3000-클럽-상태-변경-→-Web-반영-확인-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/club-e2e-BO-클럽-관리-localhost-3000-클럽-상태-변경-→-Web-반영-확인-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/club-e2e.spec.js",
+                        "column": 73,
+                        "line": 342
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c8b497cd60bea912c4fa-dfa83cd9783045644b0d",
+              "file": "club-e2e.spec.js",
+              "line": 326,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-04-09T04:13:44.594Z",
+    "duration": 25325.809999999998,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 8,
+    "flaky": 0
+  }
+}

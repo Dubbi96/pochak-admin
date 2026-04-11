@@ -1,0 +1,578 @@
+{
+  "config": {
+    "configFile": "/Users/gangjong-won/Dubbi/pochak/scripts/playwright-login.config.js",
+    "rootDir": "/Users/gangjong-won/Dubbi/pochak/scripts",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/gangjong-won/Dubbi/pochak/scripts",
+        "testIgnore": [],
+        "testMatch": [
+          "**/login-e2e.spec.js"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/Users/gangjong-won/Dubbi/pochak/scripts/test-reports/login-e2e-results.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 4,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "login-e2e.spec.js",
+      "file": "login-e2e.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "BO 로그인 (localhost:3000)",
+          "file": "login-e2e.spec.js",
+          "line": 7,
+          "column": 6,
+          "specs": [
+            {
+              "title": "정상 로그인 시 토큰 반환 및 대시보드 진입 확인",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3468,
+                      "error": {
+                        "message": "Error: 로그인 API 호출되어야 함\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mundefined\u001b[39m",
+                        "stack": "Error: 로그인 API 호출되어야 함\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mundefined\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js:27:42",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                          "column": 42,
+                          "line": 27
+                        },
+                        "snippet": "  25 |\n  26 |     const loginResp = loginApiResponses.find(r => r.url.includes('auth/login'));\n> 27 |     expect(loginResp, '로그인 API 호출되어야 함').toBeTruthy();\n     |                                          ^\n  28 |     expect(loginResp.status, '로그인 API 200 응답').toBe(200);\n  29 |\n  30 |     // 에러 메시지 없음 확인 (서버 연결 실패 메시지가 있으면 실패)"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                            "column": 42,
+                            "line": 27
+                          },
+                          "message": "Error: 로그인 API 호출되어야 함\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mundefined\u001b[39m\n\n  25 |\n  26 |     const loginResp = loginApiResponses.find(r => r.url.includes('auth/login'));\n> 27 |     expect(loginResp, '로그인 API 호출되어야 함').toBeTruthy();\n     |                                          ^\n  28 |     expect(loginResp.status, '로그인 API 200 응답').toBe(200);\n  29 |\n  30 |     // 에러 메시지 없음 확인 (서버 연결 실패 메시지가 있으면 실패)\n    at /Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js:27:42"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:10:10.271Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/login-e2e-BO-로그인-localhost-3000-정상-로그인-시-토큰-반환-및-대시보드-진입-확인-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/login-e2e-BO-로그인-localhost-3000-정상-로그인-시-토큰-반환-및-대시보드-진입-확인-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                        "column": 42,
+                        "line": 27
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3fef96a709cff2aef811-4b577b7a5ee01b6c5a3b",
+              "file": "login-e2e.spec.js",
+              "line": 8,
+              "column": 3
+            },
+            {
+              "title": "API 401 에러 없음 (로그인 후 인증 토큰 유효성)",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "fail",
+                      "description": "로그인 실패로 인해 대시보드 진입 불가. 백엔드 토큰 반환 버그 확인 필요",
+                      "location": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                        "line": 60,
+                        "column": 12
+                      }
+                    }
+                  ],
+                  "expectedStatus": "failed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3414,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:10:14.877Z",
+                      "annotations": [
+                        {
+                          "type": "fail",
+                          "description": "로그인 실패로 인해 대시보드 진입 불가. 백엔드 토큰 반환 버그 확인 필요",
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                            "line": 60,
+                            "column": 12
+                          }
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/login-e2e-BO-로그인-localhost-c70db--401-에러-없음-로그인-후-인증-토큰-유효성--chromium/test-failed-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3fef96a709cff2aef811-41b2d3d0763b570a6cb0",
+              "file": "login-e2e.spec.js",
+              "line": 39,
+              "column": 3
+            },
+            {
+              "title": "잘못된 비밀번호 → 에러 메시지 표시",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 2408,
+                      "error": {
+                        "message": "Error: 에러 메시지가 표시되어야 함\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: 에러 메시지가 표시되어야 함\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js:79:41",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                          "column": 41,
+                          "line": 79
+                        },
+                        "snippet": "  77 |     // 에러 메시지 확인 (서버 에러 OR 인증 실패 메시지)\n  78 |     const errorMsg = await page.locator('p.text-red-500, p[class*=\"red\"], [class*=\"error\"]').first().isVisible().catch(() => false);\n> 79 |     expect(errorMsg, '에러 메시지가 표시되어야 함').toBe(true);\n     |                                         ^\n  80 |   });\n  81 | });\n  82 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                            "column": 41,
+                            "line": 79
+                          },
+                          "message": "Error: 에러 메시지가 표시되어야 함\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  77 |     // 에러 메시지 확인 (서버 에러 OR 인증 실패 메시지)\n  78 |     const errorMsg = await page.locator('p.text-red-500, p[class*=\"red\"], [class*=\"error\"]').first().isVisible().catch(() => false);\n> 79 |     expect(errorMsg, '에러 메시지가 표시되어야 함').toBe(true);\n     |                                         ^\n  80 |   });\n  81 | });\n  82 |\n    at /Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js:79:41"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:10:19.193Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/login-e2e-BO-로그인-localhost-3000-잘못된-비밀번호-→-에러-메시지-표시-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/login-e2e-BO-로그인-localhost-3000-잘못된-비밀번호-→-에러-메시지-표시-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                        "column": 41,
+                        "line": 79
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3fef96a709cff2aef811-262e010a49e93ea3a26f",
+              "file": "login-e2e.spec.js",
+              "line": 64,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Partner 로그인 (localhost:3200)",
+          "file": "login-e2e.spec.js",
+          "line": 86,
+          "column": 6,
+          "specs": [
+            {
+              "title": "정상 로그인 → 대시보드 진입, CORS 에러 없음",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3359,
+                      "error": {
+                        "message": "Error: CORS 에러가 없어야 함\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoHaveLength\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected length: \u001b[32m0\u001b[39m\nReceived length: \u001b[31m1\u001b[39m\nReceived array:  \u001b[31m[\"Access to XMLHttpRequest at 'http://localhost:8080/api/v1/auth/partner/login' from origin 'http://localhost:3200' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.\"]\u001b[39m",
+                        "stack": "Error: CORS 에러가 없어야 함\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoHaveLength\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected length: \u001b[32m0\u001b[39m\nReceived length: \u001b[31m1\u001b[39m\nReceived array:  \u001b[31m[\"Access to XMLHttpRequest at 'http://localhost:8080/api/v1/auth/partner/login' from origin 'http://localhost:3200' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.\"]\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js:118:42",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                          "column": 42,
+                          "line": 118
+                        },
+                        "snippet": "  116 |\n  117 |     // CORS 에러 없음 확인\n> 118 |     expect(corsErrors, 'CORS 에러가 없어야 함').toHaveLength(0);\n      |                                          ^\n  119 |\n  120 |     // 로그인 API 호출 확인\n  121 |     const loginResp = loginApiResponses.find(r => r.url.includes('auth/login'));"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                            "column": 42,
+                            "line": 118
+                          },
+                          "message": "Error: CORS 에러가 없어야 함\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoHaveLength\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected length: \u001b[32m0\u001b[39m\nReceived length: \u001b[31m1\u001b[39m\nReceived array:  \u001b[31m[\"Access to XMLHttpRequest at 'http://localhost:8080/api/v1/auth/partner/login' from origin 'http://localhost:3200' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.\"]\u001b[39m\n\n  116 |\n  117 |     // CORS 에러 없음 확인\n> 118 |     expect(corsErrors, 'CORS 에러가 없어야 함').toHaveLength(0);\n      |                                          ^\n  119 |\n  120 |     // 로그인 API 호출 확인\n  121 |     const loginResp = loginApiResponses.find(r => r.url.includes('auth/login'));\n    at /Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js:118:42"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:10:22.613Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/login-e2e-Partner-로그인-loca-7de71-정상-로그인-→-대시보드-진입-CORS-에러-없음-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/login-e2e-Partner-로그인-loca-7de71-정상-로그인-→-대시보드-진입-CORS-에러-없음-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                        "column": 42,
+                        "line": 118
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3fef96a709cff2aef811-f4cf1ca00e3c9c11862b",
+              "file": "login-e2e.spec.js",
+              "line": 87,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Web 서비스 (localhost:3300)",
+          "file": "login-e2e.spec.js",
+          "line": 138,
+          "column": 6,
+          "specs": [
+            {
+              "title": "서비스 가용성 확인",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 283,
+                      "error": {
+                        "message": "Error: Web 서비스(localhost:3300)가 실행 중이어야 함\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: Web 서비스(localhost:3300)가 실행 중이어야 함\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js:147:61",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                          "column": 61,
+                          "line": 147
+                        },
+                        "snippet": "  145 |       serviceUp = false;\n  146 |     }\n> 147 |     expect(serviceUp, 'Web 서비스(localhost:3300)가 실행 중이어야 함').toBe(true);\n      |                                                             ^\n  148 |   });\n  149 |\n  150 |   test('정상 로그인 → 메인 페이지(/home) 진입', async ({ page }) => {"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                            "column": 61,
+                            "line": 147
+                          },
+                          "message": "Error: Web 서비스(localhost:3300)가 실행 중이어야 함\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  145 |       serviceUp = false;\n  146 |     }\n> 147 |     expect(serviceUp, 'Web 서비스(localhost:3300)가 실행 중이어야 함').toBe(true);\n      |                                                             ^\n  148 |   });\n  149 |\n  150 |   test('정상 로그인 → 메인 페이지(/home) 진입', async ({ page }) => {\n    at /Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js:147:61"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:10:27.260Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/login-e2e-Web-서비스-localhost-3300-서비스-가용성-확인-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/login-e2e-Web-서비스-localhost-3300-서비스-가용성-확인-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                        "column": 61,
+                        "line": 147
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3fef96a709cff2aef811-f3966b265a1fef260ed2",
+              "file": "login-e2e.spec.js",
+              "line": 139,
+              "column": 3
+            },
+            {
+              "title": "정상 로그인 → 메인 페이지(/home) 진입",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 307,
+                      "error": {
+                        "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 로그인 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 로그인 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js:156:81",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                          "column": 81,
+                          "line": 156
+                        },
+                        "snippet": "  154 |     } catch {\n  155 |       serviceAvailable = false;\n> 156 |       expect(serviceAvailable, 'Web 서비스(localhost:3300)가 실행되지 않음 - 로그인 테스트 불가').toBe(true);\n      |                                                                                 ^\n  157 |       return;\n  158 |     }\n  159 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                            "column": 81,
+                            "line": 156
+                          },
+                          "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 로그인 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  154 |     } catch {\n  155 |       serviceAvailable = false;\n> 156 |       expect(serviceAvailable, 'Web 서비스(localhost:3300)가 실행되지 않음 - 로그인 테스트 불가').toBe(true);\n      |                                                                                 ^\n  157 |       return;\n  158 |     }\n  159 |\n    at /Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js:156:81"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:10:29.444Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/login-e2e-Web-서비스-localhost-3300-정상-로그인-→-메인-페이지-home-진입-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/login-e2e-Web-서비스-localhost-3300-정상-로그인-→-메인-페이지-home-진입-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                        "column": 81,
+                        "line": 156
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3fef96a709cff2aef811-c924dd75a019565908c1",
+              "file": "login-e2e.spec.js",
+              "line": 150,
+              "column": 3
+            },
+            {
+              "title": "미인증 상태에서 /my 접근 시 /login으로 리다이렉트",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 323,
+                      "error": {
+                        "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 리다이렉트 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 리다이렉트 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js:178:83",
+                        "location": {
+                          "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                          "column": 83,
+                          "line": 178
+                        },
+                        "snippet": "  176 |     } catch {\n  177 |       serviceAvailable = false;\n> 178 |       expect(serviceAvailable, 'Web 서비스(localhost:3300)가 실행되지 않음 - 리다이렉트 테스트 불가').toBe(true);\n      |                                                                                   ^\n  179 |       return;\n  180 |     }\n  181 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                            "column": 83,
+                            "line": 178
+                          },
+                          "message": "Error: Web 서비스(localhost:3300)가 실행되지 않음 - 리다이렉트 테스트 불가\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  176 |     } catch {\n  177 |       serviceAvailable = false;\n> 178 |       expect(serviceAvailable, 'Web 서비스(localhost:3300)가 실행되지 않음 - 리다이렉트 테스트 불가').toBe(true);\n      |                                                                                   ^\n  179 |       return;\n  180 |     }\n  181 |\n    at /Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js:178:83"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-09T04:10:32.761Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/login-e2e-Web-서비스-localhos-2a357--상태에서-my-접근-시-login으로-리다이렉트-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/gangjong-won/Dubbi/pochak/scripts/test-results/login-e2e-Web-서비스-localhos-2a357--상태에서-my-접근-시-login으로-리다이렉트-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/gangjong-won/Dubbi/pochak/scripts/login-e2e.spec.js",
+                        "column": 83,
+                        "line": 178
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3fef96a709cff2aef811-bafb43277bf773c380ad",
+              "file": "login-e2e.spec.js",
+              "line": 172,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-04-09T04:10:09.419Z",
+    "duration": 24239.892,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 7,
+    "flaky": 0
+  }
+}

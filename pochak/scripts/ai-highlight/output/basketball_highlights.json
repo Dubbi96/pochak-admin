@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "detector": "pochak-ai-highlight",
+  "highlights": [
+    {
+      "timestamp": 20.0,
+      "duration": 5.0,
+      "event_type": "BUZZER_BEATER",
+      "confidence": 0.865,
+      "description": "버저비터!",
+      "sport": "basketball"
+    },
+    {
+      "timestamp": 60.0,
+      "duration": 5.0,
+      "event_type": "DUNK",
+      "confidence": 0.897,
+      "description": "덩크!",
+      "sport": "basketball"
+    },
+    {
+      "timestamp": 110.0,
+      "duration": 5.0,
+      "event_type": "DUNK",
+      "confidence": 0.931,
+      "description": "덩크!",
+      "sport": "basketball"
+    },
+    {
+      "timestamp": 160.0,
+      "duration": 5.0,
+      "event_type": "DUNK",
+      "confidence": 0.905,
+      "description": "덩크!",
+      "sport": "basketball"
+    }
+  ]
+}

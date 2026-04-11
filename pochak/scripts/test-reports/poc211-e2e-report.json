@@ -1,0 +1,477 @@
+{
+  "overall": "PASS",
+  "total_pass": 20,
+  "total_fail": 0,
+  "total_warn": 43,
+  "details": [
+    {
+      "status": "INFO",
+      "scenario": "S1:배너",
+      "step": "BO에서 배너 생성 → Content 서비스 동기화 → Web 홈 표시 검증 시작",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "scenario": "S1:배너",
+      "step": "BO 배너 생성 성공",
+      "detail": "id=5, title=E2E POC-211 배너 1775806031"
+    },
+    {
+      "status": "PASS",
+      "scenario": "S1:배너",
+      "step": "DB(admin.banners) 배너 저장 확인",
+      "detail": "5 | E2E POC-211 배너 1775806031 | t"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S1:배너",
+      "step": "display_sections 동기화 미확인 (캐시 때문일 수 있음)",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "scenario": "S1:배너",
+      "step": "Web BFF /home 응답 정상",
+      "detail": "HTTP 200"
+    },
+    {
+      "status": "PASS",
+      "scenario": "S1:배너",
+      "step": "Content 서비스 홈 배너 반환 확인",
+      "detail": "배너 3개 표시"
+    },
+    {
+      "status": "INFO",
+      "scenario": "S2:대회",
+      "step": "BO에서 대회 등록 → Content 서비스 → Web 일정 표시 검증 시작",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "scenario": "S2:대회",
+      "step": "대회 등록 성공",
+      "detail": "id=12, name=POC-211 E2E 테스트 대회 1775806031"
+    },
+    {
+      "status": "PASS",
+      "scenario": "S2:대회",
+      "step": "DB(content.competitions) 대회 저장 확인",
+      "detail": "12 | POC-211 E2E 테스트 대회 1775806031 | SCHEDULED"
+    },
+    {
+      "status": "PASS",
+      "scenario": "S2:대회",
+      "step": "Web 일정(schedule/matches) API 정상 응답",
+      "detail": "HTTP 200"
+    },
+    {
+      "status": "PASS",
+      "scenario": "S2:대회",
+      "step": "BO 이벤트 목록 확인",
+      "detail": "이벤트 1개"
+    },
+    {
+      "status": "PASS",
+      "scenario": "S2:대회",
+      "step": "일정 내 Mock 데이터 없음 확인",
+      "detail": ""
+    },
+    {
+      "status": "INFO",
+      "scenario": "S3:클럽",
+      "step": "BO 팀/클럽 등록 → Partner 클럽 관리 → Web 클럽 표시 검증 시작",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "scenario": "S3:클럽",
+      "step": "DB 클럽 데이터 존재 확인",
+      "detail": "총 13개 클럽"
+    },
+    {
+      "status": "PASS",
+      "scenario": "S3:클럽",
+      "step": "Web Content /clubs 응답 정상",
+      "detail": "클럽 18개 반환"
+    },
+    {
+      "status": "PASS",
+      "scenario": "S3:클럽",
+      "step": "클럽 목록 내 Mock 데이터 없음",
+      "detail": ""
+    },
+    {
+      "status": "WARN",
+      "scenario": "S3:클럽",
+      "step": "Partner BFF 클럽 조회 실패",
+      "detail": "HTTP 404 | {'timestamp': '2026-04-10T07:27:12.300+00:00', 'status': 404, 'error': 'Not Found', 'path': '/api/v1/partner/partners/2/clubs'}"
+    },
+    {
+      "status": "PASS",
+      "scenario": "S3:클럽",
+      "step": "Web 클럽 상세 조회 성공",
+      "detail": "teamId=1, name=서울FC유소년"
+    },
+    {
+      "status": "INFO",
+      "scenario": "S4:회원가입",
+      "step": "Web 회원가입 → BO 회원 관리 검증 시작",
+      "detail": ""
+    },
+    {
+      "status": "INFO",
+      "scenario": "S4:회원가입",
+      "step": "회원가입 전 ACTIVE 유저 수: 11",
+      "detail": ""
+    },
+    {
+      "status": "WARN",
+      "scenario": "S4:회원가입",
+      "step": "Web BFF 로그인 확인 실패",
+      "detail": "HTTP 502"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S4:회원가입",
+      "step": "Phone 인증 코드 발송 실패",
+      "detail": "HTTP 400"
+    },
+    {
+      "status": "INFO",
+      "scenario": "S4:회원가입",
+      "step": "회원가입 후 ACTIVE 유저 수: 11",
+      "detail": ""
+    },
+    {
+      "status": "INFO",
+      "scenario": "S4:회원가입",
+      "step": "BO 확인용 최근 유저 목록 (DB)",
+      "detail": "24 | partner@pochak.live | ACTIVE |  23 | test@pochak.live    | ACTIVE |  22 | qatest@pochak.com   | ACTIVE"
+    },
+    {
+      "status": "PASS",
+      "scenario": "S4:회원가입",
+      "step": "BO 회원 관리 DB 접근 확인 완료",
+      "detail": ""
+    },
+    {
+      "status": "INFO",
+      "scenario": "S5:클럽커스터마이징",
+      "step": "Partner 클럽 커스터마이징 수정 → Web 클럽 상세 반영 검증 시작",
+      "detail": ""
+    },
+    {
+      "status": "INFO",
+      "scenario": "S5:클럽커스터마이징",
+      "step": "테스트 대상: club_id=1, partner_id=2, user_id=24",
+      "detail": ""
+    },
+    {
+      "status": "INFO",
+      "scenario": "S5:클럽커스터마이징",
+      "step": "커스터마이징 수정 전 상태",
+      "detail": "HTTP 400"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S5:클럽커스터마이징",
+      "step": "커스터마이징 업데이트 실패 (권한 또는 파트너 미연결)",
+      "detail": "HTTP 404 | {'timestamp': '2026-04-10T07:27:12.877+00:00', 'status': 404, 'error': 'Not Found', 'path': '/api/v1/partner/partners/2/clubs/1/customization'}"
+    },
+    {
+      "status": "PASS",
+      "scenario": "S5:클럽커스터마이징",
+      "step": "DB(content.club_customizations) 커스터마이징 저장 확인",
+      "detail": "ERROR: Command '['docker', 'exec', 'pochak-postgres', 'psql', '-U', 'pochak', '-d', 'pochak', '-t', '-c', 'SELECT team_id, description FROM content.club_customizations WHERE team_id=1 LIMIT 1']' returned non-zero exit status 1."
+    },
+    {
+      "status": "WARN",
+      "scenario": "S5:클럽커스터마이징",
+      "step": "Web 클럽 커스터마이징 조회 실패",
+      "detail": "HTTP 400"
+    },
+    {
+      "status": "INFO",
+      "scenario": "S6:구매",
+      "step": "Web 상품 구매 → BO 거래 내역 검증 시작",
+      "detail": ""
+    },
+    {
+      "status": "WARN",
+      "scenario": "S6:구매",
+      "step": "상품 목록 API 오류 (HTTP 500) — DB 직접 조회로 전환",
+      "detail": ""
+    },
+    {
+      "status": "INFO",
+      "scenario": "S6:구매",
+      "step": "DB에서 상품 조회",
+      "detail": "2 | QA 월정액 시즌패스"
+    },
+    {
+      "status": "PASS",
+      "scenario": "S6:구매",
+      "step": "DB 상품 확인 성공",
+      "detail": "id=2, name=QA 월정액 시즌패스"
+    },
+    {
+      "status": "INFO",
+      "scenario": "S6:구매",
+      "step": "구매 전 총 거래 건수: 1",
+      "detail": ""
+    },
+    {
+      "status": "WARN",
+      "scenario": "S6:구매",
+      "step": "구매 API 오류 (400) — 기존 DB 거래 내역으로 검증 전환",
+      "detail": ""
+    },
+    {
+      "status": "INFO",
+      "scenario": "S6:구매",
+      "step": "거래 후 총 거래 건수: 1",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "scenario": "S6:구매",
+      "step": "DB(commerce.purchases) 거래 내역 확인 (BO 소스)",
+      "detail": "1 |      21 |          2 | COMPLETED"
+    },
+    {
+      "status": "PASS",
+      "scenario": "S6:구매",
+      "step": "BO Analytics 대시보드 확인",
+      "detail": "HTTP 200"
+    },
+    {
+      "status": "INFO",
+      "scenario": "S7:Mock데이터",
+      "step": "각 시나리오에서 Mock/샘플 데이터 미표시 확인 시작",
+      "detail": ""
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=U12 유망주 김포착 환상 드리블, url=https://picsum.photos/seed/clip-1/320/400"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=경기용인 수비수 신들린 태클, url=https://picsum.photos/seed/clip-2/320/400"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=대구강북 에이스 프리킥 골, url=https://picsum.photos/seed/clip-3/320/400"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=결승골 세리머니 모음, url=https://picsum.photos/seed/clip-4/320/400"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=화랑대기 골키퍼 신들린 세이브, url=https://picsum.photos/seed/clip-5/320/400"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=[샘플] 축구 하이라이트 영상, url=https://picsum.photos/seed/sample-soccer/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "Mock 콘텐츠 제목 감지",
+      "detail": "title=[샘플] 축구 하이라이트 영상"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=[샘플] 배구 하이라이트 영상, url=https://picsum.photos/seed/sample-volleyball/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "Mock 콘텐츠 제목 감지",
+      "detail": "title=[샘플] 배구 하이라이트 영상"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=[샘플] 농구 하이라이트 영상, url=https://picsum.photos/seed/sample-basketball/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "Mock 콘텐츠 제목 감지",
+      "detail": "title=[샘플] 농구 하이라이트 영상"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=[샘플] 야구 하이라이트 영상, url=https://picsum.photos/seed/sample-baseball/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "Mock 콘텐츠 제목 감지",
+      "detail": "title=[샘플] 야구 하이라이트 영상"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=동대문구 리틀야구 vs 군포시 리틀야구, url=https://picsum.photos/seed/vod-mlb1/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=동대문구 리틀야구 vs 군포시 리틀야구, url=https://picsum.photos/seed/vod-mlb2/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=동대문구 리틀야구 vs 군포시 리틀야구, url=https://picsum.photos/seed/vod-mlb3/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=감독의 하루 - 화랑대기 편, url=https://picsum.photos/seed/vod-5/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=루키 다이어리 시즌2 EP.1, url=https://picsum.photos/seed/vod-6/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=농구 예시 경기 VOD, url=https://via.placeholder.com/640x360/0000cc/ffffff?text=Basketball"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "Mock 콘텐츠 제목 감지",
+      "detail": "title=농구 예시 경기 VOD"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=감독의 하루 - 화랑대기 편, url=https://picsum.photos/seed/vod-5/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=루키 다이어리 시즌2 EP.1, url=https://picsum.photos/seed/vod-6/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=동대문구 리틀야구 vs 군포시 리틀야구, url=https://picsum.photos/seed/vod-mlb1/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=동대문구 리틀야구 vs 군포시 리틀야구, url=https://picsum.photos/seed/vod-mlb2/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=동대문구 리틀야구 vs 군포시 리틀야구, url=https://picsum.photos/seed/vod-mlb3/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=[샘플] 야구 하이라이트 영상, url=https://picsum.photos/seed/sample-baseball/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "Mock 콘텐츠 제목 감지",
+      "detail": "title=[샘플] 야구 하이라이트 영상"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=[샘플] 농구 하이라이트 영상, url=https://picsum.photos/seed/sample-basketball/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "Mock 콘텐츠 제목 감지",
+      "detail": "title=[샘플] 농구 하이라이트 영상"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=축구 예시 경기 VOD, url=https://via.placeholder.com/640x360/00cc00/ffffff?text=Soccer"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "Mock 콘텐츠 제목 감지",
+      "detail": "title=축구 예시 경기 VOD"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=[샘플] 배구 하이라이트 영상, url=https://picsum.photos/seed/sample-volleyball/640/360"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "Mock 콘텐츠 제목 감지",
+      "detail": "title=[샘플] 배구 하이라이트 영상"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "썸네일에 Mock URL 감지",
+      "detail": "title=야구 예시 경기 VOD, url=https://via.placeholder.com/640x360/cc0000/ffffff?text=Baseball"
+    },
+    {
+      "status": "WARN",
+      "scenario": "S7:Mock데이터",
+      "step": "Mock 콘텐츠 제목 감지",
+      "detail": "title=야구 예시 경기 VOD"
+    },
+    {
+      "status": "PASS",
+      "scenario": "S7:Mock데이터",
+      "step": "클럽 목록 Mock 로고 없음 확인",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "scenario": "S7:Mock데이터",
+      "step": "Mock 데이터 전체 검사 완료",
+      "detail": ""
+    }
+  ],
+  "timestamp": "2026-04-10T07:27:13.642677+00:00"
+}
