@@ -19,6 +19,8 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
 
     Optional<Team> findByIdAndActiveTrue(Long id);
 
+    Optional<Team> findByPublicSlugAndActiveTrue(String publicSlug);
+
     @Query("SELECT t FROM Team t WHERE t.active = true" +
             " AND (:sportId IS NULL OR t.sport.id = :sportId)" +
             " AND (:siGunGuCode IS NULL OR t.siGunGuCode = :siGunGuCode)" +

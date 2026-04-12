@@ -54,15 +54,17 @@ import SectionHeader from '@/components/SectionHeader';
 import HVideoCard from '@/components/HVideoCard';
 import VClipCard from '@/components/VClipCard';
 import {
-  fetchHomeBanners,
-  fetchCompetitions,
-  fetchPopularClips,
-  fetchLiveContents,
-  fetchVodContents,
-  fetchPopularClubs,
   type CompetitionCard as CompetitionCardType,
   type PopularClip as PopularClipType,
 } from '@/services/webApi';
+import {
+  useHomeBannersQuery,
+  useCompetitionsQuery,
+  usePopularClipsQuery,
+  useLiveContentsQuery,
+  useVodContentsQuery,
+  usePopularClubsQuery,
+} from '@/queries/publicWebQueries';
 import type { PochakBanner, PochakContent, PochakChannel } from '../../../../shared/types';
 
 /* ── More Button ─────────────────────────────────────────── */
@@ -477,26 +479,31 @@ function CompetitionVideosSection({ title, items }: { title: string; items: Poch
 
 /* ── Home Page ───────────────────────────────────────────── */
 export default function HomePage() {
-  const [bannerItems, setBannerItems] = useState<PochakBanner[]>([]);
-  const [competitionItems, setCompetitionItems] = useState<CompetitionCardType[]>([]);
-  const [clipItems, setClipItems] = useState<PopularClipType[]>([]);
-  const [liveContents, setLiveContents] = useState<PochakContent[]>([]);
-  const [vodContents, setVodContents] = useState<PochakContent[]>([]);
-  const [clubItems, setClubItems] = useState<PochakChannel[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [apiError, setApiError] = useState(false);
+  const bannersQ = useHomeBannersQuery();
+  const competitionsQ = useCompetitionsQuery();
+  const clipsQ = usePopularClipsQuery();
+  const liveQ = useLiveContentsQuery();
+  const vodQ = useVodContentsQuery();
+  const clubsQ = usePopularClubsQuery();
+
   const [selectedSport, setSelectedSport] = useState<Sport>('전체');
 
-  useEffect(() => {
-    Promise.all([
-      fetchHomeBanners().then((data) => { if (data) setBannerItems(data); else setApiError(true); }),
-      fetchCompetitions().then((data) => { if (data) setCompetitionItems(data); else setApiError(true); }),
-      fetchPopularClips().then((data) => { if (data) setClipItems(data); else setApiError(true); }),
-      fetchLiveContents().then((data) => { if (data) setLiveContents(data); }),
-      fetchVodContents().then((data) => { if (data) setVodContents(data); }),
-      fetchPopularClubs().then((data) => { if (data) setClubItems(data); }),
-    ]).finally(() => setLoading(false));
-  }, []);
+  const loading =
+    bannersQ.isPending ||
+    competitionsQ.isPending ||
+    clipsQ.isPending ||
+    liveQ.isPending ||
+    vodQ.isPending ||
+    clubsQ.isPending;
+
+  const apiError = bannersQ.isError || competitionsQ.isError || clipsQ.isError;
+
+  const bannerItems = bannersQ.data ?? [];
+  const competitionItems = competitionsQ.data ?? [];
+  const clipItems = clipsQ.data ?? [];
+  const liveContents = liveQ.data ?? [];
+  const vodContents = vodQ.data ?? [];
+  const clubItems = clubsQ.data ?? [];
 
   if (apiError && !loading && bannerItems.length === 0 && competitionItems.length === 0 && clipItems.length === 0) {
     return (

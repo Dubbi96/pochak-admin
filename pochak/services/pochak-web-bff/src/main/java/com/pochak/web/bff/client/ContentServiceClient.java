@@ -70,6 +70,69 @@ public class ContentServiceClient {
         }
     }
 
+    public JsonNode resolveSlug(String slug) {
+        try {
+            return contentClient.get()
+                    .uri("/public/resolve/{slug}", slug)
+                    .retrieve()
+                    .body(JsonNode.class);
+        } catch (RestClientException e) {
+            log.warn("Content service slug resolve failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode checkSlug(String slug) {
+        try {
+            return contentClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/public/slug/check")
+                            .queryParam("slug", slug)
+                            .build())
+                    .retrieve()
+                    .body(JsonNode.class);
+        } catch (RestClientException e) {
+            log.warn("Content service slug check failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode getClubDetail(Long clubId) {
+        try {
+            return contentClient.get()
+                    .uri("/clubs/{clubId}", clubId)
+                    .retrieve()
+                    .body(JsonNode.class);
+        } catch (RestClientException e) {
+            log.warn("Content service club detail failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode getCompetitionDetail(Long competitionId) {
+        try {
+            return contentClient.get()
+                    .uri("/competitions/{id}", competitionId)
+                    .retrieve()
+                    .body(JsonNode.class);
+        } catch (RestClientException e) {
+            log.warn("Content service competition detail failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode getOrganizationDetail(Long organizationId) {
+        try {
+            return contentClient.get()
+                    .uri("/organizations/{id}", organizationId)
+                    .retrieve()
+                    .body(JsonNode.class);
+        } catch (RestClientException e) {
+            log.warn("Content service organization detail failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
     public JsonNode getFavorites(Long userId, int size) {
         try {
             return contentClient.get()

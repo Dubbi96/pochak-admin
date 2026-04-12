@@ -1,5 +1,6 @@
 package com.pochak.admin.site.controller;
 
+import com.pochak.admin.audit.service.AuditLogService;
 import com.pochak.admin.site.client.ContentSyncService;
 import com.pochak.admin.site.dto.BannerRequest;
 import com.pochak.admin.site.dto.BannerResponse;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -19,10 +21,12 @@ import java.util.Map;
 @RestController
 @RequestMapping("/admin/api/v1/site/banners")
 @RequiredArgsConstructor
+@PreAuthorize("hasAuthority('PERM_banner.read') or hasRole('SUPER_ADMIN')")
 public class BannerController {
 
     private final BannerRepository bannerRepository;
     private final ContentSyncService contentSyncService;
+    private final AuditLogService auditLogService;
 
     @GetMapping
     public ResponseEntity<Page<BannerResponse>> getBanners(
@@ -55,11 +59,15 @@ public class BannerController {
     }
 
     @PostMapping
-    public ResponseEntity<BannerResponse> createBanner(@RequestBody BannerRequest request) {
+    @PreAuthorize("hasAuthority('PERM_banner.write') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<BannerResponse> createBanner(
+            @RequestBody BannerRequest request,
+            @RequestAttribute(value = "adminUserId", required = false) Long adminUserId) {
         Banner saved = bannerRepository.save(request.toEntity());
         if (Boolean.TRUE.equals(saved.getIsActive())) {
             contentSyncService.syncBannerToContent(saved);
         }
+        auditLogService.log("CREATE", "BANNER", String.valueOf(saved.getId()), null, saved);
         return ResponseEntity.created(URI.create("/admin/api/v1/site/banners/" + saved.getId()))
                 .body(BannerResponse.from(saved));
     }

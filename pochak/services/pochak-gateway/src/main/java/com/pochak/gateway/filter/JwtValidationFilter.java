@@ -28,6 +28,10 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String TOKEN_BLACKLIST_PREFIX = "token-blacklist:";
 
+    /**
+     * Prefixes for routes that allow anonymous access. Any sub-path matches ({@code startsWith}).
+     * Write/sensitive operations under these prefixes must be enforced in downstream services.
+     */
     private static final List<String> PUBLIC_PATHS = List.of(
             "/api/v1/auth/login",
             "/api/v1/auth/signup",
@@ -47,6 +51,7 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
             "/api/v1/schedule",
             "/api/v1/venues",
             "/api/v1/clubs",
+            "/api/v1/channels",
             "/api/v1/streaming",
             "/api/v1/communities",
             "/api/v1/matches",
@@ -97,14 +102,25 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
                 // Public path, no JWT: pass through with clean headers (no user context)
                 return chain.filter(cleanedExchange);
             }
-            // Public path with JWT: try to parse and attach user context
+            // Public path with Authorization: invalid or revoked token must be rejected (401),
+            // so clients do not silently run as anonymous while sending a bad credential.
             try {
                 return buildAuthenticatedExchange(cleanedExchange, cleanedRequest, authHeader, path)
                         .flatMap(chain::filter)
-                        .onErrorResume(e -> chain.filter(cleanedExchange));
+                        .onErrorResume(SecurityException.class, e -> {
+                            cleanedExchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+                            return cleanedExchange.getResponse().setComplete();
+                        })
+                        .onErrorResume(e -> {
+                            cleanedExchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                            return cleanedExchange.getResponse().setComplete();
+                        });
+            } catch (SecurityException e) {
+                cleanedExchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+                return cleanedExchange.getResponse().setComplete();
             } catch (Exception e) {
-                // Invalid JWT on public path: pass through without user context
-                return chain.filter(cleanedExchange);
+                cleanedExchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return cleanedExchange.getResponse().setComplete();
             }
         }
 
@@ -152,8 +168,8 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
         String userId = claims.getSubject();
         String role = claims.get("role", String.class);
 
-        // SEC-004: Admin endpoints require ADMIN role
-        if (path.startsWith("/api/v1/admin") && !"ADMIN".equalsIgnoreCase(role)) {
+        // SEC-004: Admin / back-office endpoints require ADMIN role
+        if (requiresAdminRole(path) && !"ADMIN".equalsIgnoreCase(role)) {
             throw new SecurityException("Forbidden: ADMIN role required");
         }
 
@@ -186,6 +202,22 @@ public class JwtValidationFilter implements GlobalFilter, Ordered {
 
     private boolean isPublicPath(String path) {
         return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
+    }
+
+    /**
+     * Paths that must be called with an ADMIN-role JWT (excluding auth login/register under the same prefix).
+     */
+    private static boolean requiresAdminRole(String path) {
+        if (path.startsWith("/admin/bff")) {
+            return true;
+        }
+        if (path.startsWith("/admin/api/v1/") && !path.startsWith("/admin/api/v1/auth")) {
+            return true;
+        }
+        if (path.startsWith("/api/v1/admin/") && !path.startsWith("/api/v1/admin/auth")) {
+            return true;
+        }
+        return false;
     }
 
     @Override

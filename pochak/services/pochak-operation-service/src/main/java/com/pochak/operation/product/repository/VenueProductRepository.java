@@ -17,4 +17,8 @@ public interface VenueProductRepository extends JpaRepository<VenueProduct, Long
     @Query("SELECT p FROM VenueProduct p JOIN Venue v ON p.venueId = v.id " +
            "WHERE v.ownerId = :ownerId AND p.isActive = true ORDER BY p.createdAt DESC")
     List<VenueProduct> findByVenueOwnerIdAndIsActiveTrue(@Param("ownerId") Long ownerId);
+
+    @Query("SELECT COUNT(p) FROM VenueProduct p JOIN Venue v ON p.venueId = v.id " +
+           "WHERE v.ownerId = :ownerId AND p.isActive = true")
+    long countByVenueOwnerIdAndIsActiveTrue(@Param("ownerId") Long ownerId);
 }

@@ -39,6 +39,11 @@ public class RefundController {
         return ResponseEntity.ok(ApiResponse.ok(refundService.getRefunds(status, pageable)));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<RefundResponse>> getRefund(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.ok(refundService.getRefund(id)));
+    }
+
     @PutMapping("/{id}/process")
     public ResponseEntity<ApiResponse<RefundResponse>> processRefund(
             @PathVariable Long id,

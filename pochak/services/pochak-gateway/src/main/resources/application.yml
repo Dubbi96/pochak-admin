@@ -30,6 +30,12 @@ pochak:
   rate-limit:
     type: ${RATE_LIMIT_TYPE:redis}
     trusted-proxies: ${TRUSTED_PROXIES:127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+    # Per-client-IP limits (see RedisRateLimitFilter / RateLimitFilter)
+    api-max-requests: ${RATE_LIMIT_API_MAX:100}
+    auth-max-requests: ${RATE_LIMIT_AUTH_MAX:10}
+    window-seconds: ${RATE_LIMIT_WINDOW_SECONDS:60}
+    # When true, skip rate limiting for loopback clients (127.0.0.1, ::1). Useful for local dev.
+    skip-loopback-clients: ${RATE_LIMIT_SKIP_LOOPBACK:false}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3200,http://localhost:3300,http://localhost:8097}
 

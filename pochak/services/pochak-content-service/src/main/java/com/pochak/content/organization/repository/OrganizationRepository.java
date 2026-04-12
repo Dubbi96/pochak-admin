@@ -22,6 +22,8 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
 
     Optional<Organization> findByIdAndActiveTrue(Long id);
 
+    Optional<Organization> findByPublicSlugAndActiveTrue(String publicSlug);
+
     @Query("SELECT o FROM Organization o WHERE o.active = true" +
             " AND (CAST(:orgType AS string) IS NULL OR o.orgType = :orgType)" +
             " AND (CAST(:parentId AS long) IS NULL OR o.parent.id = :parentId)" +

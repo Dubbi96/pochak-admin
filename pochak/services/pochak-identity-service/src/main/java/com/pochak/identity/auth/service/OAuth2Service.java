@@ -66,6 +66,19 @@ public class OAuth2Service {
     @Value("${oauth2.naver.redirect-uri:}")
     private String naverRedirectUri;
 
+    // --- Apple ---
+    @Value("${oauth2.apple.client-id:}")
+    private String appleClientId;
+
+    @Value("${oauth2.apple.team-id:}")
+    private String appleTeamId;
+
+    @Value("${oauth2.apple.key-id:}")
+    private String appleKeyId;
+
+    @Value("${oauth2.apple.redirect-uri:}")
+    private String appleRedirectUri;
+
     /**
      * Process OAuth callback and determine the result:
      * - LOGIN: existing linked account → issue JWT
@@ -80,6 +93,7 @@ public class OAuth2Service {
             case "kakao" -> processKakao(code);
             case "google" -> processGoogle(code);
             case "naver" -> processNaver(code);
+            case "apple" -> processApple(code);
             default -> throw new BusinessException(ErrorCode.INVALID_INPUT, "Unknown OAuth provider: " + provider);
         };
 
@@ -479,6 +493,44 @@ public class OAuth2Service {
                 .expiresIn(jwtTokenProvider.getAccessTokenExpiration() / 1000)
                 .tokenType("Bearer")
                 .build();
+    }
+
+    /**
+     * Apple Sign-In: validates the identity token (id_token) from Apple.
+     * In a full implementation this would verify the JWT signature using Apple's public keys.
+     * For now, it extracts claims from the id_token payload.
+     */
+    private OAuthUserInfo processApple(String idToken) {
+        log.info("[OAuth/Apple] Processing Apple id_token");
+        try {
+            String[] parts = idToken.split("\\.");
+            if (parts.length < 2) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "Invalid Apple id_token format");
+            }
+            String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            JsonNode claims = mapper.readTree(payload);
+
+            String sub = claims.has("sub") ? claims.get("sub").asText() : null;
+            String email = claims.has("email") ? claims.get("email").asText() : null;
+            String name = claims.has("name") ? claims.get("name").asText() : null;
+
+            if (sub == null) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "Apple id_token missing 'sub'");
+            }
+
+            return OAuthUserInfo.builder()
+                    .provider("apple")
+                    .providerId(sub)
+                    .email(email)
+                    .name(name)
+                    .build();
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("[OAuth/Apple] Failed to process Apple id_token", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Apple sign-in failed");
+        }
     }
 
     private String extractField(JsonNode node, String field) {

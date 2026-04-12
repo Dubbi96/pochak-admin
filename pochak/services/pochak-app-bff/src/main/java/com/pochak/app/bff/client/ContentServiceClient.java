@@ -67,6 +67,18 @@ public class ContentServiceClient {
         }
     }
 
+    public JsonNode resolveSlug(String slug) {
+        try {
+            return contentClient.get()
+                    .uri("/public/resolve/{slug}", slug)
+                    .retrieve()
+                    .body(JsonNode.class);
+        } catch (RestClientException e) {
+            log.warn("Content service slug resolve failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
     public JsonNode getFavorites(Long userId, int size) {
         try {
             return contentClient.get()

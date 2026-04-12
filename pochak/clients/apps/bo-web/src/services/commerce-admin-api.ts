@@ -212,6 +212,8 @@ export async function getPointHistory(
     params.searchKeyword = filters.searchKeyword;
     params.searchType = filters.searchType || "name";
   }
+  if (filters.dateFrom) params.dateFrom = filters.dateFrom;
+  if (filters.dateTo) params.dateTo = filters.dateTo;
 
   return gatewayApi.get<PageResponse<PointHistory>>("/api/v1/admin/commerce/points/history", params);
 }
@@ -282,11 +284,16 @@ export async function getRefunds(
 }
 
 export async function approveRefund(id: number): Promise<Refund> {
-  return gatewayApi.put<Refund>(`/api/v1/admin/commerce/refunds/${id}/approve`);
+  return gatewayApi.put<Refund>(`/api/v1/admin/commerce/refunds/${id}/process`, {
+    approved: true,
+  });
 }
 
 export async function rejectRefund(id: number, reason?: string): Promise<Refund> {
-  return gatewayApi.put<Refund>(`/api/v1/admin/commerce/refunds/${id}/reject`, { reason });
+  return gatewayApi.put<Refund>(`/api/v1/admin/commerce/refunds/${id}/process`, {
+    approved: false,
+    adminNote: reason,
+  });
 }
 
 export async function getRefundById(id: number): Promise<Refund> {
@@ -323,7 +330,7 @@ export async function exportPointHistoryCsv(filters: PointHistoryFilter): Promis
   if (filters.dateFrom) params.dateFrom = filters.dateFrom;
   if (filters.dateTo) params.dateTo = filters.dateTo;
 
-  return gatewayApi.get<string>("/api/v1/admin/commerce/points/history/export", params);
+  return gatewayApi.getText("/api/v1/admin/commerce/points/history/export", params);
 }
 
 // ── Pricing APIs ──────────────────────────────────────────────────

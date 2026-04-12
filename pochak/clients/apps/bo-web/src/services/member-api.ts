@@ -138,10 +138,26 @@ export async function getBlacklist(
     params.searchType = filters.searchType || "name";
   }
 
-  return gatewayApi.get<PageResponse<BlacklistMember>>(
-    "/api/v1/admin/members/blacklist",
+  params.status = "SUSPENDED";
+
+  const apiResult = await gatewayApi.get<PageResponse<Record<string, unknown>>>(
+    "/api/v1/admin/members",
     params
   );
+  const mapRow = (m: Record<string, unknown>): BlacklistMember => ({
+    id: Number(m.id),
+    name: String(m.nickname ?? m.name ?? "-"),
+    nationality: "—",
+    phone: String(m.phoneNumber ?? ""),
+    email: String(m.email ?? ""),
+    blockReason: "—",
+    blockedAt: m.updatedAt ? String(m.updatedAt) : String(m.lastLoginAt ?? ""),
+    blockedBy: "—",
+  });
+  return {
+    ...apiResult,
+    content: (apiResult.content ?? []).map(mapRow),
+  };
 }
 
 export async function unblockMember(id: number): Promise<void> {

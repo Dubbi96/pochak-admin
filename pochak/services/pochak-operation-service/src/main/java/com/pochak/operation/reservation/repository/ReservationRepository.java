@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
@@ -66,4 +67,17 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("UPDATE Reservation r SET r.reservedByUserId = -1 " +
             "WHERE r.reservedByUserId = :userId AND r.status = 'COMPLETED'")
     int anonymizeCompletedByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT COUNT(r) FROM Reservation r WHERE r.venueId IN :venueIds AND r.status = :status")
+    long countByVenueIdInAndStatus(
+            @Param("venueIds") Collection<Long> venueIds,
+            @Param("status") ReservationStatus status);
+
+    @Query("SELECT COUNT(r) FROM Reservation r WHERE r.venueId IN :venueIds "
+            + "AND r.status <> :excluded AND r.startTime >= :start AND r.startTime < :end")
+    long countByVenueIdInAndStartTimeBetweenAndStatusNot(
+            @Param("venueIds") Collection<Long> venueIds,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
+            @Param("excluded") ReservationStatus excluded);
 }

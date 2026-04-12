@@ -4,16 +4,16 @@ import ContentCardItem from '@/components/ContentCardItem';
 import HScrollRow from '@/components/HScrollRow';
 import HVideoCard from '@/components/HVideoCard';
 import VClipCard from '@/components/VClipCard';
+import { fetchSearchResults } from '@/services/webApi';
 import {
-  fetchSearchResults,
-  fetchLiveContents,
-  fetchVodContents,
-  fetchPopularClubs,
-  fetchCompetitions,
-  fetchPopularClips,
-  fetchTrendingSearches,
-} from '@/services/webApi';
-import type { ContentCard, PochakContent, PochakChannel, CompetitionCard, PopularClip } from '@/services/webApi';
+  useLiveContentsQuery,
+  useVodContentsQuery,
+  usePopularClubsQuery,
+  useCompetitionsQuery,
+  usePopularClipsQuery,
+  useTrendingSearchesQuery,
+} from '@/queries/publicWebQueries';
+import type { ContentCard } from '@/services/webApi';
 
 type SearchTab = '전체' | '클럽' | '라이브' | '대회' | '영상' | '클립';
 const tabs: SearchTab[] = ['전체', '클럽', '라이브', '대회', '영상', '클립'];
@@ -88,21 +88,19 @@ export default function SearchPage() {
   const [activeTab, setActiveTab] = useState<SearchTab>('전체');
   const [apiResults, setApiResults] = useState<ContentCard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [teamItems, setTeamItems] = useState<PochakChannel[]>([]);
-  const [liveItems, setLiveItems] = useState<PochakContent[]>([]);
-  const [competitionItems, setCompetitionItems] = useState<CompetitionCard[]>([]);
-  const [vodItems, setVodItems] = useState<PochakContent[]>([]);
-  const [clipItems, setClipItems] = useState<PopularClip[]>([]);
-  const [trendingTerms, setTrendingTerms] = useState<string[]>([]);
+  const clubsQ = usePopularClubsQuery();
+  const liveQ = useLiveContentsQuery();
+  const competitionsQ = useCompetitionsQuery();
+  const vodQ = useVodContentsQuery();
+  const clipsQ = usePopularClipsQuery();
+  const trendingQ = useTrendingSearchesQuery();
 
-  useEffect(() => {
-    fetchPopularClubs().then((data) => { if (data) setTeamItems(data); });
-    fetchLiveContents().then((data) => { if (data) setLiveItems(data); });
-    fetchCompetitions().then((data) => { if (data) setCompetitionItems(data); });
-    fetchVodContents().then((data) => { if (data) setVodItems(data); });
-    fetchPopularClips().then((data) => { if (data) setClipItems(data); });
-    fetchTrendingSearches().then((data) => { if (data) setTrendingTerms(data); });
-  }, []);
+  const teamItems = clubsQ.data ?? [];
+  const liveItems = liveQ.data ?? [];
+  const competitionItems = competitionsQ.data ?? [];
+  const vodItems = vodQ.data ?? [];
+  const clipItems = clipsQ.data ?? [];
+  const trendingTerms = trendingQ.data ?? [];
 
   const isSearching = query.trim().length > 0;
 

@@ -6,14 +6,14 @@ import HScrollRow from '@/components/HScrollRow';
 import SectionHeader from '@/components/SectionHeader';
 import HVideoCard from '@/components/HVideoCard';
 import VClipCard from '@/components/VClipCard';
+import { fetchMyProfile } from '@/services/webApi';
 import {
-  fetchMyProfile,
-  fetchVodContents,
-  fetchPopularClips,
-  fetchCompetitions,
-  fetchPopularChannels,
-} from '@/services/webApi';
-import type { UserProfile, PochakContent, PopularClip, CompetitionCard, PochakChannel } from '@/services/webApi';
+  useVodContentsQuery,
+  usePopularClipsQuery,
+  useCompetitionsQuery,
+  usePopularChannelsQuery,
+} from '@/queries/publicWebQueries';
+import type { UserProfile } from '@/services/webApi';
 
 /* ── Tab definitions ────────────────────────────────────────── */
 type TabKey = 'home' | 'history' | 'myclip' | 'reservation' | 'favorites';
@@ -44,17 +44,15 @@ function maskEmail(email: string): string {
 
 /* ── 홈 Tab ──────────────────────────────────────────────────── */
 function HomeTab() {
-  const [vodContents, setVodContents] = useState<PochakContent[]>([]);
-  const [clips, setClips] = useState<PopularClip[]>([]);
-  const [competitions, setCompetitions] = useState<CompetitionCard[]>([]);
-  const [channels, setChannels] = useState<PochakChannel[]>([]);
+  const vodQ = useVodContentsQuery();
+  const clipsQ = usePopularClipsQuery();
+  const competitionsQ = useCompetitionsQuery();
+  const channelsQ = usePopularChannelsQuery();
 
-  useEffect(() => {
-    fetchVodContents().then((data) => { if (data) setVodContents(data); });
-    fetchPopularClips().then((data) => { if (data) setClips(data); });
-    fetchCompetitions().then((data) => { if (data) setCompetitions(data); });
-    fetchPopularChannels().then((data) => { if (data) setChannels(data); });
-  }, []);
+  const vodContents = vodQ.data ?? [];
+  const clips = clipsQ.data ?? [];
+  const competitions = competitionsQ.data ?? [];
+  const channels = channelsQ.data ?? [];
 
   return (
     <div className="space-y-10">

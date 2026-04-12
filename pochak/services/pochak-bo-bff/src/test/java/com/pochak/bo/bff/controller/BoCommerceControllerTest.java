@@ -125,17 +125,17 @@ class BoCommerceControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /refunds/{id} - 환불 상태 변경")
-    void updateRefund() throws Exception {
+    @DisplayName("PUT /refunds/{id}/process - 환불 승인/거절 처리")
+    void processRefund() throws Exception {
         ObjectNode expected = mapper.createObjectNode().put("id", 5).put("status", "APPROVED");
-        when(commerceClient.updateRefund(eq(5L), anyMap())).thenReturn(expected);
+        when(commerceClient.processRefund(eq(5L), anyMap())).thenReturn(expected);
 
-        mockMvc.perform(put("/refunds/5")
+        mockMvc.perform(put("/refunds/5/process")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"APPROVED\"}"))
+                        .content("{\"approved\":true}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("APPROVED"));
 
-        verify(commerceClient).updateRefund(eq(5L), anyMap());
+        verify(commerceClient).processRefund(eq(5L), anyMap());
     }
 }

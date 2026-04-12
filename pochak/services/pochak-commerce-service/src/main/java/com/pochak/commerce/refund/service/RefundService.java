@@ -62,6 +62,12 @@ public class RefundService {
                 .map(RefundResponse::from);
     }
 
+    public RefundResponse getRefund(Long id) {
+        Refund refund = refundRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Refund not found: " + id));
+        return RefundResponse.from(refund);
+    }
+
     public Page<RefundResponse> getUserRefunds(Long userId, RefundStatus status, Pageable pageable) {
         return refundRepository.findByUserIdWithStatusFilter(userId, status, pageable)
                 .map(RefundResponse::from);

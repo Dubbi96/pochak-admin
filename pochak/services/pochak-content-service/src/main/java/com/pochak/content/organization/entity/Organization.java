@@ -45,6 +45,9 @@ public class Organization {
     @Column(name = "sport_id")
     private Long sportId;
 
+    @Column(name = "public_slug", length = 100)
+    private String publicSlug;
+
     @Column(name = "logo_url", length = 500)
     private String logoUrl;
 

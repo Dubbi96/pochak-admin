@@ -1,0 +1,13 @@
+# Activate with: --spring.profiles.active=local
+# Relaxes gateway rate limiting for browser traffic from localhost (loopback).
+spring:
+  config:
+    activate:
+      on-profile: local
+
+pochak:
+  rate-limit:
+    skip-loopback-clients: true
+    api-max-requests: 2000
+    auth-max-requests: 100
+    window-seconds: 60

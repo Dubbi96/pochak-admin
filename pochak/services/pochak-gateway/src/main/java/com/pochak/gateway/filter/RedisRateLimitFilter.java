@@ -30,10 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Uses Redis INCR + EXPIRE for atomic, distributed rate limiting.
  *
  * Key format: rate-limit:{clientIp}:{path-prefix}
- * TTL: 60 seconds (automatic expiry, no manual cleanup needed).
- *
- * Auth routes: 10 requests per minute (brute-force protection).
- * General API routes: 100 requests per minute.
+ * Window and limits are configurable (see application.yml pochak.rate-limit.*).
  *
  * When Redis is unavailable, falls back to an embedded in-memory
  * ConcurrentHashMap-based limiter to prevent fail-open bypass.
@@ -45,10 +42,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @ConditionalOnProperty(name = "pochak.rate-limit.type", havingValue = "redis", matchIfMissing = true)
 public class RedisRateLimitFilter implements GlobalFilter, Ordered {
 
-    private static final int AUTH_MAX_REQUESTS = 10;
-    private static final int API_MAX_REQUESTS = 100;
-    private static final long WINDOW_MILLIS = 60_000L;
-    private static final Duration WINDOW_DURATION = Duration.ofSeconds(60);
     private static final String KEY_PREFIX = "rate-limit:";
 
     private final ReactiveStringRedisTemplate redisTemplate;
@@ -62,11 +55,33 @@ public class RedisRateLimitFilter implements GlobalFilter, Ordered {
     @Value("${pochak.rate-limit.trusted-proxies:127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}")
     private String trustedProxiesConfig;
 
+    @Value("${pochak.rate-limit.api-max-requests:100}")
+    private int apiMaxRequests;
+
+    @Value("${pochak.rate-limit.auth-max-requests:10}")
+    private int authMaxRequests;
+
+    @Value("${pochak.rate-limit.window-seconds:60}")
+    private int windowSeconds;
+
+    @Value("${pochak.rate-limit.skip-loopback-clients:false}")
+    private boolean skipLoopbackClients;
+
+    private Duration windowDuration;
+    private long windowMillis;
+
     public RedisRateLimitFilter(ReactiveStringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
     @PostConstruct
+    void initWindowAndParseProxies() {
+        this.windowSeconds = Math.max(1, windowSeconds);
+        this.windowDuration = Duration.ofSeconds(windowSeconds);
+        this.windowMillis = windowDuration.toMillis();
+        parseTrustedProxies();
+    }
+
     void parseTrustedProxies() {
         String[] entries = trustedProxiesConfig.split(",");
         for (String entry : entries) {
@@ -86,12 +101,16 @@ public class RedisRateLimitFilter implements GlobalFilter, Ordered {
         String path = exchange.getRequest().getURI().getPath();
         String clientIp = resolveClientIp(exchange);
 
+        if (skipLoopbackClients && isLoopbackClient(clientIp)) {
+            return chain.filter(exchange);
+        }
+
         // OAuth callback/authorize paths are excluded from strict auth rate limit
         // — these are redirects from OAuth providers (Google, Kakao, Naver), not user-initiated brute force
         boolean isOAuthCallback = path.startsWith("/api/v1/auth/oauth2/callback")
                 || path.startsWith("/api/v1/auth/oauth2/authorize");
         boolean isAuthRoute = !isOAuthCallback && path.startsWith("/api/v1/auth");
-        int maxRequests = isAuthRoute ? AUTH_MAX_REQUESTS : API_MAX_REQUESTS;
+        int maxRequests = isAuthRoute ? authMaxRequests : apiMaxRequests;
         String pathPrefix = isAuthRoute ? "auth" : "api";
 
         String redisKey = KEY_PREFIX + clientIp + ":" + pathPrefix;
@@ -103,25 +122,36 @@ public class RedisRateLimitFilter implements GlobalFilter, Ordered {
                 });
     }
 
+    private boolean isLoopbackClient(String clientIp) {
+        if ("unknown".equals(clientIp)) {
+            return false;
+        }
+        try {
+            return InetAddress.getByName(clientIp).isLoopbackAddress();
+        } catch (UnknownHostException e) {
+            return false;
+        }
+    }
+
     private Mono<Void> checkRedisRateLimit(ServerWebExchange exchange, GatewayFilterChain chain,
                                            String redisKey, int maxRequests,
                                            String clientIp, String path) {
         return redisTemplate.opsForValue().increment(redisKey)
                 .flatMap(count -> {
                     if (count == 1) {
-                        return redisTemplate.expire(redisKey, WINDOW_DURATION)
+                        return redisTemplate.expire(redisKey, windowDuration)
                                 .thenReturn(count);
                     }
                     return Mono.just(count);
                 })
                 .flatMap(count -> {
                     long remaining = Math.max(0, maxRequests - count);
-                    addRateLimitHeaders(exchange, maxRequests, remaining, WINDOW_DURATION.getSeconds());
+                    addRateLimitHeaders(exchange, maxRequests, remaining, windowSeconds);
 
                     if (count > maxRequests) {
                         log.warn("Rate limit exceeded for IP={} path={} count={}", clientIp, path, count);
                         exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
-                        exchange.getResponse().getHeaders().add("Retry-After", "60");
+                        exchange.getResponse().getHeaders().add("Retry-After", String.valueOf(windowSeconds));
                         return exchange.getResponse().setComplete();
                     }
                     return chain.filter(exchange);
@@ -132,7 +162,8 @@ public class RedisRateLimitFilter implements GlobalFilter, Ordered {
                                               String clientIp, String path,
                                               boolean isAuthRoute, int maxRequests) {
         String bucketKey = clientIp + ":" + (isAuthRoute ? "auth" : "api");
-        TokenBucket bucket = inMemoryFallback.computeIfAbsent(bucketKey, k -> new TokenBucket(maxRequests));
+        TokenBucket bucket = inMemoryFallback.computeIfAbsent(bucketKey,
+                k -> new TokenBucket(maxRequests, windowMillis));
 
         int remainingTokens = bucket.remaining();
         long secondsUntilReset = bucket.secondsUntilReset();
@@ -141,7 +172,7 @@ public class RedisRateLimitFilter implements GlobalFilter, Ordered {
         if (!bucket.tryConsume()) {
             log.warn("Rate limit exceeded (in-memory fallback) for IP={} path={}", clientIp, path);
             exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
-            exchange.getResponse().getHeaders().add("Retry-After", "60");
+            exchange.getResponse().getHeaders().add("Retry-After", String.valueOf(windowSeconds));
             return exchange.getResponse().setComplete();
         }
 
@@ -214,11 +245,13 @@ public class RedisRateLimitFilter implements GlobalFilter, Ordered {
 
     private static class TokenBucket {
         private final int maxTokens;
+        private final long windowMillis;
         private final AtomicInteger tokens;
         private volatile long windowStart;
 
-        TokenBucket(int maxTokens) {
+        TokenBucket(int maxTokens, long windowMillis) {
             this.maxTokens = maxTokens;
+            this.windowMillis = windowMillis;
             this.tokens = new AtomicInteger(maxTokens);
             this.windowStart = Instant.now().toEpochMilli();
         }
@@ -235,15 +268,15 @@ public class RedisRateLimitFilter implements GlobalFilter, Ordered {
 
         long secondsUntilReset() {
             long elapsed = Instant.now().toEpochMilli() - windowStart;
-            long remaining = WINDOW_MILLIS - elapsed;
+            long remaining = windowMillis - elapsed;
             return Math.max(0, remaining / 1000);
         }
 
         private void resetIfExpired() {
             long now = Instant.now().toEpochMilli();
-            if (now - windowStart > WINDOW_MILLIS) {
+            if (now - windowStart > windowMillis) {
                 synchronized (this) {
-                    if (now - windowStart > WINDOW_MILLIS) {
+                    if (now - windowStart > windowMillis) {
                         tokens.set(maxTokens);
                         windowStart = now;
                     }
@@ -312,6 +345,6 @@ public class RedisRateLimitFilter implements GlobalFilter, Ordered {
     public void evictStaleBuckets() {
         long now = Instant.now().toEpochMilli();
         inMemoryFallback.entrySet().removeIf(entry ->
-                now - entry.getValue().windowStart > WINDOW_MILLIS * 5);
+                now - entry.getValue().windowStart > windowMillis * 5);
     }
 }
