@@ -34,7 +34,11 @@ function formatTime(seconds: number): string {
     .padStart(2, '0')}`;
 }
 
-const EVENT_TYPE_ICONS: Record<string, {name: string; pack: 'ionicons' | 'mci'}> = {
+type IconEntry =
+  | {name: React.ComponentProps<typeof Ionicons>['name']; pack: 'ionicons'}
+  | {name: React.ComponentProps<typeof MaterialCommunityIcons>['name']; pack: 'mci'};
+
+const EVENT_TYPE_ICONS: Record<string, IconEntry> = {
   GOAL: {name: 'soccer', pack: 'mci'},
   SUBSTITUTION: {name: 'swap-horizontal', pack: 'mci'},
   HIGHLIGHT: {name: 'star', pack: 'ionicons'},
@@ -65,13 +69,13 @@ function TimelineCard({
         <View style={styles.thumbnailIconWrap}>
           {iconInfo.pack === 'mci' ? (
             <MaterialCommunityIcons
-              name={iconInfo.name as any}
+              name={iconInfo.name}
               size={28}
               color="rgba(255,255,255,0.9)"
             />
           ) : (
             <Ionicons
-              name={iconInfo.name as any}
+              name={iconInfo.name}
               size={28}
               color="rgba(255,255,255,0.9)"
             />

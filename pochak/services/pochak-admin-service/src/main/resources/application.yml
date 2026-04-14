@@ -11,7 +11,7 @@ spring:
     username: ${RABBITMQ_USER:pochak}
     password: ${RABBITMQ_PASS:pochak_dev_2026}
   datasource:
-    url: jdbc:postgresql://localhost:5432/pochak?currentSchema=admin
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:pochak}?currentSchema=admin
     username: ${DB_USERNAME:pochak}
     password: ${DB_PASSWORD:pochak}
     driver-class-name: org.postgresql.Driver
@@ -19,7 +19,7 @@ spring:
       maximum-pool-size: 10
       minimum-idle: 5
   flyway:
-    enabled: false  # Disabled for dev; enable for production
+    enabled: true
     baseline-on-migrate: true
     baseline-version: "0"
     locations: classpath:db/migration
@@ -28,7 +28,7 @@ spring:
     default-schema: admin
   jpa:
     hibernate:
-      ddl-auto: update  # Revert from validate to update for dev
+      ddl-auto: validate
     properties:
       hibernate:
         default_schema: admin

@@ -1,5 +1,6 @@
 import React, {useState, useEffect, useCallback} from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   ScrollView,
@@ -20,6 +21,12 @@ import {
   getFollowerCount,
   isFollowing,
 } from '../../services/followApi';
+import {contentService} from '../../api/contentService';
+import type {
+  CompetitionData,
+  CompetitionVideoItem,
+  CompetitionMatchItem,
+} from '../../api/contentService';
 
 type CompetitionDetailRouteProp = RouteProp<RootStackParamList, 'CompetitionDetail'>;
 
@@ -28,50 +35,7 @@ type CompetitionDetailRouteProp = RouteProp<RootStackParamList, 'CompetitionDeta
 type TabName = '홈' | '영상' | '일정' | '게시글' | '정보';
 type VideoSubTab = '영상' | '클립';
 
-interface CompetitionData {
-  id: string;
-  name: string;
-  sport: string;
-  imageUrl: string;
-  bannerUrl: string;
-  startDate: string;
-  endDate: string;
-  description: string;
-  isFree: boolean;
-  organizer: string;
-  venue: string;
-  participantCount: number;
-  tags: string[];
-}
-
-interface VideoItem {
-  id: string;
-  thumbnailUrl: string;
-  title: string;
-  date: string;
-  viewCount: number;
-  duration: string;
-}
-
-interface ClipItem {
-  id: string;
-  thumbnailUrl: string;
-  title: string;
-  viewCount: number;
-  duration: string;
-}
-
-interface MatchItem {
-  id: string;
-  date: string;
-  time: string;
-  round: string;
-  status: 'COMPLETED' | 'LIVE' | 'SCHEDULED';
-  homeName: string;
-  awayName: string;
-  homeScore?: number;
-  awayScore?: number;
-}
+// CompetitionData, CompetitionVideoItem, CompetitionMatchItem are imported from contentService
 
 interface PostItem {
   id: string;
@@ -82,98 +46,12 @@ interface PostItem {
   commentCount: number;
 }
 
-// ─── Mock Data ───────────────────────────────────────────
-
-const MOCK_COMPETITIONS: Record<string, CompetitionData> = {
-  'comp-1': {
-    id: 'comp-1',
-    name: '2026 K리그1',
-    sport: '축구',
-    imageUrl: 'https://placehold.co/80x80/1E1E1E/00C853?text=K1',
-    bannerUrl: 'https://placehold.co/400x200/0D3B0D/00C853?text=K+LEAGUE+1',
-    startDate: '2026.03.01',
-    endDate: '2026.11.30',
-    description: '2026 시즌 K리그1 정규리그. 대한민국 최고의 프로축구 리그로, 12개 팀이 참가하여 치열한 경쟁을 펼칩니다.',
-    isFree: false,
-    organizer: '한국프로축구연맹',
-    venue: '전국 12개 구장',
-    participantCount: 12,
-    tags: ['축구', '유료', '해설'],
-  },
-  'comp-2': {
-    id: 'comp-2',
-    name: '2026 KBO 리그',
-    sport: '야구',
-    imageUrl: 'https://placehold.co/80x80/1E1E1E/00C853?text=KBO',
-    bannerUrl: 'https://placehold.co/400x200/1A0D3B/4488FF?text=KBO+LEAGUE',
-    startDate: '2026.03.15',
-    endDate: '2026.10.31',
-    description: '2026 시즌 KBO 프로야구. 10개 구단이 참가하는 대한민국 대표 프로야구 리그입니다.',
-    isFree: true,
-    organizer: '한국야구위원회',
-    venue: '전국 10개 구장',
-    participantCount: 10,
-    tags: ['야구', '무료', '해설'],
-  },
-};
-
-const DEFAULT_COMPETITION: CompetitionData = {
-  id: 'default',
-  name: '대회명',
-  sport: '스포츠',
-  imageUrl: 'https://placehold.co/80x80/1E1E1E/00C853?text=?',
-  bannerUrl: 'https://placehold.co/400x200/1E1E1E/00C853?text=COMPETITION',
-  startDate: '2026.01.01',
-  endDate: '2026.12.31',
-  description: '대회 설명이 준비 중입니다.',
-  isFree: false,
-  organizer: '-',
-  venue: '-',
-  participantCount: 0,
-  tags: [],
-};
-
-const MOCK_VIDEOS: VideoItem[] = [
-  {id: 'cv1', thumbnailUrl: 'https://placehold.co/320x180/1E1E1E/4488FF?text=VOD', title: '전북 vs 울산 하이라이트', date: '2026.03.19', viewCount: 24500, duration: '12:34'},
-  {id: 'cv2', thumbnailUrl: 'https://placehold.co/320x180/1E1E1E/4488FF?text=VOD', title: '수원 FC vs FC 서울 풀경기', date: '2026.03.19', viewCount: 18200, duration: '1:52:10'},
-  {id: 'cv3', thumbnailUrl: 'https://placehold.co/320x180/1E1E1E/4488FF?text=VOD', title: '인천 vs 대전 경기 리뷰', date: '2026.03.18', viewCount: 9800, duration: '15:22'},
-  {id: 'cv4', thumbnailUrl: 'https://placehold.co/320x180/1E1E1E/4488FF?text=VOD', title: '제주 vs 강원 베스트 플레이', date: '2026.03.17', viewCount: 7300, duration: '8:45'},
-  {id: 'cv5', thumbnailUrl: 'https://placehold.co/320x180/1E1E1E/4488FF?text=VOD', title: '포항 vs 김천 전반전 하이라이트', date: '2026.03.16', viewCount: 5600, duration: '6:30'},
-];
-
-const MOCK_CLIPS: ClipItem[] = [
-  {id: 'cc1', thumbnailUrl: 'https://placehold.co/120x160/1E1E1E/00C853?text=CLIP', title: '환상적인 프리킥 골!', viewCount: 34200, duration: '0:32'},
-  {id: 'cc2', thumbnailUrl: 'https://placehold.co/120x160/1E1E1E/00C853?text=CLIP', title: '수비수의 슬라이딩 태클', viewCount: 15800, duration: '0:18'},
-  {id: 'cc3', thumbnailUrl: 'https://placehold.co/120x160/1E1E1E/00C853?text=CLIP', title: '역전골 세리머니', viewCount: 28900, duration: '0:45'},
-  {id: 'cc4', thumbnailUrl: 'https://placehold.co/120x160/1E1E1E/00C853?text=CLIP', title: '골키퍼 신들린 세이브', viewCount: 42100, duration: '0:22'},
-  {id: 'cc5', thumbnailUrl: 'https://placehold.co/120x160/1E1E1E/00C853?text=CLIP', title: '논란의 VAR 판정', viewCount: 67300, duration: '1:05'},
-  {id: 'cc6', thumbnailUrl: 'https://placehold.co/120x160/1E1E1E/00C853?text=CLIP', title: '헤딩 연결 추가골', viewCount: 11200, duration: '0:28'},
-];
-
-const MOCK_MATCHES: MatchItem[] = [
-  {id: 'cm1', date: '2026.03.23', time: '14:00', round: '7라운드', status: 'SCHEDULED', homeName: '전북 현대', awayName: '울산 HD'},
-  {id: 'cm2', date: '2026.03.23', time: '16:00', round: '7라운드', status: 'SCHEDULED', homeName: '수원 FC', awayName: 'FC 서울'},
-  {id: 'cm3', date: '2026.03.23', time: '19:00', round: '7라운드', status: 'SCHEDULED', homeName: '인천 유나이티드', awayName: '대전 하나시티즌'},
-  {id: 'cm4', date: '2026.03.19', time: '14:00', round: '6라운드', status: 'COMPLETED', homeName: '전북 현대', awayName: '울산 HD', homeScore: 3, awayScore: 1},
-  {id: 'cm5', date: '2026.03.19', time: '19:30', round: '6라운드', status: 'COMPLETED', homeName: '수원 FC', awayName: 'FC 서울', homeScore: 1, awayScore: 2},
-  {id: 'cm6', date: '2026.03.26', time: '14:00', round: '8라운드', status: 'SCHEDULED', homeName: 'FC 서울', awayName: '전북 현대'},
-  {id: 'cm7', date: '2026.03.26', time: '16:00', round: '8라운드', status: 'SCHEDULED', homeName: '울산 HD', awayName: '수원 FC'},
-];
-
-const MOCK_POSTS: PostItem[] = [
-  {id: 'cp1', title: '오늘 경기 어떻게 보셨나요?', authorName: '축구팬123', createdAt: '2시간 전', likeCount: 24, commentCount: 12},
-  {id: 'cp2', title: '전북 이번 시즌 전력 분석', authorName: '분석왕', createdAt: '5시간 전', likeCount: 48, commentCount: 23},
-  {id: 'cp3', title: '다음 라운드 예측합니다', authorName: '예측러', createdAt: '1일 전', likeCount: 15, commentCount: 8},
-  {id: 'cp4', title: '심판 판정 논란에 대해', authorName: '공정심판', createdAt: '1일 전', likeCount: 92, commentCount: 67},
-  {id: 'cp5', title: '이번 시즌 MVP 후보는?', authorName: '축구매니아', createdAt: '2일 전', likeCount: 33, commentCount: 19},
-];
-
 const TABS: TabName[] = ['홈', '영상', '일정', '게시글', '정보'];
 
 // ─── Helpers ─────────────────────────────────────────────
 
-function groupMatchesByDate(matches: MatchItem[]): Record<string, MatchItem[]> {
-  const grouped: Record<string, MatchItem[]> = {};
+function groupMatchesByDate(matches: CompetitionMatchItem[]): Record<string, CompetitionMatchItem[]> {
+  const grouped: Record<string, CompetitionMatchItem[]> = {};
   for (const m of matches) {
     if (!grouped[m.date]) grouped[m.date] = [];
     grouped[m.date].push(m);
@@ -181,7 +59,7 @@ function groupMatchesByDate(matches: MatchItem[]): Record<string, MatchItem[]> {
   return grouped;
 }
 
-function statusLabel(status: MatchItem['status']): string {
+function statusLabel(status: CompetitionMatchItem['status']): string {
   switch (status) {
     case 'LIVE': return 'LIVE';
     case 'COMPLETED': return '종료';
@@ -189,7 +67,7 @@ function statusLabel(status: MatchItem['status']): string {
   }
 }
 
-function statusColor(status: MatchItem['status']): string {
+function statusColor(status: CompetitionMatchItem['status']): string {
   switch (status) {
     case 'LIVE': return colors.error;
     case 'COMPLETED': return colors.gray;
@@ -204,7 +82,12 @@ export default function CompetitionDetailScreen() {
   const route = useRoute<CompetitionDetailRouteProp>();
   const {competitionId} = route.params;
 
-  const competition = MOCK_COMPETITIONS[competitionId] || DEFAULT_COMPETITION;
+  const [competition, setCompetition] = useState<CompetitionData | null>(null);
+  const [videos, setVideos] = useState<CompetitionVideoItem[]>([]);
+  const [clips, setClips] = useState<CompetitionVideoItem[]>([]);
+  const [matches, setMatches] = useState<CompetitionMatchItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   const [activeTab, setActiveTab] = useState<TabName>('홈');
   const [videoSubTab, setVideoSubTab] = useState<VideoSubTab>('영상');
@@ -215,6 +98,22 @@ export default function CompetitionDetailScreen() {
   useEffect(() => {
     isFollowing('competition', competitionId).then(setFollowing);
     getFollowerCount('competition', competitionId).then(setFollowerCount);
+
+    setIsLoading(true);
+    setHasError(false);
+    Promise.all([
+      contentService.getCompetition(competitionId),
+      contentService.getCompetitionVideos(competitionId),
+      contentService.getCompetitionMatches(competitionId),
+    ])
+      .then(([compData, contentsData, matchesData]) => {
+        setCompetition(compData);
+        setVideos(contentsData.videos);
+        setClips(contentsData.clips);
+        setMatches(matchesData);
+      })
+      .catch(() => setHasError(true))
+      .finally(() => setIsLoading(false));
   }, [competitionId]);
 
   const handleToggleFollow = useCallback(async () => {
@@ -230,6 +129,39 @@ export default function CompetitionDetailScreen() {
       setFollowerCount(prevCount);
     }
   }, [following, followerCount, competitionId]);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={colors.green} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (hasError || !competition) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={24} color={colors.white} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle} numberOfLines={1}>대회 상세</Text>
+          <View style={styles.shareButton} />
+        </View>
+        <View style={styles.centerContainer}>
+          <MaterialIcons name="error-outline" size={48} color={colors.grayDark} />
+          <Text style={styles.errorText}>대회 정보를 불러올 수 없습니다.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -367,11 +299,16 @@ export default function CompetitionDetailScreen() {
         </View>
 
         {/* Tab Content */}
-        {activeTab === '홈' && <HomeTab />}
+        {activeTab === '홈' && <HomeTab videos={videos} clips={clips} />}
         {activeTab === '영상' && (
-          <VideoTab subTab={videoSubTab} onSubTabChange={setVideoSubTab} />
+          <VideoTab
+            subTab={videoSubTab}
+            onSubTabChange={setVideoSubTab}
+            videos={videos}
+            clips={clips}
+          />
         )}
-        {activeTab === '일정' && <ScheduleTab />}
+        {activeTab === '일정' && <ScheduleTab matches={matches} />}
         {activeTab === '게시글' && <PostsTab />}
         {activeTab === '정보' && <InfoTab competition={competition} />}
 
@@ -383,7 +320,13 @@ export default function CompetitionDetailScreen() {
 
 // ─── Home Tab ────────────────────────────────────────────
 
-function HomeTab() {
+function HomeTab({
+  videos,
+  clips,
+}: {
+  videos: CompetitionVideoItem[];
+  clips: CompetitionVideoItem[];
+}) {
   return (
     <View>
       {/* Live Section */}
@@ -409,12 +352,13 @@ function HomeTab() {
           </TouchableOpacity>
         </View>
         <FlatList
-          data={MOCK_CLIPS.slice(0, 4)}
+          data={clips.slice(0, 4)}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.horizontalList}
           keyExtractor={item => item.id}
           renderItem={({item}) => <ClipCard item={item} />}
+          ListEmptyComponent={<Text style={styles.emptyText}>클립이 없습니다</Text>}
         />
       </View>
 
@@ -427,26 +371,14 @@ function HomeTab() {
           </TouchableOpacity>
         </View>
         <FlatList
-          data={MOCK_VIDEOS.slice(0, 3)}
+          data={videos.slice(0, 3)}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.horizontalList}
           keyExtractor={item => item.id}
           renderItem={({item}) => <VideoCard item={item} />}
+          ListEmptyComponent={<Text style={styles.emptyText}>영상이 없습니다</Text>}
         />
-      </View>
-
-      {/* Recent Posts */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>게시글</Text>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Text style={styles.sectionMore}>전체보기</Text>
-          </TouchableOpacity>
-        </View>
-        {MOCK_POSTS.slice(0, 3).map(post => (
-          <PostRow key={post.id} post={post} />
-        ))}
       </View>
     </View>
   );
@@ -457,9 +389,13 @@ function HomeTab() {
 function VideoTab({
   subTab,
   onSubTabChange,
+  videos,
+  clips,
 }: {
   subTab: VideoSubTab;
   onSubTabChange: (t: VideoSubTab) => void;
+  videos: CompetitionVideoItem[];
+  clips: CompetitionVideoItem[];
 }) {
   return (
     <View>
@@ -487,59 +423,67 @@ function VideoTab({
 
       {subTab === '영상' && (
         <View style={styles.videoListSection}>
-          {MOCK_VIDEOS.map(video => (
-            <TouchableOpacity
-              key={video.id}
-              style={styles.videoListItem}
-              activeOpacity={0.7}>
-              <View style={styles.videoListThumbnailWrap}>
-                <Image
-                  source={{uri: video.thumbnailUrl}}
-                  style={styles.videoListThumbnail}
-                  resizeMode="cover"
-                />
-                <View style={styles.videoDuration}>
-                  <Text style={styles.videoDurationText}>{video.duration}</Text>
+          {videos.length === 0 ? (
+            <Text style={styles.emptyText}>영상이 없습니다</Text>
+          ) : (
+            videos.map(video => (
+              <TouchableOpacity
+                key={video.id}
+                style={styles.videoListItem}
+                activeOpacity={0.7}>
+                <View style={styles.videoListThumbnailWrap}>
+                  <Image
+                    source={{uri: video.thumbnailUrl}}
+                    style={styles.videoListThumbnail}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.videoDuration}>
+                    <Text style={styles.videoDurationText}>{video.duration}</Text>
+                  </View>
                 </View>
-              </View>
-              <View style={styles.videoListInfo}>
-                <Text style={styles.videoListTitle} numberOfLines={2}>
-                  {video.title}
-                </Text>
-                <Text style={styles.videoListMeta}>
-                  {video.date} · 조회 {video.viewCount.toLocaleString()}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+                <View style={styles.videoListInfo}>
+                  <Text style={styles.videoListTitle} numberOfLines={2}>
+                    {video.title}
+                  </Text>
+                  <Text style={styles.videoListMeta}>
+                    {video.date} · 조회 {video.viewCount.toLocaleString()}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
         </View>
       )}
 
       {subTab === '클립' && (
         <View style={styles.clipGrid}>
-          {MOCK_CLIPS.map(clip => (
-            <TouchableOpacity
-              key={clip.id}
-              style={styles.clipGridItem}
-              activeOpacity={0.7}>
-              <View style={styles.clipGridThumbnailWrap}>
-                <Image
-                  source={{uri: clip.thumbnailUrl}}
-                  style={styles.clipGridThumbnail}
-                  resizeMode="cover"
-                />
-                <View style={styles.clipDuration}>
-                  <Text style={styles.clipDurationText}>{clip.duration}</Text>
+          {clips.length === 0 ? (
+            <Text style={styles.emptyText}>클립이 없습니다</Text>
+          ) : (
+            clips.map(clip => (
+              <TouchableOpacity
+                key={clip.id}
+                style={styles.clipGridItem}
+                activeOpacity={0.7}>
+                <View style={styles.clipGridThumbnailWrap}>
+                  <Image
+                    source={{uri: clip.thumbnailUrl}}
+                    style={styles.clipGridThumbnail}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.clipDuration}>
+                    <Text style={styles.clipDurationText}>{clip.duration}</Text>
+                  </View>
                 </View>
-              </View>
-              <Text style={styles.clipGridTitle} numberOfLines={2}>
-                {clip.title}
-              </Text>
-              <Text style={styles.clipGridViews}>
-                {clip.viewCount.toLocaleString()}회
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text style={styles.clipGridTitle} numberOfLines={2}>
+                  {clip.title}
+                </Text>
+                <Text style={styles.clipGridViews}>
+                  {clip.viewCount.toLocaleString()}회
+                </Text>
+              </TouchableOpacity>
+            ))
+          )}
         </View>
       )}
     </View>
@@ -548,9 +492,13 @@ function VideoTab({
 
 // ─── Schedule Tab ────────────────────────────────────────
 
-function ScheduleTab() {
-  const grouped = groupMatchesByDate(MOCK_MATCHES);
+function ScheduleTab({matches}: {matches: CompetitionMatchItem[]}) {
+  const grouped = groupMatchesByDate(matches);
   const dates = Object.keys(grouped).sort();
+
+  if (dates.length === 0) {
+    return <Text style={styles.emptyText}>일정이 없습니다</Text>;
+  }
 
   return (
     <View style={styles.scheduleSection}>
@@ -605,9 +553,7 @@ function ScheduleTab() {
 function PostsTab() {
   return (
     <View>
-      {MOCK_POSTS.map(post => (
-        <PostRow key={post.id} post={post} />
-      ))}
+      <Text style={styles.emptyText}>게시글이 없습니다</Text>
     </View>
   );
 }
@@ -649,7 +595,7 @@ function InfoRow({label, value}: {label: string; value: string}) {
 
 // ─── Shared Sub-components ───────────────────────────────
 
-function VideoCard({item}: {item: VideoItem}) {
+function VideoCard({item}: {item: CompetitionVideoItem}) {
   return (
     <TouchableOpacity style={styles.videoCard} activeOpacity={0.8}>
       <View style={styles.videoThumbnailWrap}>
@@ -672,7 +618,7 @@ function VideoCard({item}: {item: VideoItem}) {
   );
 }
 
-function ClipCard({item}: {item: ClipItem}) {
+function ClipCard({item}: {item: CompetitionVideoItem}) {
   return (
     <TouchableOpacity style={styles.clipCard} activeOpacity={0.8}>
       <View style={styles.clipThumbnailWrap}>
@@ -731,6 +677,23 @@ const styles = StyleSheet.create({
   },
 
   // Header
+  centerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  errorText: {
+    fontSize: 14,
+    color: colors.gray,
+    marginTop: 8,
+  },
+  emptyText: {
+    fontSize: 13,
+    color: colors.gray,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

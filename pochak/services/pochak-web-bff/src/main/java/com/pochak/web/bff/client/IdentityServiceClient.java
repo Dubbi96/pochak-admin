@@ -9,6 +9,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -17,16 +18,18 @@ public class IdentityServiceClient {
 
     private final RestClient identityClient;
 
-    public JsonNode getCurrentUser(Long userId) {
+    public Optional<JsonNode> getCurrentUser(Long userId) {
         try {
-            return identityClient.get()
-                    .uri("/users/me")
-                    .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                identityClient.get()
+                        .uri("/users/me")
+                        .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Identity service /users/me call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 

@@ -1,27 +1,47 @@
 package com.pochak.partner.bff.controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.pochak.common.constant.HeaderConstants;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClient;
 
 /**
- * Partner auth/profile endpoints. Identity-service does not yet expose
- * {@code /api/v1/partners/me} or {@code /api/v1/partners/register}; these return 501 until implemented.
+ * Partner auth/profile endpoints.
+ * Proxies to identity-service: partners are users with role=PARTNER.
  */
 @RestController
 @RequestMapping("/api/v1/partner")
+@RequiredArgsConstructor
 public class PartnerAuthController {
 
-    private static final String NOT_IMPLEMENTED_JSON =
-            "{\"success\":false,\"code\":\"NOT_IMPLEMENTED\",\"message\":\"Partner profile APIs are not implemented in identity-service yet\"}";
+    private final RestClient identityClient;
 
+    /**
+     * 파트너 본인 프로필 조회
+     * GET /api/v1/partner/me → identity-service GET /users/me
+     */
     @GetMapping("/me")
-    public ResponseEntity<String> getMyPartnerInfo() {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(NOT_IMPLEMENTED_JSON);
+    public String getMyPartnerInfo(
+            @RequestHeader(HeaderConstants.X_USER_ID) Long userId) {
+        return identityClient.get()
+                .uri("/users/me")
+                .header(HeaderConstants.X_USER_ID, userId.toString())
+                .retrieve()
+                .body(String.class);
     }
 
+    /**
+     * 파트너 계정 등록 (이메일/패스워드 기반 가입)
+     * POST /api/v1/partner/register → identity-service POST /auth/signup
+     * 가입 후 관리자가 role을 PARTNER로 승격해야 함
+     */
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody(required = false) String body) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(NOT_IMPLEMENTED_JSON);
+    public String register(@RequestBody(required = false) String body) {
+        return identityClient.post()
+                .uri("/auth/signup")
+                .header("Content-Type", "application/json")
+                .body(body != null ? body : "{}")
+                .retrieve()
+                .body(String.class);
     }
 }

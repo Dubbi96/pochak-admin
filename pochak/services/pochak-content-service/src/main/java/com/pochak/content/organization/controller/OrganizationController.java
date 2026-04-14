@@ -24,13 +24,14 @@ public class OrganizationController {
     @GetMapping
     public ApiResponse<List<OrganizationListResponse>> listOrganizations(
             @RequestParam(required = false) String orgType,
+            @RequestParam(required = false) String accessType,
             @RequestParam(required = false) Long parentId,
             @RequestParam(required = false) Long sportId,
             @RequestParam(required = false) String keyword,
             @PageableDefault(size = 20) Pageable pageable) {
 
         Page<OrganizationListResponse> page = organizationService.listOrganizations(
-                orgType, parentId, sportId, keyword, pageable);
+                orgType, accessType, parentId, sportId, keyword, pageable);
 
         PageMeta meta = PageMeta.builder()
                 .page(page.getNumber())

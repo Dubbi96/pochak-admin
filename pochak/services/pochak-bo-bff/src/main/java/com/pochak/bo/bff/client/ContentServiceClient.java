@@ -8,6 +8,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -31,33 +32,37 @@ public class ContentServiceClient {
 
     // --- Generic CRUD pass-through ---
 
-    public JsonNode list(String resource, Map<String, String> params) {
+    public Optional<JsonNode> list(String resource, Map<String, String> params) {
         try {
             String base = resourceBasePath(resource);
-            return contentClient.get()
-                    .uri(uriBuilder -> {
-                        var builder = uriBuilder.path(base);
-                        params.forEach(builder::queryParam);
-                        return builder.build();
-                    })
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                contentClient.get()
+                        .uri(uriBuilder -> {
+                            var builder = uriBuilder.path(base);
+                            params.forEach(builder::queryParam);
+                            return builder.build();
+                        })
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Content service list {} call failed: {}", resource, e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
-    public JsonNode get(String resource, Long id) {
+    public Optional<JsonNode> get(String resource, Long id) {
         try {
             String base = resourceBasePath(resource);
-            return contentClient.get()
-                    .uri(base + "/" + id)
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                contentClient.get()
+                        .uri(base + "/" + id)
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Content service get {}/{} call failed: {}", resource, id, e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -83,6 +88,44 @@ public class ContentServiceClient {
         String base = resourceBasePath(resource);
         contentClient.delete()
                 .uri(base + "/" + id)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    // --- Community Admin ---
+
+    public Optional<JsonNode> listCommunityPosts(Map<String, String> params) {
+        try {
+            return Optional.ofNullable(
+                contentClient.get()
+                        .uri(uriBuilder -> {
+                            var builder = uriBuilder.path("/admin/community/posts");
+                            params.forEach(builder::queryParam);
+                            return builder.build();
+                        })
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
+        } catch (RestClientException e) {
+            log.warn("Content service list admin/community/posts call failed: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    public JsonNode updateCommunityPostStatus(Long id, Map<String, Object> body) {
+        return contentClient.patch()
+                .uri("/admin/community/posts/{id}/status", id)
+                .body(body)
+                .retrieve()
+                .body(JsonNode.class);
+    }
+
+    public void deleteCommunityPost(Long id, String reason) {
+        contentClient.delete()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/admin/community/posts/{id}")
+                        .queryParam("reason", reason)
+                        .build(id))
                 .retrieve()
                 .toBodilessEntity();
     }

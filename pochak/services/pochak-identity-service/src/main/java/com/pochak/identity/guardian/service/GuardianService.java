@@ -27,6 +27,7 @@ public class GuardianService {
 
     private final GuardianRelationshipRepository guardianRepository;
     private final EntityManager entityManager;
+    private final GuardianConsentVerifier consentVerifier;
 
     /**
      * 보호자 연결 요청 (PENDING 상태로 생성)
@@ -72,8 +73,7 @@ public class GuardianService {
             throw new IllegalStateException("PENDING 상태의 관계만 인증할 수 있습니다");
         }
 
-        // TODO: 실제 PASS/Kakao 인증 검증 로직 (interface for now)
-        // verificationService.verify(relationship.getConsentMethod(), verificationToken);
+        consentVerifier.verify(relationship.getConsentMethod(), verificationToken);
 
         relationship.verify();
 

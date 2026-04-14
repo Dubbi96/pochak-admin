@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import {MaterialIcons} from '@expo/vector-icons';
 import GreenButton from '../../../components/common/GreenButton';
+import {phoneVerificationService} from '../../../api/phoneVerificationService';
 
 const BG = '#1A1A1A';
 const SURFACE = '#262626';
@@ -35,6 +36,7 @@ const GuardianVerificationScreen: React.FC<GuardianVerificationScreenProps> = ({
   const [codeSent, setCodeSent] = useState(false);
   const [code, setCode] = useState('');
   const [verified, setVerified] = useState(false);
+  const [verifiedToken, setVerifiedToken] = useState('');
   const [timer, setTimer] = useState(TIMER_DURATION);
   const [isTimerActive, setIsTimerActive] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -64,35 +66,49 @@ const GuardianVerificationScreen: React.FC<GuardianVerificationScreenProps> = ({
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleSendCode = useCallback(() => {
+  const handleSendCode = useCallback(async () => {
     if (phone.length < 10) {
       Alert.alert('알림', '올바른 전화번호를 입력해 주세요.');
       return;
     }
-    setCodeSent(true);
-    setCode('');
-    setTimer(TIMER_DURATION);
-    setIsTimerActive(true);
-    setVerified(false);
+    try {
+      await phoneVerificationService.sendCode(phone, 'GUARDIAN');
+      setCodeSent(true);
+      setCode('');
+      setTimer(TIMER_DURATION);
+      setIsTimerActive(true);
+      setVerified(false);
+    } catch {
+      Alert.alert('오류', '인증번호 전송에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+    }
   }, [phone]);
 
-  const handleVerifyCode = useCallback(() => {
+  const handleVerifyCode = useCallback(async () => {
     if (code.length !== 6) {
       Alert.alert('알림', '6자리 인증번호를 입력해 주세요.');
       return;
     }
-    // Mock: verify code and check that it belongs to an adult account
-    setVerified(true);
-    setIsTimerActive(false);
-    if (timerRef.current) clearInterval(timerRef.current);
-  }, [code]);
+    try {
+      const result = await phoneVerificationService.verifyCode(phone, code, 'GUARDIAN');
+      if (result.verified) {
+        setVerified(true);
+        setVerifiedToken(result.verifiedToken);
+        setIsTimerActive(false);
+        if (timerRef.current) clearInterval(timerRef.current);
+      } else {
+        Alert.alert('오류', '인증번호가 올바르지 않습니다.');
+      }
+    } catch {
+      Alert.alert('오류', '인증번호 확인에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+    }
+  }, [code, phone]);
 
   const handleNext = useCallback(() => {
     onNext?.({
       guardian_phone: phone,
-      guardian_verified_token: `mock-guardian-token-${Date.now()}`,
+      guardian_verified_token: verifiedToken,
     });
-  }, [onNext, phone]);
+  }, [onNext, phone, verifiedToken]);
 
   return (
     <SafeAreaView style={styles.safeArea}>

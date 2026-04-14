@@ -17,101 +17,78 @@ import {
   type DateRange,
 } from "@/components/filter/date-range-picker";
 import { Search } from "lucide-react";
+import {
+  getRefunds,
+  REFUND_KIND_LABELS,
+  REFUND_STATUS_LABELS,
+  type RefundKind,
+  type RefundStatus,
+  type RefundFilter,
+} from "@/services/commerce-admin-api";
 import type { PageResponse } from "@/types/common";
+import type { Refund } from "@/services/commerce-admin-api";
 
-// ── Types ──────────────────────────────────────────────────────────
+// ── Status badge variants ──────────────────────────────────────────
 
-type InappPlatform = "ALL" | "APPLE" | "GOOGLE";
-
-interface InappRefund {
-  id: number;
-  platform: "APPLE" | "GOOGLE";
-  amount: number;
-  requesterName: string;
-  requesterEmail: string;
-  requestedAt: string;
-  remarkOrderId: string;
-}
-
-const PLATFORM_LABELS: Record<string, string> = {
-  ALL: "전체",
-  APPLE: "애플",
-  GOOGLE: "구글",
+const REFUND_STATUS_VARIANTS: Record<string, "warning" | "success" | "secondary" | "default"> = {
+  REQUESTED: "warning",
+  COMPLETED: "success",
+  REJECTED: "secondary",
 };
 
-const PLATFORM_BADGE_VARIANT: Record<string, "secondary" | "default"> = {
-  APPLE: "secondary",
-  GOOGLE: "default",
+const REFUND_KIND_VARIANTS: Record<string, "default" | "secondary"> = {
+  BALL: "default",
+  SEASON_PASS: "secondary",
 };
-
-// ── Mock Data ──────────────────────────────────────────────────────
-
-const MOCK_INAPP_REFUNDS: InappRefund[] = [
-  { id: 1, platform: "GOOGLE", amount: 9900, requesterName: "김민수", requesterEmail: "minsu@gmail.com", requestedAt: "2026-03-22", remarkOrderId: "GPA.3387-2045-1298-54321" },
-  { id: 2, platform: "APPLE", amount: 14900, requesterName: "이수진", requesterEmail: "sujin@naver.com", requestedAt: "2026-03-20", remarkOrderId: "MKTX8F2PNV" },
-  { id: 3, platform: "GOOGLE", amount: 4900, requesterName: "박정호", requesterEmail: "jh.park@gmail.com", requestedAt: "2026-03-18", remarkOrderId: "GPA.3387-7721-9384-12345" },
-  { id: 4, platform: "APPLE", amount: 29900, requesterName: "최예린", requesterEmail: "yerin@icloud.com", requestedAt: "2026-03-15", remarkOrderId: "PQRS5T6UVW" },
-  { id: 5, platform: "GOOGLE", amount: 9900, requesterName: "정태우", requesterEmail: "taewoo@kakao.com", requestedAt: "2026-03-12", remarkOrderId: "GPA.3387-5544-6677-98765" },
-  { id: 6, platform: "APPLE", amount: 4900, requesterName: "한지은", requesterEmail: "jieun@naver.com", requestedAt: "2026-03-10", remarkOrderId: "ABCD1E2FGH" },
-];
-
-// ── Mock API ───────────────────────────────────────────────────────
-
-async function getInappRefunds(
-  filters: { platform: InappPlatform; dateRange?: DateRange; searchKeyword?: string },
-  page = 0,
-  size = 20
-): Promise<PageResponse<InappRefund>> {
-  await new Promise((r) => setTimeout(r, 300));
-  let filtered = [...MOCK_INAPP_REFUNDS];
-
-  if (filters.platform !== "ALL") {
-    filtered = filtered.filter((r) => r.platform === filters.platform);
-  }
-  if (filters.searchKeyword) {
-    const kw = filters.searchKeyword.toLowerCase();
-    filtered = filtered.filter((r) => r.requesterName.toLowerCase().includes(kw));
-  }
-
-  const start = page * size;
-  const content = filtered.slice(start, start + size);
-  return { content, totalElements: filtered.length, totalPages: Math.ceil(filtered.length / size), page, size };
-}
 
 // ── Component ──────────────────────────────────────────────────────
 
 export default function InappRefundsPage() {
-  const [data, setData] = useState<PageResponse<InappRefund> | null>(null);
+  const [data, setData] = useState<PageResponse<Refund> | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
 
   // Filters
-  const [platform, setPlatform] = useState<InappPlatform>("ALL");
+  const [kind, setKind] = useState<RefundKind>("ALL");
+  const [status, setStatus] = useState<RefundStatus>("ALL");
   const [dateRangeMode, setDateRangeMode] = useState<"ALL" | "RANGE">("ALL");
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
+  const [pendingKeyword, setPendingKeyword] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getInappRefunds(
-        { platform, dateRange: dateRangeMode === "RANGE" ? dateRange : undefined, searchKeyword: searchKeyword || undefined },
-        page
-      );
+      const filters: RefundFilter = {
+        category: "ALL",
+        kind,
+        status,
+        searchKeyword: searchKeyword || undefined,
+      };
+      const result = await getRefunds(filters, page);
       setData(result);
+    } catch (err) {
+      console.error("[InappRefunds] fetch error", err);
     } finally {
       setLoading(false);
     }
-  }, [platform, dateRangeMode, dateRange, searchKeyword, page]);
+  }, [kind, status, searchKeyword, page]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleSearch = () => { setPage(0); fetchData(); };
+  const handleSearch = () => {
+    setSearchKeyword(pendingKeyword);
+    setPage(0);
+  };
+
   const handleReset = () => {
-    setPlatform("ALL");
+    setKind("ALL");
+    setStatus("ALL");
     setDateRangeMode("ALL");
     setDateRange({ from: undefined, to: undefined });
+    setPendingKeyword("");
     setSearchKeyword("");
+    setPage(0);
   };
 
   return (
@@ -125,13 +102,27 @@ export default function InappRefundsPage() {
       <div className="flex flex-wrap items-end gap-4 rounded-lg border border-gray-200 bg-white p-4">
         <div className="space-y-1.5">
           <Label className="text-xs text-gray-500">구분</Label>
-          <Select value={platform} onValueChange={(v) => setPlatform(v as InappPlatform)}>
-            <SelectTrigger className="w-[120px]">
+          <Select value={kind} onValueChange={(v) => { setKind(v as RefundKind); setPage(0); }}>
+            <SelectTrigger className="w-[130px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {(["ALL", "APPLE", "GOOGLE"] as InappPlatform[]).map((p) => (
-                <SelectItem key={p} value={p}>{PLATFORM_LABELS[p]}</SelectItem>
+              {(Object.keys(REFUND_KIND_LABELS) as RefundKind[]).map((k) => (
+                <SelectItem key={k} value={k}>{REFUND_KIND_LABELS[k]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs text-gray-500">상태</Label>
+          <Select value={status} onValueChange={(v) => { setStatus(v as RefundStatus); setPage(0); }}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(Object.keys(REFUND_STATUS_LABELS) as RefundStatus[]).map((s) => (
+                <SelectItem key={s} value={s}>{REFUND_STATUS_LABELS[s]}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -158,8 +149,8 @@ export default function InappRefundsPage() {
         <div className="space-y-1.5">
           <Label className="text-xs text-gray-500">접수자 검색</Label>
           <Input
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
+            value={pendingKeyword}
+            onChange={(e) => setPendingKeyword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             placeholder="접수자 이름 검색"
             className="w-[200px]"
@@ -183,33 +174,42 @@ export default function InappRefundsPage() {
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 text-xs font-medium uppercase tracking-wider text-gray-500">
               <th className="px-4 py-3 text-center w-[60px]">NO</th>
+              <th className="px-4 py-3 text-center">상태</th>
               <th className="px-4 py-3 text-center">구분</th>
-              <th className="px-4 py-3 text-right">금액</th>
+              <th className="px-4 py-3 text-right">환불금액</th>
               <th className="px-4 py-3">접수자</th>
               <th className="px-4 py-3 text-center">접수일자</th>
-              <th className="px-4 py-3">REMARK/ORDERID</th>
+              <th className="px-4 py-3">결제수단</th>
+              <th className="px-4 py-3">거래ID</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-gray-400">로딩 중...</td>
+                <td colSpan={8} className="px-4 py-12 text-center text-gray-400">로딩 중...</td>
               </tr>
             ) : !data || data.content.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-gray-400">데이터가 없습니다.</td>
+                <td colSpan={8} className="px-4 py-12 text-center text-gray-400">데이터가 없습니다.</td>
               </tr>
             ) : (
               data.content.map((item, idx) => (
                 <tr key={item.id} className={`border-b border-gray-100 transition-colors hover:bg-gray-50 ${idx % 2 === 1 ? "bg-gray-50/50" : ""}`}>
-                  <td className="px-4 py-3 text-center text-gray-500">{page * (data?.size ?? 20) + idx + 1}</td>
+                  <td className="px-4 py-3 text-center text-gray-500">
+                    {page * (data?.size ?? 20) + idx + 1}
+                  </td>
                   <td className="px-4 py-3 text-center">
-                    <Badge variant={PLATFORM_BADGE_VARIANT[item.platform]}>
-                      {PLATFORM_LABELS[item.platform]}
+                    <Badge variant={REFUND_STATUS_VARIANTS[item.status]}>
+                      {REFUND_STATUS_LABELS[item.status]}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <Badge variant={REFUND_KIND_VARIANTS[item.kind]}>
+                      {REFUND_KIND_LABELS[item.kind]}
                     </Badge>
                   </td>
                   <td className="px-4 py-3 text-right font-medium tabular-nums text-gray-900">
-                    {item.amount.toLocaleString()}원
+                    {item.wonAmount.toLocaleString()}원
                   </td>
                   <td className="px-4 py-3">
                     <button className="hover:underline font-medium" style={{ color: "var(--c-primary)" }}>
@@ -217,8 +217,11 @@ export default function InappRefundsPage() {
                     </button>
                     <p className="text-xs text-gray-400">{item.requesterEmail}</p>
                   </td>
-                  <td className="px-4 py-3 text-center text-gray-500">{item.requestedAt}</td>
-                  <td className="px-4 py-3 text-gray-500 text-xs font-mono">{item.remarkOrderId}</td>
+                  <td className="px-4 py-3 text-center text-gray-500">
+                    {item.requestedAt ? item.requestedAt.slice(0, 10) : "-"}
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 text-xs">{item.paymentMethod ?? "-"}</td>
+                  <td className="px-4 py-3 text-gray-500 text-xs font-mono">{item.originalTransactionId}</td>
                 </tr>
               ))
             )}

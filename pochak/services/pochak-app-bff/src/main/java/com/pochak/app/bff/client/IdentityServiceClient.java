@@ -9,6 +9,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -17,29 +18,33 @@ public class IdentityServiceClient {
 
     private final RestClient identityClient;
 
-    public JsonNode getCurrentUser(Long userId) {
+    public Optional<JsonNode> getCurrentUser(Long userId) {
         try {
-            return identityClient.get()
-                    .uri("/users/me")
-                    .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                identityClient.get()
+                        .uri("/users/me")
+                        .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Identity service /users/me call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
-    public JsonNode getMyGuardian(Long userId) {
+    public Optional<JsonNode> getMyGuardian(Long userId) {
         try {
-            return identityClient.get()
-                    .uri("/guardians/my-guardian")
-                    .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                identityClient.get()
+                        .uri("/guardians/my-guardian")
+                        .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Identity service guardian call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -103,16 +108,18 @@ public class IdentityServiceClient {
         }
     }
 
-    public JsonNode getPushPreferences(Long userId) {
+    public Optional<JsonNode> getPushPreferences(Long userId) {
         try {
-            return identityClient.get()
-                    .uri("/users/me/push-preferences")
-                    .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                identityClient.get()
+                        .uri("/users/me/push-preferences")
+                        .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Identity service push preferences call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -125,16 +132,18 @@ public class IdentityServiceClient {
                 .body(JsonNode.class);
     }
 
-    public JsonNode getMySessions(Long userId) {
+    public Optional<JsonNode> getMySessions(Long userId) {
         try {
-            return identityClient.get()
-                    .uri("/users/me/sessions")
-                    .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                identityClient.get()
+                        .uri("/users/me/sessions")
+                        .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Identity service sessions call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 

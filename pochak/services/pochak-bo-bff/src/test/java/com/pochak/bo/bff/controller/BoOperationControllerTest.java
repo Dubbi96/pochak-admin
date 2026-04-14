@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -35,7 +36,7 @@ class BoOperationControllerTest {
     @DisplayName("GET /venues - 목록 조회가 Operation 서비스로 패스스루된다")
     void listVenues() throws Exception {
         ObjectNode expected = mapper.createObjectNode().put("total", 5);
-        when(operationClient.list(eq("venues"), anyMap())).thenReturn(expected);
+        when(operationClient.list(eq("venues"), anyMap())).thenReturn(Optional.of(expected));
 
         mockMvc.perform(get("/venues").param("page", "0"))
                 .andExpect(status().isOk())
@@ -48,7 +49,7 @@ class BoOperationControllerTest {
     @DisplayName("GET /venues/{id} - 단건 조회가 Operation 서비스로 패스스루된다")
     void getVenue() throws Exception {
         ObjectNode expected = mapper.createObjectNode().put("id", 1).put("name", "Stadium A");
-        when(operationClient.get("venues", 1L)).thenReturn(expected);
+        when(operationClient.get("venues", 1L)).thenReturn(Optional.of(expected));
 
         mockMvc.perform(get("/venues/1"))
                 .andExpect(status().isOk())
@@ -104,7 +105,7 @@ class BoOperationControllerTest {
     @DisplayName("GET /cameras - 카메라 목록 조회")
     void listCameras() throws Exception {
         ObjectNode expected = mapper.createObjectNode().put("total", 3);
-        when(operationClient.list(eq("cameras"), anyMap())).thenReturn(expected);
+        when(operationClient.list(eq("cameras"), anyMap())).thenReturn(Optional.of(expected));
 
         mockMvc.perform(get("/cameras"))
                 .andExpect(status().isOk())
@@ -115,7 +116,7 @@ class BoOperationControllerTest {
     @DisplayName("GET /cameras/{id} - 카메라 단건 조회")
     void getCamera() throws Exception {
         ObjectNode expected = mapper.createObjectNode().put("id", 2);
-        when(operationClient.get("cameras", 2L)).thenReturn(expected);
+        when(operationClient.get("cameras", 2L)).thenReturn(Optional.of(expected));
 
         mockMvc.perform(get("/cameras/2"))
                 .andExpect(status().isOk())
@@ -165,7 +166,7 @@ class BoOperationControllerTest {
     @DisplayName("GET /reservations - 예약 목록 조회")
     void listReservations() throws Exception {
         ObjectNode expected = mapper.createObjectNode().put("total", 10);
-        when(operationClient.list(eq("reservations"), anyMap())).thenReturn(expected);
+        when(operationClient.list(eq("reservations"), anyMap())).thenReturn(Optional.of(expected));
 
         mockMvc.perform(get("/reservations"))
                 .andExpect(status().isOk())
@@ -176,7 +177,7 @@ class BoOperationControllerTest {
     @DisplayName("GET /reservations/{id} - 예약 단건 조회")
     void getReservation() throws Exception {
         ObjectNode expected = mapper.createObjectNode().put("id", 7);
-        when(operationClient.get("reservations", 7L)).thenReturn(expected);
+        when(operationClient.get("reservations", 7L)).thenReturn(Optional.of(expected));
 
         mockMvc.perform(get("/reservations/7"))
                 .andExpect(status().isOk())
@@ -202,7 +203,7 @@ class BoOperationControllerTest {
     @DisplayName("GET /streaming/ingest - 인제스트 목록 조회")
     void listIngest() throws Exception {
         ObjectNode expected = mapper.createObjectNode().put("total", 2);
-        when(operationClient.listIngest(anyMap())).thenReturn(expected);
+        when(operationClient.listIngest(anyMap())).thenReturn(Optional.of(expected));
 
         mockMvc.perform(get("/streaming/ingest"))
                 .andExpect(status().isOk())

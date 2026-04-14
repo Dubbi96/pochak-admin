@@ -22,7 +22,9 @@ public class BoRbacController {
     @GetMapping("/roles")
     public ResponseEntity<JsonNode> getRoles() {
         log.debug("BO listing roles");
-        return ResponseEntity.ok(adminClient.getRoles());
+        return adminClient.getRoles()
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 
     @GetMapping("/roles/{id}")
@@ -73,7 +75,9 @@ public class BoRbacController {
     @GetMapping("/groups")
     public ResponseEntity<JsonNode> getGroups() {
         log.debug("BO listing groups");
-        return ResponseEntity.ok(adminClient.getGroups());
+        return adminClient.getGroups()
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 
     @GetMapping("/groups/{id}")
@@ -160,7 +164,9 @@ public class BoRbacController {
     @GetMapping("/menus")
     public ResponseEntity<JsonNode> getMenus() {
         log.debug("BO listing menus");
-        return ResponseEntity.ok(adminClient.getMenus());
+        return adminClient.getMenus()
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 
     @GetMapping("/menus/{id}")
@@ -201,7 +207,9 @@ public class BoRbacController {
     @GetMapping("/functions")
     public ResponseEntity<JsonNode> getFunctions() {
         log.debug("BO listing functions");
-        return ResponseEntity.ok(adminClient.getFunctions());
+        return adminClient.getFunctions()
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 
     @GetMapping("/functions/{id}")

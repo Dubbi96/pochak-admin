@@ -22,7 +22,9 @@ public class BoSiteController {
     @GetMapping("/banners")
     public ResponseEntity<JsonNode> getBanners(@RequestParam Map<String, String> params) {
         log.debug("BO listing banners");
-        return ResponseEntity.ok(adminClient.getBanners(params));
+        return adminClient.getBanners(params)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 
     @PostMapping("/banners")
@@ -51,7 +53,9 @@ public class BoSiteController {
     @GetMapping("/notices")
     public ResponseEntity<JsonNode> getNotices(@RequestParam Map<String, String> params) {
         log.debug("BO listing notices");
-        return ResponseEntity.ok(adminClient.getNotices(params));
+        return adminClient.getNotices(params)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 
     @PostMapping("/notices")

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   StyleSheet,
   Text,
@@ -76,8 +76,7 @@ function StepIndicator({currentStep}: {currentStep: number}) {
   );
 }
 
-// Mock product for the purchase flow
-const MOCK_PRODUCT = {
+const DEFAULT_PRODUCT = {
   name: '대가족 무제한 시청권',
   price: 29900,
   priceUnit: '원' as const,
@@ -89,7 +88,22 @@ export default function PurchaseScreen() {
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [purchaseResult, setPurchaseResult] = useState<{purchaseId: string; validUntil: string} | null>(null);
+  const [product, setProduct] = useState(DEFAULT_PRODUCT);
   const navigation = useNavigation<any>();
+
+  useEffect(() => {
+    commerceService.getProducts().then(products => {
+      if (products.length > 0) {
+        const p = products[0];
+        setProduct({
+          name: p.name ?? DEFAULT_PRODUCT.name,
+          price: p.price ?? DEFAULT_PRODUCT.price,
+          priceUnit: '원',
+          duration: p.duration ?? DEFAULT_PRODUCT.duration,
+        });
+      }
+    }).catch(() => { /* keep default */ });
+  }, []);
 
   const handleNext = async () => {
     if (currentStep === 0) {
@@ -113,7 +127,7 @@ export default function PurchaseScreen() {
           });
           analyticsService.trackPurchase(
             'product-family-unlimited',
-            MOCK_PRODUCT.price,
+            product.price,
             selectedPayment,
           );
           setCurrentStep(2);
@@ -163,16 +177,16 @@ export default function PurchaseScreen() {
           <View>
             <Text style={styles.sectionTitle}>상품 정보</Text>
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryProductName}>{MOCK_PRODUCT.name}</Text>
+              <Text style={styles.summaryProductName}>{product.name}</Text>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>이용기간</Text>
-                <Text style={styles.summaryValue}>{MOCK_PRODUCT.duration}</Text>
+                <Text style={styles.summaryValue}>{product.duration}</Text>
               </View>
               <View style={styles.divider} />
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>결제금액</Text>
                 <Text style={styles.summaryPrice}>
-                  {formatPrice(MOCK_PRODUCT.price, MOCK_PRODUCT.priceUnit)}
+                  {formatPrice(product.price, product.priceUnit)}
                 </Text>
               </View>
             </View>
@@ -242,7 +256,7 @@ export default function PurchaseScreen() {
               <View style={styles.summaryRow}>
                 <Text style={styles.totalLabel}>총 결제금액</Text>
                 <Text style={styles.totalPrice}>
-                  {formatPrice(MOCK_PRODUCT.price, MOCK_PRODUCT.priceUnit)}
+                  {formatPrice(product.price, product.priceUnit)}
                 </Text>
               </View>
             </View>
@@ -281,13 +295,13 @@ export default function PurchaseScreen() {
             <View style={styles.completeCard}>
               <View style={styles.completeRow}>
                 <Text style={styles.completeLabel}>상품명</Text>
-                <Text style={styles.completeValue}>{MOCK_PRODUCT.name}</Text>
+                <Text style={styles.completeValue}>{product.name}</Text>
               </View>
               <View style={styles.completeDivider} />
               <View style={styles.completeRow}>
                 <Text style={styles.completeLabel}>금액</Text>
                 <Text style={styles.completeValue}>
-                  {formatPrice(MOCK_PRODUCT.price, MOCK_PRODUCT.priceUnit)}
+                  {formatPrice(product.price, product.priceUnit)}
                 </Text>
               </View>
               <View style={styles.completeDivider} />

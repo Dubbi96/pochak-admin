@@ -20,15 +20,17 @@ public class BoMemberController {
     @GetMapping
     public ResponseEntity<JsonNode> getMembers(@RequestParam Map<String, String> params) {
         log.debug("BO listing members with params={}", params);
-        JsonNode result = identityClient.getMembers(params);
-        return ResponseEntity.ok(result);
+        return identityClient.getMembers(params)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<JsonNode> getMember(@PathVariable Long id) {
         log.debug("BO getting member/{}", id);
-        JsonNode result = identityClient.getMember(id);
-        return ResponseEntity.ok(result);
+        return identityClient.getMember(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 
     @PutMapping("/{id}/status")

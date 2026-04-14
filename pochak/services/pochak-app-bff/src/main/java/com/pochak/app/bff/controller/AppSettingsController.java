@@ -23,7 +23,9 @@ public class AppSettingsController {
     public ResponseEntity<JsonNode> getPushPreferences() {
         Long userId = UserContextHolder.getUserId();
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(identityClient.getPushPreferences(userId));
+        return identityClient.getPushPreferences(userId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 
     @PatchMapping("/settings/push-preferences/{category}")
@@ -39,7 +41,9 @@ public class AppSettingsController {
     public ResponseEntity<JsonNode> getSessions() {
         Long userId = UserContextHolder.getUserId();
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(identityClient.getMySessions(userId));
+        return identityClient.getMySessions(userId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 
     @DeleteMapping("/settings/sessions/{sessionId}")

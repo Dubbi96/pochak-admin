@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Optional;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -30,26 +32,26 @@ public class AppPlayerController {
         Long userId = UserContextHolder.getUserId();
         log.debug("Fetching app player data for {}/{} userId={}", type, id, userId);
 
-        JsonNode playerData = contentClient.getPlayerData(type, id);
-        JsonNode accessData = contentClient.checkAccess(type, id, userId);
+        Optional<JsonNode> playerData = contentClient.getPlayerData(type, id);
+        Optional<JsonNode> accessData = contentClient.checkAccess(type, id, userId);
 
-        boolean accessGranted = isAccessGranted(accessData);
+        boolean accessGranted = accessData.map(this::isAccessGranted).orElse(false);
         String deniedReason = null;
         JsonNode productSuggestions = null;
         JsonNode cameras = null;
 
         if (accessGranted) {
-            // For live matches, fetch camera views
             if ("match".equalsIgnoreCase(type) || "live".equalsIgnoreCase(type)) {
-                cameras = extractData(operationClient.getCameras(id));
+                cameras = operationClient.getCameras(id).map(this::extractData).orElse(null);
             }
         } else {
-            deniedReason = extractDeniedReason(accessData);
-            productSuggestions = extractData(commerceClient.getProductSuggestions(type, id));
+            deniedReason = accessData.map(this::extractDeniedReason).orElse("Service unavailable");
+            productSuggestions = commerceClient.getProductSuggestions(type, id)
+                    .map(this::extractData).orElse(null);
         }
 
         AppPlayerResponse response = AppPlayerResponse.builder()
-                .playerData(accessGranted ? extractData(playerData) : null)
+                .playerData(accessGranted ? playerData.map(this::extractData).orElse(null) : null)
                 .accessGranted(accessGranted)
                 .accessDeniedReason(deniedReason)
                 .cameras(cameras)
@@ -61,19 +63,16 @@ public class AppPlayerController {
     }
 
     private boolean isAccessGranted(JsonNode accessData) {
-        if (accessData == null) return false;
         JsonNode data = accessData.has("data") ? accessData.get("data") : accessData;
         return data.has("granted") && data.get("granted").asBoolean(false);
     }
 
     private String extractDeniedReason(JsonNode accessData) {
-        if (accessData == null) return "Service unavailable";
         JsonNode data = accessData.has("data") ? accessData.get("data") : accessData;
         return data.has("reason") ? data.get("reason").asText("Access denied") : "Access denied";
     }
 
     private JsonNode extractData(JsonNode node) {
-        if (node == null) return null;
         return node.has("data") ? node.get("data") : node;
     }
 }

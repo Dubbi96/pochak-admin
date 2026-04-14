@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { AuthStackParamList } from '../../navigation/types';
 import GreenButton from '../../components/common/GreenButton';
 
 const BG = '#1A1A1A';
@@ -20,7 +22,7 @@ const GRAY = '#A6A6A6';
 const GRAY_LIGHT = '#A6A6A6';
 
 const ForeignerEmailVerifyScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const [email, setEmail] = useState('');
   const [emailDomain, setEmailDomain] = useState('gmail.com');
   const [sent, setSent] = useState(false);
@@ -40,7 +42,7 @@ const ForeignerEmailVerifyScreen: React.FC = () => {
           </View>
 
           <View style={styles.bottomSection}>
-            <GreenButton title="Back to Home" onPress={() => navigation.navigate('Login' as any)} />
+            <GreenButton title="Back to Home" onPress={() => navigation.navigate('Login')} />
             <TouchableOpacity
               style={styles.resendLink}
               onPress={() => setSent(false)}

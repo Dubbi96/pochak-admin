@@ -22,7 +22,7 @@ public class Inquiry {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(nullable = false)
+    @Column(name = "inquiry_type", nullable = false)
     private String category;
 
     @Column(nullable = false)

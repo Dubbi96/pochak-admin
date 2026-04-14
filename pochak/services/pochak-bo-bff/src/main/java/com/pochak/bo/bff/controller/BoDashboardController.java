@@ -31,12 +31,12 @@ public class BoDashboardController {
     public ApiResponse<BoDashboardResponse> getDashboardSummary() {
         log.debug("Fetching BO dashboard summary");
 
-        JsonNode analytics = adminClient.getDashboardAnalytics();
-        JsonNode memberStats = identityClient.getMemberStats();
+        JsonNode analytics = adminClient.getDashboardAnalytics().orElse(null);
+        JsonNode memberStats = identityClient.getMemberStats().orElse(null);
         JsonNode revenueStats = safeCall(() -> commerceClient.getRevenueStats());
         JsonNode pendingRefunds = safeCall(() -> commerceClient.listRefunds(Map.of("status", "PENDING", "size", "5")));
-        JsonNode pendingReports = adminClient.getPendingReports();
-        JsonNode recentAuditLogs = adminClient.getAuditLogs(Map.of("size", "10"));
+        JsonNode pendingReports = adminClient.getPendingReports().orElse(null);
+        JsonNode recentAuditLogs = adminClient.getAuditLogs(Map.of("size", "10")).orElse(null);
 
         return ApiResponse.success(BoDashboardResponse.builder()
                 .analytics(analytics)
@@ -50,7 +50,7 @@ public class BoDashboardController {
 
     @GetMapping("/audit-logs")
     public ApiResponse<JsonNode> getAuditLogs(@RequestParam Map<String, String> params) {
-        return ApiResponse.success(adminClient.getAuditLogs(params));
+        return ApiResponse.success(adminClient.getAuditLogs(params).orElse(null));
     }
 
     private JsonNode safeCall(java.util.function.Supplier<JsonNode> supplier) {

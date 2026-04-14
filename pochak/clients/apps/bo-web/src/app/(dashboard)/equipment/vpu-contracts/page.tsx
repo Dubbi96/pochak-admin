@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,40 +13,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, Download } from "lucide-react";
+import { getVpuContracts } from "@/services/equipment-api";
+import type { VpuContract, PlatformType, ActivationStatus } from "@/services/equipment-api";
 
-// ── Types ────────────────────────────────────────────────────────────
-
-type PlatformType = "PIXELLOT" | "ARENA" | "UNDECIDED";
-type ActivationStatus =
-  | "ACTIVATED"
-  | "DEACTIVATED"
-  | "ACTIVATING"
-  | "ERROR"
-  | "SUSPENDED"
-  | "TERMINATED"
-  | "TEST";
-
-interface VpuContract {
-  id: number;
-  platformType: PlatformType;
-  modelName: string;
-  vpuName: string;
-  serialNumber: string;
-  partner: string;
-  activationStatus: ActivationStatus;
-  vendor: string;
-}
-
-// ── Mock Data ────────────────────────────────────────────────────────
-
-const MOCK_CONTRACTS: VpuContract[] = [
-  { id: 1, platformType: "PIXELLOT", modelName: "VPU-3000", vpuName: "VPU-서울-001", serialNumber: "SN-VPU-20240101", partner: "서울FC", activationStatus: "ACTIVATED", vendor: "호각" },
-  { id: 2, platformType: "ARENA", modelName: "VPU-5000", vpuName: "VPU-부산-002", serialNumber: "SN-VPU-20240102", partner: "부산유나이티드", activationStatus: "ACTIVATED", vendor: "스카이라이프" },
-  { id: 3, platformType: "PIXELLOT", modelName: "VPU-3000", vpuName: "VPU-대전-003", serialNumber: "SN-VPU-20240103", partner: "대전시민구단", activationStatus: "DEACTIVATED", vendor: "호각" },
-  { id: 4, platformType: "UNDECIDED", modelName: "VPU-7000", vpuName: "VPU-인천-004", serialNumber: "SN-VPU-20240104", partner: "인천체육회", activationStatus: "ACTIVATING", vendor: "미정" },
-  { id: 5, platformType: "PIXELLOT", modelName: "VPU-5000", vpuName: "VPU-광주-005", serialNumber: "SN-VPU-20240105", partner: "광주스포츠클럽", activationStatus: "SUSPENDED", vendor: "호각" },
-  { id: 6, platformType: "ARENA", modelName: "VPU-3000", vpuName: "VPU-대구-006", serialNumber: "SN-VPU-20240106", partner: "대구FC유소년", activationStatus: "ACTIVATED", vendor: "스카이라이프" },
-];
+// ── Constants ─────────────────────────────────────────────────────────
 
 const ACTIVATION_LABELS: Record<ActivationStatus, string> = {
   ACTIVATED: "개통",
@@ -83,6 +53,12 @@ export default function VpuContractsPage() {
   const [page, setPage] = useState(0);
   const pageSize = 20;
 
+  // API state
+  const [contracts, setContracts] = useState<VpuContract[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // Filters
   const [platformFilter, setPlatformFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -94,25 +70,34 @@ export default function VpuContractsPage() {
   // Selection
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
-  // Filtered data
-  const filtered = MOCK_CONTRACTS.filter((c) => {
-    if (platformFilter !== "ALL" && c.platformType !== platformFilter) return false;
-    if (statusFilter !== "ALL" && c.activationStatus !== statusFilter) return false;
-    if (modelFilter !== "ALL" && c.modelName !== modelFilter) return false;
-    if (vendorFilter !== "ALL" && c.vendor !== vendorFilter) return false;
-    if (keyword) {
-      const term = keyword.toLowerCase();
-      if (searchCondition === "VPU_NAME" && !c.vpuName.toLowerCase().includes(term)) return false;
-      if (searchCondition === "SERIAL" && !c.serialNumber.toLowerCase().includes(term)) return false;
-      if (searchCondition === "CUSTOMER" && !c.partner.toLowerCase().includes(term)) return false;
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await getVpuContracts(
+        {
+          platformType: platformFilter,
+          activationStatus: statusFilter,
+          modelName: modelFilter,
+          vendor: vendorFilter,
+          searchCondition,
+          keyword: keyword || undefined,
+        },
+        page,
+        pageSize
+      );
+      setContracts(result.content);
+      setTotalPages(Math.max(1, result.totalPages));
+    } catch {
+      setError("데이터를 불러오지 못했습니다.");
+    } finally {
+      setIsLoading(false);
     }
-    return true;
-  });
+  }, [platformFilter, statusFilter, modelFilter, vendorFilter, searchCondition, keyword, page]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const pageData = filtered.slice(page * pageSize, (page + 1) * pageSize);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  const modelNames = [...new Set(MOCK_CONTRACTS.map((c) => c.modelName))];
+  const pageData = contracts;
 
   const toggleAll = () => {
     if (selectedIds.size === pageData.length) {
@@ -190,11 +175,9 @@ export default function VpuContractsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">전체</SelectItem>
-              {modelNames.map((m) => (
-                <SelectItem key={m} value={m}>
-                  {m}
-                </SelectItem>
-              ))}
+              <SelectItem value="VPU-3000">VPU-3000</SelectItem>
+              <SelectItem value="VPU-5000">VPU-5000</SelectItem>
+              <SelectItem value="VPU-7000">VPU-7000</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -268,7 +251,15 @@ export default function VpuContractsPage() {
             </tr>
           </thead>
           <tbody>
-            {pageData.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={8} className="px-4 py-12 text-center text-gray-400">로딩 중...</td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={8} className="px-4 py-12 text-center text-red-400">{error}</td>
+              </tr>
+            ) : pageData.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
                   데이터가 없습니다.

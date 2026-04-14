@@ -1,13 +1,13 @@
 x-service-env: &service-env
   SPRING_DATASOURCE_URL: jdbc:postgresql://pochak-postgres:5432/pochak
   SPRING_DATASOURCE_USERNAME: pochak
-  SPRING_DATASOURCE_PASSWORD: pochak_dev_2026
+  SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
   SPRING_REDIS_HOST: pochak-redis
   SPRING_REDIS_PORT: 6379
   SPRING_RABBITMQ_HOST: pochak-rabbitmq
   SPRING_RABBITMQ_PORT: 5672
   SPRING_RABBITMQ_USERNAME: pochak
-  SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-pochak_dev_2026}
+  SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
 
 services:
   # ── Dependencies ──────────────────────────────────────────────
@@ -19,7 +19,7 @@ services:
     environment:
       POSTGRES_DB: pochak
       POSTGRES_USER: pochak
-      POSTGRES_PASSWORD: pochak_dev_2026
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - pochak-pg-data:/var/lib/postgresql/data
       - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
@@ -55,7 +55,7 @@ services:
       - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: pochak
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-pochak_dev_2026}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     volumes:
       - pochak-rabbitmq-data:/var/lib/rabbitmq
     healthcheck:
@@ -82,7 +82,7 @@ services:
       SERVICES_APP_BFF_URL: http://pochak-app-bff:9081
       SERVICES_BO_BFF_URL: http://pochak-bo-bff:9090
       SERVICES_PARTNER_BFF_URL: http://pochak-partner-bff:9091
-      JWT_SECRET: pochak-jwt-secret-key-for-development-only-minimum-256-bits-long-enough
+      JWT_SECRET: ${JWT_SECRET}
       REDIS_HOST: pochak-redis
       REDIS_PORT: 6379
       CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3200,http://localhost:3300,http://localhost:8097
@@ -117,17 +117,17 @@ services:
     environment:
       <<: *service-env
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: identity
-      KAKAO_REST_API_KEY: ${KAKAO_REST_API_KEY:-edc9e6bd81a7a4acf582dc0b5abe7a18}
-      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET:-0yiRId8tdyz1j6D5LMnA7AgYcE2PiSQC}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-314211860010-vjtd4vi5gqgbgo3rinloh8ko15vgmg2f.apps.googleusercontent.com}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-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}
-      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:-MRf6icYP1IOnUr_RxdB_}
-      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:-a3YSt8mPKy}
+      KAKAO_REST_API_KEY: ${KAKAO_REST_API_KEY}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET}
       APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-}
       APPLE_TEAM_ID: ${APPLE_TEAM_ID:-}
       APPLE_KEY_ID: ${APPLE_KEY_ID:-}
       APPLE_REDIRECT_URI: ${APPLE_REDIRECT_URI:-http://localhost:8080/api/v1/auth/oauth2/callback/apple}
-      JWT_SECRET: pochak-jwt-secret-key-for-development-only-minimum-256-bits-long-enough
+      JWT_SECRET: ${JWT_SECRET}
       REDIS_HOST: pochak-redis
       REDIS_PORT: 6379
     depends_on:
@@ -218,7 +218,7 @@ services:
     environment:
       <<: *service-env
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: admin
-      JWT_SECRET: pochak-jwt-secret-key-for-development-only-minimum-256-bits-long-enough
+      JWT_SECRET: ${JWT_SECRET}
     depends_on:
       pochak-postgres:
         condition: service_healthy

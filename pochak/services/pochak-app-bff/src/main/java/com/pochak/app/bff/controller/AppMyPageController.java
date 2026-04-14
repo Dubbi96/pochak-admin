@@ -31,11 +31,11 @@ public class AppMyPageController {
         log.debug("Fetching app my page data for userId={}", userId);
 
         AppMyPageResponse response = AppMyPageResponse.builder()
-                .userProfile(identityClient.getCurrentUser(userId))
-                .guardianInfo(identityClient.getMyGuardian(userId))
-                .wallet(commerceClient.getWallet(userId))
-                .watchHistory(contentClient.getWatchHistory(userId, 10))
-                .favorites(contentClient.getFavorites(userId, 10))
+                .userProfile(identityClient.getCurrentUser(userId).orElse(null))
+                .guardianInfo(identityClient.getMyGuardian(userId).orElse(null))
+                .wallet(commerceClient.getWallet(userId).orElse(null))
+                .watchHistory(contentClient.getWatchHistory(userId, 10).orElse(null))
+                .favorites(contentClient.getFavorites(userId, 10).orElse(null))
                 .build();
 
         return ApiResponse.success(response);

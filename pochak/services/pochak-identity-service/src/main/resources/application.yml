@@ -14,7 +14,7 @@ spring:
       minimum-idle: 5
       connection-timeout: 30000
   flyway:
-    enabled: false  # Disabled for dev; enable for production
+    enabled: true
     baseline-on-migrate: true
     baseline-version: "0"
     locations: classpath:db/migration
@@ -32,7 +32,7 @@ spring:
     password: ${RABBITMQ_PASS:pochak_dev_2026}
   jpa:
     hibernate:
-      ddl-auto: update  # Revert from validate to update for dev
+      ddl-auto: validate
     properties:
       hibernate:
         default_schema: identity
@@ -47,10 +47,14 @@ pochak:
     dek-file: ${PII_DEK_FILE:./pii-dek.enc}
   sms:
     provider: stub  # Replace with 'twilio', 'naver-cloud', 'kakao' for production
+  guardian:
+    verifier: stub  # Replace with 'pass' or 'kakao' for production (requires paid API contract)
   jwt:
     secret: ${JWT_SECRET}
     access-expiration: 1800000       # 30 min
     refresh-expiration: 2592000000   # 30 days
+  services:
+    commerce-url: ${SERVICES_COMMERCE_URL:http://localhost:8083}
 
 management:
   endpoints:
@@ -96,3 +100,4 @@ logging:
   level:
     com.pochak.identity: DEBUG
     org.hibernate.SQL: DEBUG
+

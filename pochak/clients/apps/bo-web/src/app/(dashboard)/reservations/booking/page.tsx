@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,44 +12,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Search } from "lucide-react";
+import { getBookingVenues } from "@/services/reservation-admin-api";
+import type { BookingVenue } from "@/services/reservation-admin-api";
 
-// ── Types ────────────────────────────────────────────────────────────
-
-interface BookingEntry {
-  id: number;
-  venueName: string;
-  ballCost: number;
-  createdBy: string;
-  createdAt: string;
-  city: string;
-  district: string;
-  equipmentType: string;
-}
-
-// ── Mock Data ────────────────────────────────────────────────────────
-
-const MOCK_BOOKINGS: BookingEntry[] = [
-  { id: 1, venueName: "서울월드컵경기장 보조구장", ballCost: 500, createdBy: "관리자A", createdAt: "2026-03-20", city: "서울특별시", district: "마포구", equipmentType: "VPU-3000" },
-  { id: 2, venueName: "부산아시아드 주경기장", ballCost: 800, createdBy: "관리자B", createdAt: "2026-03-18", city: "부산광역시", district: "연제구", equipmentType: "VPU-5000" },
-  { id: 3, venueName: "대전한밭종합운동장", ballCost: 300, createdBy: "관리자A", createdAt: "2026-03-15", city: "대전광역시", district: "중구", equipmentType: "VPU-3000" },
-  { id: 4, venueName: "인천축구전용경기장", ballCost: 600, createdBy: "관리자C", createdAt: "2026-03-12", city: "인천광역시", district: "남동구", equipmentType: "VPU-7000" },
-  { id: 5, venueName: "광주월드컵경기장", ballCost: 450, createdBy: "관리자B", createdAt: "2026-03-10", city: "광주광역시", district: "서구", equipmentType: "VPU-3000" },
-  { id: 6, venueName: "수원종합운동장", ballCost: 700, createdBy: "관리자A", createdAt: "2026-03-08", city: "경기도", district: "수원시", equipmentType: "VPU-5000" },
-];
+// ── Constants ────────────────────────────────────────────────────────
 
 const CITY_DISTRICTS: Record<string, string[]> = {
-  서울특별시: ["전체", "마포구", "강남구", "송파구", "종로구"],
-  부산광역시: ["전체", "연제구", "해운대구", "수영구"],
-  대전광역시: ["전체", "중구", "서구", "유성구"],
-  인천광역시: ["전체", "남동구", "연수구", "부평구"],
-  광주광역시: ["전체", "서구", "북구", "광산구"],
-  경기도: ["전체", "수원시", "성남시", "용인시"],
+  서울특별시: ["마포구", "강남구", "송파구", "종로구"],
+  부산광역시: ["연제구", "해운대구", "수영구"],
+  대전광역시: ["중구", "서구", "유성구"],
+  인천광역시: ["남동구", "연수구", "부평구"],
+  광주광역시: ["서구", "북구", "광산구"],
+  경기도: ["수원시", "성남시", "용인시"],
 };
-
-const VENUE_OPTIONS = [
-  "전체",
-  ...MOCK_BOOKINGS.map((b) => b.venueName),
-];
 
 const EQUIPMENT_TYPES = ["전체", "VPU-3000", "VPU-5000", "VPU-7000"];
 
@@ -59,10 +34,15 @@ export default function BookingPage() {
   const [page, setPage] = useState(0);
   const pageSize = 20;
 
+  // API state
+  const [venues, setVenues] = useState<BookingVenue[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // Filters
   const [cityFilter, setCityFilter] = useState("ALL");
   const [districtFilter, setDistrictFilter] = useState("ALL");
-  const [venueFilter, setVenueFilter] = useState("ALL");
   const [equipmentFilter, setEquipmentFilter] = useState("ALL");
   const [keyword, setKeyword] = useState("");
 
@@ -72,18 +52,32 @@ export default function BookingPage() {
   // Available districts based on city
   const availableDistricts = cityFilter !== "ALL" ? CITY_DISTRICTS[cityFilter] ?? [] : [];
 
-  // Filtered data
-  const filtered = MOCK_BOOKINGS.filter((b) => {
-    if (cityFilter !== "ALL" && b.city !== cityFilter) return false;
-    if (districtFilter !== "ALL" && b.district !== districtFilter) return false;
-    if (venueFilter !== "ALL" && b.venueName !== venueFilter) return false;
-    if (equipmentFilter !== "ALL" && b.equipmentType !== equipmentFilter) return false;
-    if (keyword && !b.venueName.toLowerCase().includes(keyword.toLowerCase())) return false;
-    return true;
-  });
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const district = districtFilter !== "ALL" ? districtFilter : cityFilter !== "ALL" ? cityFilter : undefined;
+      const result = await getBookingVenues(
+        {
+          district,
+          equipmentType: equipmentFilter !== "ALL" ? equipmentFilter : undefined,
+          searchKeyword: keyword || undefined,
+        },
+        page,
+        pageSize
+      );
+      setVenues(result.content);
+      setTotalPages(Math.max(1, result.totalPages));
+    } catch {
+      setError("데이터를 불러오지 못했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [cityFilter, districtFilter, equipmentFilter, keyword, page]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const pageData = filtered.slice(page * pageSize, (page + 1) * pageSize);
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const pageData = venues;
 
   const toggleAll = () => {
     if (selectedIds.size === pageData.length) {
@@ -163,22 +157,6 @@ export default function BookingPage() {
         )}
 
         <div className="space-y-1.5">
-          <Label className="text-xs text-gray-500">구장</Label>
-          <Select value={venueFilter} onValueChange={setVenueFilter}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {VENUE_OPTIONS.map((v) => (
-                <SelectItem key={v} value={v === "전체" ? "ALL" : v}>
-                  {v}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-1.5">
           <Label className="text-xs text-gray-500">장비타입</Label>
           <Select value={equipmentFilter} onValueChange={setEquipmentFilter}>
             <SelectTrigger className="w-[130px]">
@@ -232,32 +210,40 @@ export default function BookingPage() {
             </tr>
           </thead>
           <tbody>
-            {pageData.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-12 text-center text-gray-400">로딩 중...</td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-12 text-center text-red-400">{error}</td>
+              </tr>
+            ) : pageData.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
                   데이터가 없습니다.
                 </td>
               </tr>
             ) : (
-              pageData.map((booking, idx) => (
+              pageData.map((venue, idx) => (
                 <tr
-                  key={booking.id}
+                  key={venue.id}
                   className={`border-b border-gray-100 transition-colors hover:bg-gray-50 ${idx % 2 === 1 ? "bg-gray-50/50" : ""}`}
                 >
                   <td className="px-4 py-3 text-center">
                     <input
                       type="checkbox"
-                      checked={selectedIds.has(booking.id)}
-                      onChange={() => toggleOne(booking.id)}
+                      checked={selectedIds.has(venue.id)}
+                      onChange={() => toggleOne(venue.id)}
                       className="rounded border-gray-300"
                     />
                   </td>
-                  <td className="px-4 py-3 font-medium text-gray-900">{booking.venueName}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900">{venue.venueName}</td>
                   <td className="px-4 py-3 text-center font-medium text-emerald-600">
-                    {booking.ballCost.toLocaleString()}
+                    {venue.ballCost.toLocaleString()}
                   </td>
-                  <td className="px-4 py-3 text-center text-gray-600">{booking.createdBy}</td>
-                  <td className="px-4 py-3 text-center text-gray-500 text-xs">{booking.createdAt}</td>
+                  <td className="px-4 py-3 text-center text-gray-600">{venue.registeredBy}</td>
+                  <td className="px-4 py-3 text-center text-gray-500 text-xs">{venue.registeredAt}</td>
                   <td className="px-4 py-3 text-center">
                     <Button variant="outline" size="sm" className="h-7 text-xs">
                       상세

@@ -20,6 +20,7 @@ import {
   getFollowerCount,
   isFollowing,
 } from '../../services/followApi';
+import apiClient from '../../api/client';
 
 type TeamDetailRouteProp = RouteProp<RootStackParamList, 'TeamDetail'>;
 
@@ -199,8 +200,7 @@ export default function TeamDetailScreen() {
   const route = useRoute<TeamDetailRouteProp>();
   const {teamId} = route.params;
 
-  const team = MOCK_TEAMS[teamId] || DEFAULT_TEAM;
-
+  const [team, setTeam] = useState<TeamData>(MOCK_TEAMS[teamId] || DEFAULT_TEAM);
   const [activeTab, setActiveTab] = useState<TabName>('홈');
   const [videoSubTab, setVideoSubTab] = useState<VideoSubTab>('영상');
   const [following, setFollowing] = useState(false);
@@ -209,6 +209,27 @@ export default function TeamDetailScreen() {
   useEffect(() => {
     isFollowing('team', teamId).then(setFollowing);
     getFollowerCount('team', teamId).then(setFollowerCount);
+    // Fetch team/club detail from real API
+    const numericId = parseInt(teamId, 10);
+    if (!isNaN(numericId)) {
+      apiClient.get(`/clubs/${numericId}`)
+        .then(res => {
+          const d = res.data.data ?? res.data;
+          if (d && d.name) {
+            setTeam(prev => ({
+              ...prev,
+              id: String(d.id ?? prev.id),
+              name: d.name ?? prev.name,
+              sport: d.sportName ?? prev.sport,
+              logoUrl: d.logoUrl ?? prev.logoUrl,
+              description: d.description ?? prev.description,
+              playerCount: d.memberCount ?? prev.playerCount,
+              region: d.siGunGuCode ?? prev.region,
+            }));
+          }
+        })
+        .catch(() => { /* keep mock */ });
+    }
   }, [teamId]);
 
   const handleToggleFollow = useCallback(async () => {

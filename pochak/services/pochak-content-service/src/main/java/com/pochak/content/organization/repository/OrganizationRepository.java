@@ -26,12 +26,14 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
 
     @Query("SELECT o FROM Organization o WHERE o.active = true" +
             " AND (CAST(:orgType AS string) IS NULL OR o.orgType = :orgType)" +
+            " AND (CAST(:accessType AS string) IS NULL OR o.accessType = :accessType)" +
             " AND (CAST(:parentId AS long) IS NULL OR o.parent.id = :parentId)" +
             " AND (CAST(:sportId AS long) IS NULL OR o.sportId = :sportId)" +
             " AND (CAST(:keyword AS string) IS NULL OR LOWER(CAST(o.name AS string)) LIKE LOWER(CAST(CONCAT('%', :keyword, '%') AS string)))" +
             " ORDER BY o.name ASC")
     Page<Organization> findWithFilters(
             @Param("orgType") Organization.OrgType orgType,
+            @Param("accessType") Organization.AccessType accessType,
             @Param("parentId") Long parentId,
             @Param("sportId") Long sportId,
             @Param("keyword") String keyword,

@@ -20,6 +20,14 @@ public class CreateReservationRequest {
 
     private Long matchId;
 
+    /**
+     * Optional: the organization that owns this reservation context.
+     * When provided, the org's reservationPolicy is enforced:
+     *   ALL_MEMBERS → user must be a member
+     *   MANAGER_ONLY → user must be MANAGER or OWNER
+     */
+    private Long organizationId;
+
     @NotNull(message = "Reservation type is required")
     private ReservationType reservationType;
 

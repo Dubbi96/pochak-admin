@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,84 +19,28 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs";
-
-// ── Types ────────────────────────────────────────────────────────────────────
-
-interface RegisteredEquipment {
-  equipmentType: string;
-  vpuName: string;
-  vpuSerial: string;
-  venueId: string;
-  registeredAt: string;
-}
-
-interface CHUEntry {
-  chuSerial: string;
-  vpuName: string;
-  status: "정상" | "비활성" | "오류";
-  registeredAt: string;
-}
-
-// ── Mock Data ────────────────────────────────────────────────────────────────
-
-const MOCK_EQUIPMENT: RegisteredEquipment[] = [
-  {
-    equipmentType: "VPU-200",
-    vpuName: "서울FC 메인",
-    vpuSerial: "VPU-SN-10001",
-    venueId: "VEN-001",
-    registeredAt: "2026-01-15",
-  },
-  {
-    equipmentType: "VPU-300",
-    vpuName: "부산 경기장 A",
-    vpuSerial: "VPU-SN-10002",
-    venueId: "VEN-002",
-    registeredAt: "2026-01-28",
-  },
-  {
-    equipmentType: "VPU-200",
-    vpuName: "대전 메인구장",
-    vpuSerial: "VPU-SN-10003",
-    venueId: "VEN-003",
-    registeredAt: "2026-02-10",
-  },
-  {
-    equipmentType: "VPU-300",
-    vpuName: "수원 체육관",
-    vpuSerial: "VPU-SN-10004",
-    venueId: "VEN-004",
-    registeredAt: "2026-02-22",
-  },
-  {
-    equipmentType: "VPU-200",
-    vpuName: "인천 보조구장",
-    vpuSerial: "VPU-SN-10005",
-    venueId: "VEN-005",
-    registeredAt: "2026-03-05",
-  },
-];
-
-const MOCK_CHUS: CHUEntry[] = [
-  { chuSerial: "CHU-SN-20001", vpuName: "서울FC 메인", status: "정상", registeredAt: "2026-01-15" },
-  { chuSerial: "CHU-SN-20002", vpuName: "서울FC 메인", status: "정상", registeredAt: "2026-01-15" },
-  { chuSerial: "CHU-SN-20003", vpuName: "부산 경기장 A", status: "정상", registeredAt: "2026-01-28" },
-  { chuSerial: "CHU-SN-20004", vpuName: "부산 경기장 A", status: "비활성", registeredAt: "2026-01-28" },
-  { chuSerial: "CHU-SN-20005", vpuName: "대전 메인구장", status: "정상", registeredAt: "2026-02-10" },
-  { chuSerial: "CHU-SN-20006", vpuName: "수원 체육관", status: "오류", registeredAt: "2026-02-22" },
-  { chuSerial: "CHU-SN-20007", vpuName: "수원 체육관", status: "정상", registeredAt: "2026-02-22" },
-  { chuSerial: "CHU-SN-20008", vpuName: "인천 보조구장", status: "정상", registeredAt: "2026-03-05" },
-];
+import {
+  getRegisteredEquipment,
+  getChus,
+  registerVpuChu,
+} from "@/services/equipment-api";
+import type { RegisteredEquipment, ChuEntry } from "@/services/equipment-api";
 
 // ── CHU Status Badge ─────────────────────────────────────────────────────────
 
-function CHUStatusBadge({ status }: { status: CHUEntry["status"] }) {
-  const variantMap: Record<CHUEntry["status"], "success" | "secondary" | "destructive"> = {
-    "정상": "success",
-    "비활성": "secondary",
-    "오류": "destructive",
+const CHU_STATUS_LABELS: Record<string, string> = {
+  ACTIVE: "정상",
+  INACTIVE: "비활성",
+  ERROR: "오류",
+};
+
+function CHUStatusBadge({ status }: { status: ChuEntry["status"] }) {
+  const variantMap: Record<string, "success" | "secondary" | "destructive"> = {
+    ACTIVE: "success",
+    INACTIVE: "secondary",
+    ERROR: "destructive",
   };
-  return <Badge variant={variantMap[status]}>{status}</Badge>;
+  return <Badge variant={variantMap[status] ?? "secondary"}>{CHU_STATUS_LABELS[status] ?? status}</Badge>;
 }
 
 // ── Registration Form Tab ────────────────────────────────────────────────────
@@ -119,11 +63,25 @@ function RegistrationForm() {
     setChuSerials("");
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isValid) return;
-    // TODO: API call
-    alert("장비 등록 요청이 전송되었습니다.");
-    handleReset();
+    try {
+      const chuList = chuSerials
+        .split(/[,\n]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      await registerVpuChu({
+        equipmentType,
+        vpuSerial: vpuSerial.trim(),
+        venueId: venueId.trim(),
+        vpuName: vpuName.trim(),
+        chuSerials: chuList,
+      });
+      alert("장비 등록 요청이 전송되었습니다.");
+      handleReset();
+    } catch {
+      alert("장비 등록에 실패하였습니다. 다시 시도해 주세요.");
+    }
   };
 
   return (
@@ -210,6 +168,44 @@ function RegistrationForm() {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function VpuChuPage() {
+  const [equipment, setEquipment] = useState<RegisteredEquipment[]>([]);
+  const [chus, setChus] = useState<ChuEntry[]>([]);
+  const [equipmentLoading, setEquipmentLoading] = useState(false);
+  const [chuLoading, setChuLoading] = useState(false);
+  const [equipmentError, setEquipmentError] = useState<string | null>(null);
+  const [chuError, setChuError] = useState<string | null>(null);
+
+  const fetchEquipment = async () => {
+    setEquipmentLoading(true);
+    setEquipmentError(null);
+    try {
+      const result = await getRegisteredEquipment();
+      setEquipment(result.content);
+    } catch {
+      setEquipmentError("데이터를 불러오지 못했습니다.");
+    } finally {
+      setEquipmentLoading(false);
+    }
+  };
+
+  const fetchChus = async () => {
+    setChuLoading(true);
+    setChuError(null);
+    try {
+      const result = await getChus();
+      setChus(result.content);
+    } catch {
+      setChuError("데이터를 불러오지 못했습니다.");
+    } finally {
+      setChuLoading(false);
+    }
+  };
+
+  const handleTabChange = (value: string) => {
+    if (value === "equipment-list") fetchEquipment();
+    if (value === "chu-list") fetchChus();
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -218,7 +214,7 @@ export default function VpuChuPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="register">
+      <Tabs defaultValue="register" onValueChange={handleTabChange}>
         <TabsList>
           <TabsTrigger value="register">장비 등록</TabsTrigger>
           <TabsTrigger value="equipment-list">등록 장비 목록</TabsTrigger>
@@ -245,7 +241,19 @@ export default function VpuChuPage() {
                 </tr>
               </thead>
               <tbody>
-                {MOCK_EQUIPMENT.map((eq, idx) => (
+                {equipmentLoading ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-12 text-center text-gray-400">로딩 중...</td>
+                  </tr>
+                ) : equipmentError ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-12 text-center text-red-400">{equipmentError}</td>
+                  </tr>
+                ) : equipment.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-12 text-center text-gray-400">데이터가 없습니다.</td>
+                  </tr>
+                ) : equipment.map((eq, idx) => (
                   <tr
                     key={eq.vpuSerial}
                     className={`border-b border-gray-100 transition-colors hover:bg-gray-50 ${idx % 2 === 1 ? "bg-gray-50/50" : ""}`}
@@ -279,7 +287,19 @@ export default function VpuChuPage() {
                 </tr>
               </thead>
               <tbody>
-                {MOCK_CHUS.map((chu, idx) => (
+                {chuLoading ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-12 text-center text-gray-400">로딩 중...</td>
+                  </tr>
+                ) : chuError ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-12 text-center text-red-400">{chuError}</td>
+                  </tr>
+                ) : chus.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-12 text-center text-gray-400">데이터가 없습니다.</td>
+                  </tr>
+                ) : chus.map((chu, idx) => (
                   <tr
                     key={chu.chuSerial}
                     className={`border-b border-gray-100 transition-colors hover:bg-gray-50 ${idx % 2 === 1 ? "bg-gray-50/50" : ""}`}

@@ -19,6 +19,16 @@ import { Search, Download } from "lucide-react";
 import { StatusBadge } from "@/components/common/status-badge";
 import { ExportButton } from "@/components/common/export-button";
 import type { PageResponse } from "@/types/common";
+import {
+  getSeasonPassHistoryStats,
+  getSeasonPassDailyRevenue,
+  getSeasonPassHistoryList,
+} from "@/services/commerce-admin-api";
+import type {
+  SeasonPassHistoryStats,
+  SeasonPassDailyRevenue,
+  SeasonPassHistoryItem,
+} from "@/services/commerce-admin-api";
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -26,43 +36,6 @@ type TabType = "STATS" | "HISTORY";
 type PeriodPreset = "TODAY" | "THIS_WEEK" | "THIS_MONTH" | "LAST_MONTH" | "3_MONTHS" | "6_MONTHS" | "ALL";
 type ProductType = "ALL" | "TERM" | "SUBSCRIPTION";
 type HistoryStatus = "ACTIVE" | "EXPIRED" | "CANCELLED" | "REFUNDED";
-
-interface SeasonPassStats {
-  totalCount: number;
-  activeCount: number;
-  expiredCount: number;
-  cancelledRefundedCount: number;
-  subscriptionActiveCount: number;
-  totalRevenue: number;
-  refundAmount: number;
-  netRevenue: number;
-  pgPayment: number;
-  googlePlay: number;
-  appStore: number;
-}
-
-interface DailyRevenue {
-  date: string;
-  newPurchases: number;
-  renewals: number;
-  cancellations: number;
-  revenue: number;
-  refunds: number;
-  netRevenue: number;
-}
-
-interface SeasonPassHistoryItem {
-  id: number;
-  userName: string;
-  userEmail: string;
-  passName: string;
-  productType: string;
-  platform: string;
-  status: HistoryStatus;
-  amount: number;
-  purchasedAt: string;
-  expiresAt: string;
-}
 
 const PERIOD_LABELS: Record<PeriodPreset, string> = {
   TODAY: "오늘",
@@ -81,43 +54,6 @@ const STATUS_BADGE_MAP: Record<HistoryStatus, string> = {
   REFUNDED: "환불",
 };
 
-// ── Mock Data ──────────────────────────────────────────────────────
-
-const MOCK_STATS: SeasonPassStats = {
-  totalCount: 2847,
-  activeCount: 1523,
-  expiredCount: 891,
-  cancelledRefundedCount: 433,
-  subscriptionActiveCount: 672,
-  totalRevenue: 142350000,
-  refundAmount: 8720000,
-  netRevenue: 133630000,
-  pgPayment: 89500000,
-  googlePlay: 31200000,
-  appStore: 21650000,
-};
-
-const MOCK_DAILY_REVENUE: DailyRevenue[] = [
-  { date: "2026-03-25", newPurchases: 42, renewals: 18, cancellations: 3, revenue: 3150000, refunds: 120000, netRevenue: 3030000 },
-  { date: "2026-03-24", newPurchases: 38, renewals: 22, cancellations: 5, revenue: 2890000, refunds: 250000, netRevenue: 2640000 },
-  { date: "2026-03-23", newPurchases: 55, renewals: 15, cancellations: 2, revenue: 4200000, refunds: 80000, netRevenue: 4120000 },
-  { date: "2026-03-22", newPurchases: 31, renewals: 20, cancellations: 4, revenue: 2550000, refunds: 310000, netRevenue: 2240000 },
-  { date: "2026-03-21", newPurchases: 47, renewals: 25, cancellations: 1, revenue: 3680000, refunds: 50000, netRevenue: 3630000 },
-  { date: "2026-03-20", newPurchases: 29, renewals: 12, cancellations: 6, revenue: 2100000, refunds: 420000, netRevenue: 1680000 },
-  { date: "2026-03-19", newPurchases: 60, renewals: 30, cancellations: 2, revenue: 5400000, refunds: 150000, netRevenue: 5250000 },
-];
-
-const MOCK_HISTORY: SeasonPassHistoryItem[] = [
-  { id: 1, userName: "김민수", userEmail: "minsu@gmail.com", passName: "30일 시즌권", productType: "기간제", platform: "PG결제", status: "ACTIVE", amount: 10000, purchasedAt: "2026-03-15", expiresAt: "2026-04-14" },
-  { id: 2, userName: "이수진", userEmail: "sujin@naver.com", passName: "월간 구독", productType: "정기구독", platform: "App Store", status: "ACTIVE", amount: 9900, purchasedAt: "2026-03-01", expiresAt: "2026-03-31" },
-  { id: 3, userName: "박정호", userEmail: "jh.park@gmail.com", passName: "7일 시즌권", productType: "기간제", platform: "Google Play", status: "EXPIRED", amount: 3000, purchasedAt: "2026-03-10", expiresAt: "2026-03-17" },
-  { id: 4, userName: "최예린", userEmail: "yerin@icloud.com", passName: "365일 시즌권", productType: "기간제", platform: "PG결제", status: "ACTIVE", amount: 50000, purchasedAt: "2026-01-10", expiresAt: "2027-01-09" },
-  { id: 5, userName: "정태우", userEmail: "taewoo@kakao.com", passName: "월간 구독", productType: "정기구독", platform: "Google Play", status: "CANCELLED", amount: 9900, purchasedAt: "2026-02-15", expiresAt: "2026-03-14" },
-  { id: 6, userName: "한지은", userEmail: "jieun@naver.com", passName: "30일 시즌권", productType: "기간제", platform: "App Store", status: "REFUNDED", amount: 10000, purchasedAt: "2026-03-05", expiresAt: "2026-04-04" },
-  { id: 7, userName: "오성민", userEmail: "sungmin@gmail.com", passName: "월간 구독", productType: "정기구독", platform: "PG결제", status: "ACTIVE", amount: 9900, purchasedAt: "2026-03-20", expiresAt: "2026-04-19" },
-  { id: 8, userName: "윤서현", userEmail: "seohyun@gmail.com", passName: "3일 시즌권", productType: "기간제", platform: "Google Play", status: "EXPIRED", amount: 1500, purchasedAt: "2026-03-21", expiresAt: "2026-03-24" },
-];
-
 const HISTORY_EXPORT_COLUMNS = [
   { header: "NO", accessor: "id" },
   { header: "이름", accessor: "userName" },
@@ -130,19 +66,6 @@ const HISTORY_EXPORT_COLUMNS = [
   { header: "구매일", accessor: "purchasedAt" },
   { header: "만료일", accessor: "expiresAt" },
 ];
-
-// ── Mock API ───────────────────────────────────────────────────────
-
-async function getSeasonPassHistory(
-  _filters: Record<string, unknown>,
-  page = 0,
-  size = 20
-): Promise<PageResponse<SeasonPassHistoryItem>> {
-  await new Promise((r) => setTimeout(r, 300));
-  const start = page * size;
-  const content = MOCK_HISTORY.slice(start, start + size);
-  return { content, totalElements: MOCK_HISTORY.length, totalPages: Math.ceil(MOCK_HISTORY.length / size), page, size };
-}
 
 // ── Component ──────────────────────────────────────────────────────
 
@@ -165,6 +88,11 @@ export default function SeasonPassHistoryPage() {
   const [productType, setProductType] = useState<ProductType>("ALL");
   const [seasonPass, setSeasonPass] = useState("ALL");
 
+  // Stats data
+  const [stats, setStats] = useState<SeasonPassHistoryStats | null>(null);
+  const [dailyRevenue, setDailyRevenue] = useState<SeasonPassDailyRevenue[]>([]);
+  const [statsLoading, setStatsLoading] = useState(false);
+
   // History state
   const [historyData, setHistoryData] = useState<PageResponse<SeasonPassHistoryItem> | null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -172,17 +100,40 @@ export default function SeasonPassHistoryPage() {
   const [historyDateRange, setHistoryDateRange] = useState<DateRange>({ from: undefined, to: undefined });
   const [historySearch, setHistorySearch] = useState("");
 
-  const stats = MOCK_STATS;
+  const fetchStats = useCallback(async () => {
+    setStatsLoading(true);
+    try {
+      const [statsResult, dailyResult] = await Promise.all([
+        getSeasonPassHistoryStats({ period, platform, productType, seasonPass }),
+        getSeasonPassDailyRevenue({ period, platform }),
+      ]);
+      setStats(statsResult);
+      setDailyRevenue(dailyResult);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, [period, platform, productType, seasonPass]);
 
   const fetchHistory = useCallback(async () => {
     setHistoryLoading(true);
     try {
-      const result = await getSeasonPassHistory({}, historyPage);
+      const result = await getSeasonPassHistoryList(
+        {
+          dateFrom: historyDateRange.from?.toISOString().slice(0, 10),
+          dateTo: historyDateRange.to?.toISOString().slice(0, 10),
+          searchKeyword: historySearch || undefined,
+        },
+        historyPage
+      );
       setHistoryData(result);
     } finally {
       setHistoryLoading(false);
     }
-  }, [historyPage]);
+  }, [historyPage, historyDateRange, historySearch]);
+
+  useEffect(() => {
+    if (tab === "STATS") fetchStats();
+  }, [tab, fetchStats]);
 
   useEffect(() => {
     if (tab === "HISTORY") fetchHistory();
@@ -278,92 +229,102 @@ export default function SeasonPassHistoryPage() {
               </Select>
             </div>
 
-            <Button onClick={() => {}}>
+            <Button onClick={fetchStats}>
               <Search size={16} className="mr-1.5" />
               검색
             </Button>
           </div>
 
-          {/* KPI Cards - Group 1: Counts */}
-          <div className="grid grid-cols-5 gap-4">
-            <KpiCard label="전체 건수" value={`${stats.totalCount.toLocaleString()}건`} />
-            <KpiCard label="이용중" value={`${stats.activeCount.toLocaleString()}건`} colorStyle={{ color: "var(--c-primary)" }} />
-            <KpiCard label="만료" value={`${stats.expiredCount.toLocaleString()}건`} color="text-gray-500" />
-            <KpiCard label="취소/환불" value={`${stats.cancelledRefundedCount.toLocaleString()}건`} color="text-red-500" />
-            <KpiCard label="구독 활성" value={`${stats.subscriptionActiveCount.toLocaleString()}건`} color="text-emerald-600" />
-          </div>
+          {statsLoading ? (
+            <p className="text-sm text-gray-400 py-8 text-center">로딩 중...</p>
+          ) : (
+            <>
+              {/* KPI Cards - Group 1: Counts */}
+              <div className="grid grid-cols-5 gap-4">
+                <KpiCard label="전체 건수" value={stats ? `${stats.totalCount.toLocaleString()}건` : "-"} />
+                <KpiCard label="이용중" value={stats ? `${stats.activeCount.toLocaleString()}건` : "-"} colorStyle={{ color: "var(--c-primary)" }} />
+                <KpiCard label="만료" value={stats ? `${stats.expiredCount.toLocaleString()}건` : "-"} color="text-gray-500" />
+                <KpiCard label="취소/환불" value={stats ? `${stats.cancelledRefundedCount.toLocaleString()}건` : "-"} color="text-red-500" />
+                <KpiCard label="구독 활성" value={stats ? `${stats.subscriptionActiveCount.toLocaleString()}건` : "-"} color="text-emerald-600" />
+              </div>
 
-          {/* KPI Cards - Group 2: Revenue */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-              <p className="text-xs text-gray-500">총 매출</p>
-              <p className="text-xl font-bold text-gray-900">{stats.totalRevenue.toLocaleString()}원</p>
-            </div>
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-              <p className="text-xs text-red-600">환불 금액</p>
-              <p className="text-xl font-bold text-red-700">-{stats.refundAmount.toLocaleString()}원</p>
-            </div>
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-              <p className="text-xs text-emerald-600">순 매출</p>
-              <p className="text-xl font-bold text-emerald-700">{stats.netRevenue.toLocaleString()}원</p>
-            </div>
-          </div>
+              {/* KPI Cards - Group 2: Revenue */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="rounded-lg border border-gray-200 bg-white p-4">
+                  <p className="text-xs text-gray-500">총 매출</p>
+                  <p className="text-xl font-bold text-gray-900">{stats ? stats.totalRevenue.toLocaleString() : "-"}원</p>
+                </div>
+                <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                  <p className="text-xs text-red-600">환불 금액</p>
+                  <p className="text-xl font-bold text-red-700">{stats ? `-${stats.refundAmount.toLocaleString()}` : "-"}원</p>
+                </div>
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                  <p className="text-xs text-emerald-600">순 매출</p>
+                  <p className="text-xl font-bold text-emerald-700">{stats ? stats.netRevenue.toLocaleString() : "-"}원</p>
+                </div>
+              </div>
 
-          {/* KPI Cards - Group 3: Platforms */}
-          <div className="grid grid-cols-3 gap-4">
-            <KpiCard label="PG 결제" value={`${stats.pgPayment.toLocaleString()}원`} sub={`${((stats.pgPayment / stats.totalRevenue) * 100).toFixed(1)}%`} />
-            <KpiCard label="Google Play" value={`${stats.googlePlay.toLocaleString()}원`} sub={`${((stats.googlePlay / stats.totalRevenue) * 100).toFixed(1)}%`} />
-            <KpiCard label="App Store" value={`${stats.appStore.toLocaleString()}원`} sub={`${((stats.appStore / stats.totalRevenue) * 100).toFixed(1)}%`} />
-          </div>
+              {/* KPI Cards - Group 3: Platforms */}
+              <div className="grid grid-cols-3 gap-4">
+                <KpiCard label="PG 결제" value={stats ? `${stats.pgPayment.toLocaleString()}원` : "-"} sub={stats && stats.totalRevenue ? `${((stats.pgPayment / stats.totalRevenue) * 100).toFixed(1)}%` : undefined} />
+                <KpiCard label="Google Play" value={stats ? `${stats.googlePlay.toLocaleString()}원` : "-"} sub={stats && stats.totalRevenue ? `${((stats.googlePlay / stats.totalRevenue) * 100).toFixed(1)}%` : undefined} />
+                <KpiCard label="App Store" value={stats ? `${stats.appStore.toLocaleString()}원` : "-"} sub={stats && stats.totalRevenue ? `${((stats.appStore / stats.totalRevenue) * 100).toFixed(1)}%` : undefined} />
+              </div>
 
-          {/* Daily Revenue Table */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-gray-700">일별 매출 현황</h2>
-              <ExportButton
-                data={MOCK_DAILY_REVENUE as unknown as Record<string, unknown>[]}
-                columns={[
-                  { header: "날짜", accessor: "date" },
-                  { header: "신규 구매", accessor: "newPurchases" },
-                  { header: "갱신", accessor: "renewals" },
-                  { header: "취소", accessor: "cancellations" },
-                  { header: "매출", accessor: "revenue" },
-                  { header: "환불", accessor: "refunds" },
-                  { header: "순 매출", accessor: "netRevenue" },
-                ]}
-                filename="season-pass-daily-revenue"
-                label="Export"
-              />
-            </div>
-            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50 text-xs font-medium uppercase tracking-wider text-gray-500">
-                    <th className="px-4 py-3 text-center">날짜</th>
-                    <th className="px-4 py-3 text-right">신규 구매</th>
-                    <th className="px-4 py-3 text-right">갱신</th>
-                    <th className="px-4 py-3 text-right">취소</th>
-                    <th className="px-4 py-3 text-right">매출</th>
-                    <th className="px-4 py-3 text-right">환불</th>
-                    <th className="px-4 py-3 text-right">순 매출</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {MOCK_DAILY_REVENUE.map((row, idx) => (
-                    <tr key={row.date} className={`border-b border-gray-100 transition-colors hover:bg-gray-50 ${idx % 2 === 1 ? "bg-gray-50/50" : ""}`}>
-                      <td className="px-4 py-3 text-center text-gray-600">{row.date}</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-gray-900">{row.newPurchases}</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-gray-600">{row.renewals}</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-red-500">{row.cancellations}</td>
-                      <td className="px-4 py-3 text-right tabular-nums font-medium text-gray-900">{row.revenue.toLocaleString()}원</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-red-500">-{row.refunds.toLocaleString()}원</td>
-                      <td className="px-4 py-3 text-right tabular-nums font-medium text-emerald-600">{row.netRevenue.toLocaleString()}원</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+              {/* Daily Revenue Table */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-gray-700">일별 매출 현황</h2>
+                  <ExportButton
+                    data={dailyRevenue as unknown as Record<string, unknown>[]}
+                    columns={[
+                      { header: "날짜", accessor: "date" },
+                      { header: "신규 구매", accessor: "newPurchases" },
+                      { header: "갱신", accessor: "renewals" },
+                      { header: "취소", accessor: "cancellations" },
+                      { header: "매출", accessor: "revenue" },
+                      { header: "환불", accessor: "refunds" },
+                      { header: "순 매출", accessor: "netRevenue" },
+                    ]}
+                    filename="season-pass-daily-revenue"
+                    label="Export"
+                  />
+                </div>
+                <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200 bg-gray-50 text-xs font-medium uppercase tracking-wider text-gray-500">
+                        <th className="px-4 py-3 text-center">날짜</th>
+                        <th className="px-4 py-3 text-right">신규 구매</th>
+                        <th className="px-4 py-3 text-right">갱신</th>
+                        <th className="px-4 py-3 text-right">취소</th>
+                        <th className="px-4 py-3 text-right">매출</th>
+                        <th className="px-4 py-3 text-right">환불</th>
+                        <th className="px-4 py-3 text-right">순 매출</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dailyRevenue.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="px-4 py-8 text-center text-gray-400">데이터가 없습니다.</td>
+                        </tr>
+                      ) : dailyRevenue.map((row, idx) => (
+                        <tr key={row.date} className={`border-b border-gray-100 transition-colors hover:bg-gray-50 ${idx % 2 === 1 ? "bg-gray-50/50" : ""}`}>
+                          <td className="px-4 py-3 text-center text-gray-600">{row.date}</td>
+                          <td className="px-4 py-3 text-right tabular-nums text-gray-900">{row.newPurchases}</td>
+                          <td className="px-4 py-3 text-right tabular-nums text-gray-600">{row.renewals}</td>
+                          <td className="px-4 py-3 text-right tabular-nums text-red-500">{row.cancellations}</td>
+                          <td className="px-4 py-3 text-right tabular-nums font-medium text-gray-900">{row.revenue.toLocaleString()}원</td>
+                          <td className="px-4 py-3 text-right tabular-nums text-red-500">-{row.refunds.toLocaleString()}원</td>
+                          <td className="px-4 py-3 text-right tabular-nums font-medium text-emerald-600">{row.netRevenue.toLocaleString()}원</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 

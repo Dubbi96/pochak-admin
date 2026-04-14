@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+import java.util.Optional;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -15,49 +17,55 @@ public class CommerceServiceClient {
 
     private final RestClient commerceClient;
 
-    public JsonNode getActiveProducts(int size) {
+    public Optional<JsonNode> getActiveProducts(int size) {
         try {
-            return commerceClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/products")
-                            .queryParam("isActive", true)
-                            .queryParam("size", size)
-                            .build())
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                commerceClient.get()
+                        .uri(uriBuilder -> uriBuilder
+                                .path("/products")
+                                .queryParam("isActive", true)
+                                .queryParam("size", size)
+                                .build())
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Commerce service products call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
-    public JsonNode getWallet(Long userId) {
+    public Optional<JsonNode> getWallet(Long userId) {
         try {
-            return commerceClient.get()
-                    .uri("/wallet")
-                    .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                commerceClient.get()
+                        .uri("/wallet")
+                        .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Commerce service wallet call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
-    public JsonNode getProductSuggestions(String contentType, String contentId) {
+    public Optional<JsonNode> getProductSuggestions(String contentType, String contentId) {
         try {
-            return commerceClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/products")
-                            .queryParam("contentType", contentType)
-                            .queryParam("contentId", contentId)
-                            .queryParam("isActive", true)
-                            .build())
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                commerceClient.get()
+                        .uri(uriBuilder -> uriBuilder
+                                .path("/products")
+                                .queryParam("contentType", contentType)
+                                .queryParam("contentId", contentId)
+                                .queryParam("isActive", true)
+                                .build())
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Commerce service product suggestions call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 }

@@ -21,22 +21,21 @@ public class WebPublicController {
 
     @GetMapping("/resolve/{slug}")
     public ApiResponse<JsonNode> resolveSlug(@PathVariable String slug) {
-        JsonNode resolved = contentClient.resolveSlug(slug);
-        return ApiResponse.success(resolved);
+        return ApiResponse.success(contentClient.resolveSlug(slug).orElse(null));
     }
 
     @GetMapping("/slug/check")
     public ApiResponse<JsonNode> checkSlug(@RequestParam String slug) {
-        return ApiResponse.success(contentClient.checkSlug(slug));
+        return ApiResponse.success(contentClient.checkSlug(slug).orElse(null));
     }
 
     @GetMapping("/clubs/{slug}")
     public ApiResponse<WebPublicLandingResponse> getClubLanding(@PathVariable String slug) {
-        JsonNode resolved = contentClient.resolveSlug(slug);
+        JsonNode resolved = contentClient.resolveSlug(slug).orElse(null);
         Long resourceId = extractResourceId(resolved);
 
-        JsonNode clubData = contentClient.getClubDetail(resourceId);
-        JsonNode products = commerceClient.getActiveProducts(5);
+        JsonNode clubData = contentClient.getClubDetail(resourceId).orElse(null);
+        JsonNode products = commerceClient.getActiveProducts(5).orElse(null);
 
         Long userId = UserContextHolder.getUserId();
         return ApiResponse.success(WebPublicLandingResponse.builder()
@@ -48,10 +47,10 @@ public class WebPublicController {
 
     @GetMapping("/competitions/{slug}")
     public ApiResponse<WebPublicLandingResponse> getCompetitionLanding(@PathVariable String slug) {
-        JsonNode resolved = contentClient.resolveSlug(slug);
+        JsonNode resolved = contentClient.resolveSlug(slug).orElse(null);
         Long resourceId = extractResourceId(resolved);
 
-        JsonNode competitionData = contentClient.getCompetitionDetail(resourceId);
+        JsonNode competitionData = contentClient.getCompetitionDetail(resourceId).orElse(null);
 
         Long userId = UserContextHolder.getUserId();
         return ApiResponse.success(WebPublicLandingResponse.builder()
@@ -62,10 +61,10 @@ public class WebPublicController {
 
     @GetMapping("/organizations/{slug}")
     public ApiResponse<WebPublicLandingResponse> getOrganizationLanding(@PathVariable String slug) {
-        JsonNode resolved = contentClient.resolveSlug(slug);
+        JsonNode resolved = contentClient.resolveSlug(slug).orElse(null);
         Long resourceId = extractResourceId(resolved);
 
-        JsonNode orgData = contentClient.getOrganizationDetail(resourceId);
+        JsonNode orgData = contentClient.getOrganizationDetail(resourceId).orElse(null);
 
         Long userId = UserContextHolder.getUserId();
         return ApiResponse.success(WebPublicLandingResponse.builder()

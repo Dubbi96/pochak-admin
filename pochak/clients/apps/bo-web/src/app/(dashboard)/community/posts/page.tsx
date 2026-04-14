@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, Trash2, Eye, Pin } from "lucide-react";
+import { gatewayApi } from "@/lib/api-client";
+import type { PageResponse } from "@/types/common";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -49,55 +51,13 @@ const POST_TYPE_VARIANTS: Record<PostType, "info" | "warning" | "success" | "sec
   FREE: "secondary",
 };
 
-// ── Mock Data ────────────────────────────────────────────────────────
-
-const MOCK_POSTS: CommunityPost[] = [
-  {
-    id: 1, postType: "NEWS", title: "2026 봄 시즌 회원 모집 안내",
-    organizationName: "서울오픈농구모임", authorName: "김민수", region: "서울 마포구",
-    viewCount: 342, likeCount: 28, commentCount: 12, isPinned: true, createdAt: "2026-03-20",
-  },
-  {
-    id: 2, postType: "JOB", title: "유소년 축구 코치 모집합니다",
-    organizationName: "대한축구협회", authorName: "이수진", region: "서울 강남구",
-    viewCount: 189, likeCount: 15, commentCount: 8, isPinned: false, createdAt: "2026-03-19",
-  },
-  {
-    id: 3, postType: "RECRUIT", title: "주말 풋살 멤버 구합니다 (경기 수원)",
-    organizationName: "시립풋살장", authorName: "박정호", region: "경기 수원시",
-    viewCount: 256, likeCount: 32, commentCount: 21, isPinned: false, createdAt: "2026-03-18",
-  },
-  {
-    id: 4, postType: "FREE", title: "지난 주말 경기 후기 공유합니다",
-    organizationName: "FC강남 본점", authorName: "최예린", region: "서울 강남구",
-    viewCount: 128, likeCount: 9, commentCount: 5, isPinned: false, createdAt: "2026-03-17",
-  },
-  {
-    id: 5, postType: "NEWS", title: "구장 시설 보수 공지 (3/25~3/28)",
-    organizationName: "구민체육관", authorName: "정태우", region: "서울 강남구",
-    viewCount: 412, likeCount: 3, commentCount: 2, isPinned: true, createdAt: "2026-03-16",
-  },
-  {
-    id: 6, postType: "RECRUIT", title: "배구 동호회 신규 회원 모집",
-    organizationName: "부산비치발리볼클럽", authorName: "한지은", region: "부산 해운대구",
-    viewCount: 95, likeCount: 7, commentCount: 3, isPinned: false, createdAt: "2026-03-15",
-  },
-  {
-    id: 7, postType: "JOB", title: "야구 심판 아르바이트 구합니다",
-    organizationName: "공공야구장", authorName: "오성민", region: "서울 송파구",
-    viewCount: 167, likeCount: 11, commentCount: 6, isPinned: false, createdAt: "2026-03-14",
-  },
-  {
-    id: 8, postType: "FREE", title: "농구화 추천 부탁드립니다",
-    organizationName: "서울오픈농구모임", authorName: "윤서현", region: "서울 마포구",
-    viewCount: 78, likeCount: 22, commentCount: 14, isPinned: false, createdAt: "2026-03-13",
-  },
-];
-
 // ── Page Component ───────────────────────────────────────────────────
 
 export default function CommunityPostsPage() {
-  const [posts] = useState<CommunityPost[]>(MOCK_POSTS);
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [regionFilter, setRegionFilter] = useState("ALL");
   const [orgKeyword, setOrgKeyword] = useState("");
@@ -105,14 +65,32 @@ export default function CommunityPostsPage() {
   const [dateTo, setDateTo] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
-  const filteredPosts = posts.filter((p) => {
-    if (typeFilter !== "ALL" && p.postType !== typeFilter) return false;
-    if (regionFilter !== "ALL" && p.region !== regionFilter) return false;
-    if (orgKeyword && !p.organizationName.includes(orgKeyword)) return false;
-    if (dateFrom && p.createdAt < dateFrom) return false;
-    if (dateTo && p.createdAt > dateTo) return false;
-    return true;
-  });
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const params: Record<string, string> = {};
+      if (typeFilter !== "ALL") params.postType = typeFilter;
+      if (regionFilter !== "ALL") params.region = regionFilter;
+      if (orgKeyword) params.searchKeyword = orgKeyword;
+      if (dateFrom) params.dateFrom = dateFrom;
+      if (dateTo) params.dateTo = dateTo;
+
+      const result = await gatewayApi.get<PageResponse<CommunityPost>>(
+        "/api/v1/admin/community/posts",
+        params
+      );
+      setPosts(result.content);
+    } catch {
+      setError("데이터를 불러오지 못했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [typeFilter, regionFilter, orgKeyword, dateFrom, dateTo]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const filteredPosts = posts;
 
   const toggleSelect = (id: number) => {
     setSelectedIds((prev) => {
@@ -226,6 +204,10 @@ export default function CommunityPostsPage() {
         >
           초기화
         </Button>
+        <Button variant="outline" onClick={fetchData}>
+          <Search size={16} className="mr-1.5" />
+          검색
+        </Button>
       </div>
 
       {/* Table */}
@@ -254,7 +236,15 @@ export default function CommunityPostsPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredPosts.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={13} className="px-4 py-12 text-center text-gray-400">로딩 중...</td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={13} className="px-4 py-12 text-center text-red-400">{error}</td>
+              </tr>
+            ) : filteredPosts.length === 0 ? (
               <tr>
                 <td colSpan={13} className="px-4 py-12 text-center text-gray-400">
                   데이터가 없습니다.

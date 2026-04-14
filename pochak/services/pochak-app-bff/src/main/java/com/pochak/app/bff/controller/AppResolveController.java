@@ -17,12 +17,12 @@ public class AppResolveController {
     @GetMapping("/resolve/{identifier}")
     public ApiResponse<JsonNode> resolve(@PathVariable String identifier) {
         log.debug("App resolving identifier: {}", identifier);
-        return ApiResponse.success(contentClient.resolveSlug(identifier));
+        return ApiResponse.success(contentClient.resolveSlug(identifier).orElse(null));
     }
 
     @GetMapping("/qr/{identifier}")
     public ApiResponse<JsonNode> qrResolve(@PathVariable String identifier) {
         log.debug("App QR resolving: {}", identifier);
-        return ApiResponse.success(contentClient.resolveSlug(identifier));
+        return ApiResponse.success(contentClient.resolveSlug(identifier).orElse(null));
     }
 }

@@ -124,21 +124,21 @@ export async function getInquiries(
   if (filters.dateFrom) params.dateFrom = filters.dateFrom;
   if (filters.dateTo) params.dateTo = filters.dateTo;
 
-  return gatewayApi.get<PageResponse<Inquiry>>("/api/v1/admin/inquiries", params);
+  return gatewayApi.get<PageResponse<Inquiry>>("/api/v1/admin/cs/inquiries", params);
 }
 
 export async function replyToInquiry(
   id: number,
   req: InquiryReplyRequest
 ): Promise<Inquiry> {
-  return gatewayApi.post<Inquiry>(`/api/v1/admin/inquiries/${id}/reply`, req);
+  return gatewayApi.post<Inquiry>(`/api/v1/admin/cs/inquiries/${id}/reply`, req);
 }
 
 export async function updateInquiryStatus(
   id: number,
   status: InquiryStatus
 ): Promise<Inquiry> {
-  return gatewayApi.put<Inquiry>(`/api/v1/admin/inquiries/${id}/status`, { status });
+  return gatewayApi.put<Inquiry>(`/api/v1/admin/cs/inquiries/${id}/status`, { status });
 }
 
 // ── Report APIs ─────────────────────────────────────────────────────
@@ -156,12 +156,12 @@ export async function getReports(
   if (filters.dateFrom) params.dateFrom = filters.dateFrom;
   if (filters.dateTo) params.dateTo = filters.dateTo;
 
-  return gatewayApi.get<PageResponse<Report>>("/api/v1/admin/reports", params);
+  return gatewayApi.get<PageResponse<Report>>("/api/v1/admin/cs/reports", params);
 }
 
 export async function actionReport(
   id: number,
   req: ReportActionRequest
 ): Promise<Report> {
-  return gatewayApi.put<Report>(`/api/v1/admin/reports/${id}/action`, req);
+  return gatewayApi.put<Report>(`/api/v1/admin/cs/reports/${id}/action`, req);
 }

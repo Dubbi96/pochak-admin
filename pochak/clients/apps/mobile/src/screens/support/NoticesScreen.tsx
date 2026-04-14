@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from 'react';
+import React, {useState, useCallback, useEffect} from 'react';
 import {
   StyleSheet,
   Text,
@@ -11,6 +11,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {MaterialIcons} from '@expo/vector-icons';
 import {colors} from '../../theme';
+import apiClient from '../../api/client';
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -125,11 +126,31 @@ export default function NoticesScreen() {
   const navigation = useNavigation();
   const [activeFilter, setActiveFilter] = useState<FilterTab>('전체');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [notices, setNotices] = useState<Notice[]>(MOCK_NOTICES);
+
+  useEffect(() => {
+    apiClient.get('/admin/site/notices', {params: {size: 50}})
+      .then(res => {
+        const payload = res.data.data ?? res.data;
+        const items: Notice[] = (Array.isArray(payload) ? payload : payload.content ?? []).map(
+          (n: any) => ({
+            id: String(n.id),
+            category: n.noticeType === 'EVENT' ? '이벤트' : n.noticeType === 'MAINTENANCE' ? '점검' : '서비스',
+            title: n.title,
+            date: n.createdAt ? n.createdAt.slice(0, 10).replace(/-/g, '.') : '',
+            isNew: !!n.isPinned,
+            body: n.content,
+          })
+        );
+        if (items.length > 0) setNotices(items);
+      })
+      .catch(() => { /* keep mock data */ });
+  }, []);
 
   const filteredNotices =
     activeFilter === '전체'
-      ? MOCK_NOTICES
-      : MOCK_NOTICES.filter(n => n.category === activeFilter);
+      ? notices
+      : notices.filter(n => n.category === activeFilter);
 
   const toggleExpand = useCallback(
     (id: string) => {

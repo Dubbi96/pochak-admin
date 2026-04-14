@@ -8,6 +8,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -16,60 +17,68 @@ public class AdminServiceClient {
 
     private final RestClient adminClient;
 
-    public JsonNode getDashboardAnalytics() {
+    public Optional<JsonNode> getDashboardAnalytics() {
         try {
-            return adminClient.get()
-                    .uri("/admin/api/v1/analytics/dashboard")
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                adminClient.get()
+                        .uri("/admin/api/v1/analytics/dashboard")
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Admin service dashboard analytics call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
-    public JsonNode getAuditLogs(Map<String, String> params) {
+    public Optional<JsonNode> getAuditLogs(Map<String, String> params) {
         try {
-            return adminClient.get()
-                    .uri(uriBuilder -> {
-                        var builder = uriBuilder.path("/admin/api/v1/audit/logs");
-                        params.forEach(builder::queryParam);
-                        return builder.build();
-                    })
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                adminClient.get()
+                        .uri(uriBuilder -> {
+                            var builder = uriBuilder.path("/admin/api/v1/audit/logs");
+                            params.forEach(builder::queryParam);
+                            return builder.build();
+                        })
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Admin service audit logs call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
-    public JsonNode getPendingReports() {
+    public Optional<JsonNode> getPendingReports() {
         try {
-            return adminClient.get()
-                    .uri("/admin/api/v1/cs/reports?status=PENDING&size=5")
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                adminClient.get()
+                        .uri("/admin/api/v1/cs/reports?status=PENDING&size=5")
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Admin service pending reports call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
     // --- Banners ---
-    public JsonNode getBanners(Map<String, String> params) {
+    public Optional<JsonNode> getBanners(Map<String, String> params) {
         try {
-            return adminClient.get()
-                    .uri(uriBuilder -> {
-                        var builder = uriBuilder.path("/admin/api/v1/site/banners");
-                        params.forEach(builder::queryParam);
-                        return builder.build();
-                    })
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                adminClient.get()
+                        .uri(uriBuilder -> {
+                            var builder = uriBuilder.path("/admin/api/v1/site/banners");
+                            params.forEach(builder::queryParam);
+                            return builder.build();
+                        })
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Admin service banners call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -97,19 +106,21 @@ public class AdminServiceClient {
     }
 
     // --- Notices ---
-    public JsonNode getNotices(Map<String, String> params) {
+    public Optional<JsonNode> getNotices(Map<String, String> params) {
         try {
-            return adminClient.get()
-                    .uri(uriBuilder -> {
-                        var builder = uriBuilder.path("/admin/api/v1/site/notices");
-                        params.forEach(builder::queryParam);
-                        return builder.build();
-                    })
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                adminClient.get()
+                        .uri(uriBuilder -> {
+                            var builder = uriBuilder.path("/admin/api/v1/site/notices");
+                            params.forEach(builder::queryParam);
+                            return builder.build();
+                        })
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Admin service notices call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -137,51 +148,59 @@ public class AdminServiceClient {
     }
 
     // --- RBAC ---
-    public JsonNode getRoles() {
+    public Optional<JsonNode> getRoles() {
         try {
-            return adminClient.get()
-                    .uri("/admin/api/v1/rbac/roles")
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                adminClient.get()
+                        .uri("/admin/api/v1/rbac/roles")
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Admin service roles call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
-    public JsonNode getGroups() {
+    public Optional<JsonNode> getGroups() {
         try {
-            return adminClient.get()
-                    .uri("/admin/api/v1/rbac/groups")
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                adminClient.get()
+                        .uri("/admin/api/v1/rbac/groups")
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Admin service groups call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
-    public JsonNode getMenus() {
+    public Optional<JsonNode> getMenus() {
         try {
-            return adminClient.get()
-                    .uri("/admin/api/v1/rbac/menus")
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                adminClient.get()
+                        .uri("/admin/api/v1/rbac/menus")
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Admin service menus call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
-    public JsonNode getFunctions() {
+    public Optional<JsonNode> getFunctions() {
         try {
-            return adminClient.get()
-                    .uri("/admin/api/v1/rbac/functions")
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                adminClient.get()
+                        .uri("/admin/api/v1/rbac/functions")
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Admin service functions call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 

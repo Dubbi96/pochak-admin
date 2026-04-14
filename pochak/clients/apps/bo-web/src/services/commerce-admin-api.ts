@@ -342,3 +342,171 @@ export async function getPricing(tab: PricingTab): Promise<PricingItem[]> {
 export async function updatePricing(id: number, data: PricingUpdateRequest): Promise<PricingItem> {
   return gatewayApi.put<PricingItem>(`/api/v1/admin/commerce/pricing/${id}`, data);
 }
+
+// ── Remaining Points APIs ─────────────────────────────────────────
+
+export interface RemainingPointUser {
+  id: number;
+  name: string;
+  email: string;
+  remainingBall: number;
+  remainingPaid: number;
+  remainingBonus: number;
+  totalCharged: number;
+}
+
+export interface RemainingPointStats {
+  totalUsersWithBall: number;
+  totalRemainingBall: number;
+  totalRemainingPaid: number;
+  totalRemainingBonus: number;
+  totalChargedAmount: number;
+  totalPaidChargedAmount: number;
+  totalBonusChargedAmount: number;
+}
+
+export interface RemainingPointFilter {
+  searchType?: string;
+  searchKeyword?: string;
+}
+
+export async function getRemainingPointStats(): Promise<RemainingPointStats> {
+  return gatewayApi.get<RemainingPointStats>("/api/v1/admin/commerce/points/remaining/stats");
+}
+
+export async function getRemainingPointUsers(
+  filters: RemainingPointFilter,
+  page = 0,
+  size = 20
+): Promise<PageResponse<RemainingPointUser>> {
+  const params: Record<string, string> = { page: String(page), size: String(size) };
+  if (filters.searchKeyword) {
+    params.searchKeyword = filters.searchKeyword;
+    params.searchType = filters.searchType || "name";
+  }
+
+  return gatewayApi.get<PageResponse<RemainingPointUser>>("/api/v1/admin/commerce/points/remaining/users", params);
+}
+
+// ── Season Pass History APIs ──────────────────────────────────────
+
+export interface SeasonPassHistoryStats {
+  totalCount: number;
+  activeCount: number;
+  expiredCount: number;
+  cancelledRefundedCount: number;
+  subscriptionActiveCount: number;
+  totalRevenue: number;
+  refundAmount: number;
+  netRevenue: number;
+  pgPayment: number;
+  googlePlay: number;
+  appStore: number;
+}
+
+export interface SeasonPassDailyRevenue {
+  date: string;
+  newPurchases: number;
+  renewals: number;
+  cancellations: number;
+  revenue: number;
+  refunds: number;
+  netRevenue: number;
+}
+
+export interface SeasonPassHistoryItem {
+  id: number;
+  userName: string;
+  userEmail: string;
+  passName: string;
+  productType: string;
+  platform: string;
+  status: "ACTIVE" | "EXPIRED" | "CANCELLED" | "REFUNDED";
+  amount: number;
+  purchasedAt: string;
+  expiresAt: string;
+}
+
+export interface SeasonPassHistoryStatsFilter {
+  period?: string;
+  platform?: string;
+  productType?: string;
+  seasonPass?: string;
+}
+
+export interface SeasonPassHistoryListFilter {
+  dateFrom?: string;
+  dateTo?: string;
+  searchKeyword?: string;
+}
+
+export async function getSeasonPassHistoryStats(
+  filters: SeasonPassHistoryStatsFilter
+): Promise<SeasonPassHistoryStats> {
+  const params: Record<string, string> = {};
+  if (filters.period && filters.period !== "ALL") params.period = filters.period;
+  if (filters.platform && filters.platform !== "ALL") params.platform = filters.platform;
+  if (filters.productType && filters.productType !== "ALL") params.productType = filters.productType;
+  if (filters.seasonPass && filters.seasonPass !== "ALL") params.seasonPass = filters.seasonPass;
+
+  return gatewayApi.get<SeasonPassHistoryStats>("/api/v1/admin/commerce/season-passes/history/stats", params);
+}
+
+export async function getSeasonPassDailyRevenue(
+  filters: SeasonPassHistoryStatsFilter
+): Promise<SeasonPassDailyRevenue[]> {
+  const params: Record<string, string> = {};
+  if (filters.period && filters.period !== "ALL") params.period = filters.period;
+  if (filters.platform && filters.platform !== "ALL") params.platform = filters.platform;
+
+  return gatewayApi.get<SeasonPassDailyRevenue[]>("/api/v1/admin/commerce/season-passes/history/daily", params);
+}
+
+export async function getSeasonPassHistoryList(
+  filters: SeasonPassHistoryListFilter,
+  page = 0,
+  size = 20
+): Promise<PageResponse<SeasonPassHistoryItem>> {
+  const params: Record<string, string> = { page: String(page), size: String(size) };
+  if (filters.dateFrom) params.dateFrom = filters.dateFrom;
+  if (filters.dateTo) params.dateTo = filters.dateTo;
+  if (filters.searchKeyword) params.searchKeyword = filters.searchKeyword;
+
+  return gatewayApi.get<PageResponse<SeasonPassHistoryItem>>("/api/v1/admin/commerce/season-passes/history", params);
+}
+
+// ── Gift Ball APIs ────────────────────────────────────────────────
+
+export interface GiftBall {
+  id: number;
+  name: string;
+  dateFrom: string;
+  dateTo: string;
+  product: string;
+  issuedCount: number;
+  status: "INACTIVE" | "ACTIVE" | "PENDING" | "STOPPED" | "ENDED";
+  usagePercent: number;
+}
+
+export interface GiftBallFilter {
+  dateFrom?: string;
+  dateTo?: string;
+  status?: string;
+  product?: string;
+  searchName?: string;
+}
+
+export async function getGiftBallList(
+  filters: GiftBallFilter,
+  page = 0,
+  size = 20
+): Promise<PageResponse<GiftBall>> {
+  const params: Record<string, string> = { page: String(page), size: String(size) };
+  if (filters.dateFrom) params.dateFrom = filters.dateFrom;
+  if (filters.dateTo) params.dateTo = filters.dateTo;
+  if (filters.status && filters.status !== "ALL") params.status = filters.status;
+  if (filters.product && filters.product !== "ALL") params.product = filters.product;
+  if (filters.searchName) params.searchName = filters.searchName;
+
+  return gatewayApi.get<PageResponse<GiftBall>>("/api/v1/admin/commerce/gift-balls", params);
+}

@@ -17,6 +17,7 @@ import type {RouteProp} from '@react-navigation/native';
 import type {RootStackParamList} from '../../navigation/types';
 import {colors} from '../../theme';
 import {analyticsService} from '../../services/analyticsService';
+import {contentService} from '../../api/contentService';
 
 const GREEN = colors.green;
 const BG = colors.bg;
@@ -92,18 +93,19 @@ export default function ClipEditScreen() {
 
     setIsSaving(true);
     try {
-      // TODO: Call clip creation API
-      // await contentService.createClip({
-      //   title, description, tags, visibility,
-      //   startTime, endTime, sourceContentType, sourceContentId
-      // });
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const result = await contentService.createClip({
+        title,
+        description,
+        tags,
+        visibility,
+        startTime,
+        endTime,
+        sourceContentType,
+        sourceContentId,
+      });
 
       // Analytics: track clip creation
-      const clipId = `clip_${Date.now()}`;
-      analyticsService.trackClipCreate(clipId, sourceContentId);
+      analyticsService.trackClipCreate(result.clipId, sourceContentId);
 
       Alert.alert('완료', '클립이 생성되었습니다.', [
         {
@@ -114,8 +116,13 @@ export default function ClipEditScreen() {
           },
         },
       ]);
-    } catch {
-      Alert.alert('오류', '클립 생성에 실패했습니다. 다시 시도해주세요.');
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { status?: number } };
+      if (axiosError?.response?.status === 503) {
+        Alert.alert('오류', '현재 클립 처리 서버가 준비 중입니다. 잠시 후 다시 시도해주세요.');
+      } else {
+        Alert.alert('오류', '클립 저장에 실패했습니다.');
+      }
     } finally {
       setIsSaving(false);
     }

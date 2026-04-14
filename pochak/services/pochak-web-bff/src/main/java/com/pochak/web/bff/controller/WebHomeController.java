@@ -22,8 +22,8 @@ public class WebHomeController {
     public ApiResponse<WebHomeResponse> getHome() {
         log.debug("Fetching web home page data");
 
-        JsonNode homeData = contentClient.getHome();
-        JsonNode productsData = commerceClient.getActiveProducts(5);
+        JsonNode homeData = contentClient.getHome().orElse(null);
+        JsonNode productsData = commerceClient.getActiveProducts(5).orElse(null);
 
         WebHomeResponse response = WebHomeResponse.builder()
                 .banners(extractField(homeData, "mainBanners"))

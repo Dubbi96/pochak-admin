@@ -41,41 +41,19 @@ interface UserProfile {
   purpose: string;
 }
 
-const MOCK_PROFILE: UserProfile = {
-  loginId: 'pochak2026',
-  nickname: 'pochak2026',
-  email: 'kimpochak@hogak.co.kr',
-  phone: '010-0000-0000',
-  name: '홍길동',
-  birthDate: '2000.01.01',
-  profileImageUrl: '',
-  interests: '축구, 마라톤, 유도',
-  regions: '대한민국 서울시, 대한민국 성남시, 대한민국 용인시',
-  purpose: '내 경기영상을 보고 싶어요 !',
-};
 
 // ── API helpers ───────────────────────────────────────────────────
 
 async function getProfile(): Promise<UserProfile> {
-  try {
-    const res = await apiClient.get('/user/profile');
-    return res.data.data || res.data;
-  } catch {
-    return {...MOCK_PROFILE};
-  }
+  const res = await apiClient.get('/users/me');
+  return res.data.data ?? res.data;
 }
 
 async function updateProfile(
   data: Partial<UserProfile>,
 ): Promise<UserProfile> {
-  try {
-    const res = await apiClient.put('/user/profile', data);
-    return res.data.data || res.data;
-  } catch {
-    // Mock: merge updates into mock profile
-    Object.assign(MOCK_PROFILE, data);
-    return {...MOCK_PROFILE};
-  }
+  const res = await apiClient.put('/users/me', data);
+  return res.data.data ?? res.data;
 }
 
 // ── Editable InfoRow ──────────────────────────────────────────────

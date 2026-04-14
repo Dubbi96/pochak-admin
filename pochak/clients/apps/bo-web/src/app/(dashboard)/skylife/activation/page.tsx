@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,91 +13,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
-
-// ── Types ────────────────────────────────────────────────────────────────────
-
-interface Contract {
-  id: string;
-  companyName: string;
-  customerName: string;
-  registeredAt: string;
-  status: "계약중" | "해지" | "대기";
-  venueId: string;
-  equipmentType: string;
-  equipmentId: string;
-}
-
-// ── Mock Data ────────────────────────────────────────────────────────────────
-
-const MOCK_CONTRACTS: Contract[] = [
-  {
-    id: "CTR-2026-001",
-    companyName: "서울FC",
-    customerName: "김민수",
-    registeredAt: "2026-01-15",
-    status: "계약중",
-    venueId: "VEN-001",
-    equipmentType: "VPU",
-    equipmentId: "VPU-SN-10001",
-  },
-  {
-    id: "CTR-2026-002",
-    companyName: "부산유나이티드",
-    customerName: "이정훈",
-    registeredAt: "2026-02-03",
-    status: "계약중",
-    venueId: "VEN-002",
-    equipmentType: "CHU",
-    equipmentId: "CHU-SN-20001",
-  },
-  {
-    id: "CTR-2026-003",
-    companyName: "대전시티즌",
-    customerName: "박세진",
-    registeredAt: "2026-02-20",
-    status: "해지",
-    venueId: "VEN-003",
-    equipmentType: "VPU",
-    equipmentId: "VPU-SN-10002",
-  },
-  {
-    id: "CTR-2026-004",
-    companyName: "수원삼성",
-    customerName: "최영호",
-    registeredAt: "2026-03-01",
-    status: "대기",
-    venueId: "VEN-004",
-    equipmentType: "",
-    equipmentId: "",
-  },
-  {
-    id: "CTR-2026-005",
-    companyName: "인천유나이티드",
-    customerName: "정하늘",
-    registeredAt: "2026-03-10",
-    status: "계약중",
-    venueId: "VEN-005",
-    equipmentType: "CHU",
-    equipmentId: "CHU-SN-20002",
-  },
-  {
-    id: "CTR-2026-006",
-    companyName: "강원FC",
-    customerName: "한지우",
-    registeredAt: "2026-03-18",
-    status: "대기",
-    venueId: "VEN-006",
-    equipmentType: "",
-    equipmentId: "",
-  },
-];
+import { getActivationContracts } from "@/services/equipment-api";
+import type { ActivationContract } from "@/services/equipment-api";
 
 const PAGE_SIZE = 20;
 
 // ── Status Badge ─────────────────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: Contract["status"] }) {
-  const variantMap: Record<Contract["status"], "success" | "destructive" | "warning"> = {
+function StatusBadge({ status }: { status: ActivationContract["status"] }) {
+  const variantMap: Record<ActivationContract["status"], "success" | "destructive" | "warning"> = {
     "계약중": "success",
     "해지": "destructive",
     "대기": "warning",
@@ -108,32 +32,43 @@ function StatusBadge({ status }: { status: Contract["status"] }) {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ActivationListPage() {
+  const [contracts, setContracts] = useState<ActivationContract[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [keyword, setKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [equipmentPresence, setEquipmentPresence] = useState("ALL");
   const [equipmentTypeFilter, setEquipmentTypeFilter] = useState("ALL");
   const [page, setPage] = useState(0);
 
-  // Filter logic
-  const filtered = MOCK_CONTRACTS.filter((c) => {
-    if (keyword) {
-      const kw = keyword.toLowerCase();
-      if (
-        !c.id.toLowerCase().includes(kw) &&
-        !c.customerName.toLowerCase().includes(kw)
-      )
-        return false;
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await getActivationContracts(
+        {
+          keyword: keyword || undefined,
+          status: statusFilter,
+          equipmentPresence,
+          equipmentType: equipmentTypeFilter,
+        },
+        page,
+        PAGE_SIZE
+      );
+      setContracts(result.content);
+      setTotalPages(Math.max(1, result.totalPages));
+    } catch {
+      setError("데이터를 불러오지 못했습니다.");
+    } finally {
+      setIsLoading(false);
     }
-    if (statusFilter !== "ALL" && c.status !== statusFilter) return false;
-    if (equipmentPresence === "유" && !c.equipmentId) return false;
-    if (equipmentPresence === "무" && c.equipmentId) return false;
-    if (equipmentTypeFilter !== "ALL" && c.equipmentType !== equipmentTypeFilter)
-      return false;
-    return true;
-  });
+  }, [keyword, statusFilter, equipmentPresence, equipmentTypeFilter, page]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const paged = contracts;
 
   const handleSearch = () => {
     setPage(0);
@@ -229,7 +164,15 @@ export default function ActivationListPage() {
             </tr>
           </thead>
           <tbody>
-            {paged.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={9} className="px-4 py-12 text-center text-gray-400">로딩 중...</td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={9} className="px-4 py-12 text-center text-red-400">{error}</td>
+              </tr>
+            ) : paged.length === 0 ? (
               <tr>
                 <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
                   데이터가 없습니다.

@@ -1,11 +1,14 @@
 package com.pochak.content.streaming.service;
 
+import com.pochak.content.asset.repository.ClipAssetRepository;
+import com.pochak.content.asset.repository.VodAssetRepository;
 import com.pochak.content.streaming.StreamingProvider;
 import com.pochak.content.streaming.dto.CameraView;
 import com.pochak.content.streaming.dto.PlaybackResponse;
 import com.pochak.content.streaming.dto.QualityLevel;
 import com.pochak.content.streaming.dto.StreamInfo;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -15,11 +18,14 @@ import java.util.List;
  * Service that assembles a full PlaybackResponse from streaming infrastructure.
  * Acts as the single entry point for playback info across all content types.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ContentStreamService {
 
     private final StreamingProvider streamingProvider;
+    private final VodAssetRepository vodAssetRepository;
+    private final ClipAssetRepository clipAssetRepository;
 
     /**
      * Build a complete PlaybackResponse for the given content.
@@ -45,18 +51,33 @@ public class ContentStreamService {
                 .streamUrl(streamInfo.getUrl())
                 .protocol(streamInfo.getProtocol().toLowerCase())
                 .isLive(isLive)
-                .durationSeconds(isLive ? null : estimateDuration(contentType))
+                .durationSeconds(isLive ? null : fetchDuration(contentType, contentId))
                 .qualityLevels(qualities)
                 .cameraViews(cameras)
                 .build();
     }
 
     /**
-     * Placeholder duration estimation.
-     * In a real implementation this would come from asset metadata.
+     * Fetches the actual duration from the asset metadata in the DB.
+     * Falls back to a sensible default if the asset is not found.
      */
-    private Long estimateDuration(String contentType) {
-        // TODO: fetch actual duration from content metadata / asset DB
-        return "clip".equalsIgnoreCase(contentType) ? 120L : 5400L;
+    private Long fetchDuration(String contentType, Long contentId) {
+        if ("clip".equalsIgnoreCase(contentType)) {
+            return clipAssetRepository.findById(contentId)
+                    .map(clip -> clip.getDuration() != null ? clip.getDuration().longValue() : 120L)
+                    .orElseGet(() -> {
+                        log.warn("[ContentStream] ClipAsset not found for id={}, using default duration", contentId);
+                        return 120L;
+                    });
+        }
+        // vod
+        return vodAssetRepository.findByIdAndDeletedAtIsNull(contentId)
+                .map(vod -> vod.getDuration() != null && vod.getDuration() > 0
+                        ? vod.getDuration().longValue()
+                        : 5400L)
+                .orElseGet(() -> {
+                    log.warn("[ContentStream] VodAsset not found for id={}, using default duration", contentId);
+                    return 5400L;
+                });
     }
 }

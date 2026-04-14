@@ -5,6 +5,7 @@ import com.pochak.common.event.UserWithdrawnEvent;
 import com.pochak.common.exception.BusinessException;
 import com.pochak.common.exception.ErrorCode;
 import com.pochak.identity.auth.dto.*;
+import com.pochak.identity.config.WalletClient;
 import com.pochak.identity.user.entity.User;
 import com.pochak.identity.user.entity.UserAuthAccount;
 import com.pochak.identity.user.entity.UserRefreshToken;
@@ -44,6 +45,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final EventPublisher eventPublisher;
+    private final WalletClient walletClient;
 
     @Override
     @Transactional
@@ -79,7 +81,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         authAccountRepository.save(authAccount);
 
-        // TODO: Create Wallet entry via REST call to wallet-service
+        walletClient.initWallet(user.getId());
 
         return generateTokenResponse(user);
     }
