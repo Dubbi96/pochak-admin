@@ -3,12 +3,16 @@
 
 -- 1. Users table additions
 ALTER TABLE identity.users ADD COLUMN IF NOT EXISTS login_id VARCHAR(100);
+ALTER TABLE identity.users ADD COLUMN IF NOT EXISTS phone_number VARCHAR(20);
 ALTER TABLE identity.users ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE identity.users ADD COLUMN IF NOT EXISTS is_minor BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE identity.users ADD COLUMN IF NOT EXISTS guardian_user_id BIGINT REFERENCES identity.users(id);
 ALTER TABLE identity.users ADD COLUMN IF NOT EXISTS guardian_phone VARCHAR(20);
 ALTER TABLE identity.users ADD COLUMN IF NOT EXISTS guardian_consent_at TIMESTAMPTZ;
 ALTER TABLE identity.users ADD COLUMN IF NOT EXISTS guardian_override_limit INT;
+
+-- Backfill phone_number from legacy phone column so the unique index below doesn't miss existing rows
+UPDATE identity.users SET phone_number = phone WHERE phone_number IS NULL AND phone IS NOT NULL;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_login_id ON identity.users(login_id) WHERE login_id IS NOT NULL AND deleted_at IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone_unique ON identity.users(phone_number) WHERE phone_number IS NOT NULL AND deleted_at IS NULL;
