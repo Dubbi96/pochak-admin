@@ -6,7 +6,7 @@
 build/
 .gradle/
 out/
-!gradle/wrapper/gradle-wrapper.jar
+!**/gradle/wrapper/gradle-wrapper.jar
 
 # ── Node / Frontend ─────────────────────────────────────────
 node_modules/
