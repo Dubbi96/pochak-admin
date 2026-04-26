@@ -18,22 +18,13 @@ import {
 import { Search, Plus } from "lucide-react";
 import { StatusBadge } from "@/components/common/status-badge";
 import type { PageResponse } from "@/types/common";
+import { getGiftBallList } from "@/services/commerce-admin-api";
+import type { GiftBall } from "@/services/commerce-admin-api";
 
 // ── Types ──────────────────────────────────────────────────────────
 
 type GiftBallStatus = "ALL" | "INACTIVE" | "ACTIVE" | "PENDING" | "STOPPED" | "ENDED";
 type GiftBallProduct = "ALL" | "100" | "200" | "500" | "1000";
-
-interface GiftBall {
-  id: number;
-  name: string;
-  dateFrom: string;
-  dateTo: string;
-  product: string;
-  issuedCount: number;
-  status: "INACTIVE" | "ACTIVE" | "PENDING" | "STOPPED" | "ENDED";
-  usagePercent: number;
-}
 
 const STATUS_LABELS: Record<string, string> = {
   ALL: "전체",
@@ -60,44 +51,6 @@ const PRODUCT_LABELS: Record<string, string> = {
   "1000": "1,000뽈",
 };
 
-// ── Mock Data ──────────────────────────────────────────────────────
-
-const MOCK_GIFT_BALLS: GiftBall[] = [
-  { id: 1, name: "신규 가입 환영 기프티뽈", dateFrom: "2026-01-01", dateTo: "2026-06-30", product: "100뽈", issuedCount: 500, status: "ACTIVE", usagePercent: 62 },
-  { id: 2, name: "봄맞이 이벤트 기프티뽈", dateFrom: "2026-03-01", dateTo: "2026-04-30", product: "200뽈", issuedCount: 300, status: "ACTIVE", usagePercent: 38 },
-  { id: 3, name: "VIP 회원 감사 기프티뽈", dateFrom: "2026-02-01", dateTo: "2026-02-28", product: "500뽈", issuedCount: 100, status: "ENDED", usagePercent: 91 },
-  { id: 4, name: "시즌 오프닝 기프티뽈", dateFrom: "2026-04-01", dateTo: "2026-05-31", product: "1,000뽈", issuedCount: 50, status: "PENDING", usagePercent: 0 },
-  { id: 5, name: "제휴사 공동 프로모션", dateFrom: "2026-01-15", dateTo: "2026-03-15", product: "200뽈", issuedCount: 1000, status: "STOPPED", usagePercent: 45 },
-  { id: 6, name: "테스트 기프티뽈", dateFrom: "2025-12-01", dateTo: "2025-12-31", product: "100뽈", issuedCount: 10, status: "INACTIVE", usagePercent: 0 },
-];
-
-// ── Mock API ───────────────────────────────────────────────────────
-
-async function getGiftBalls(
-  filters: { dateRange?: DateRange; status: GiftBallStatus; product: GiftBallProduct; searchName?: string },
-  page = 0,
-  size = 20
-): Promise<PageResponse<GiftBall>> {
-  await new Promise((r) => setTimeout(r, 300));
-  let filtered = [...MOCK_GIFT_BALLS];
-
-  if (filters.status !== "ALL") {
-    filtered = filtered.filter((g) => g.status === filters.status);
-  }
-  if (filters.product !== "ALL") {
-    const label = PRODUCT_LABELS[filters.product];
-    filtered = filtered.filter((g) => g.product === label);
-  }
-  if (filters.searchName) {
-    const kw = filters.searchName.toLowerCase();
-    filtered = filtered.filter((g) => g.name.toLowerCase().includes(kw));
-  }
-
-  const start = page * size;
-  const content = filtered.slice(start, start + size);
-  return { content, totalElements: filtered.length, totalPages: Math.ceil(filtered.length / size), page, size };
-}
-
 // ── Component ──────────────────────────────────────────────────────
 
 export default function GiftBallPage() {
@@ -115,7 +68,16 @@ export default function GiftBallPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getGiftBalls({ dateRange: dateRangeMode === "RANGE" ? dateRange : undefined, status, product, searchName: searchName || undefined }, page);
+      const result = await getGiftBallList(
+        {
+          dateFrom: dateRangeMode === "RANGE" && dateRange.from ? dateRange.from.toISOString().slice(0, 10) : undefined,
+          dateTo: dateRangeMode === "RANGE" && dateRange.to ? dateRange.to.toISOString().slice(0, 10) : undefined,
+          status: status !== "ALL" ? status : undefined,
+          product: product !== "ALL" ? PRODUCT_LABELS[product] : undefined,
+          searchName: searchName || undefined,
+        },
+        page
+      );
       setData(result);
     } finally {
       setLoading(false);

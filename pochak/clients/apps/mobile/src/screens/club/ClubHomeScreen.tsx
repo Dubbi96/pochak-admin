@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   Alert,
   FlatList,
@@ -198,9 +198,30 @@ function ClosedOrgCard({
 
 export default function ClubHomeScreen() {
   const navigation = useNavigation();
-  const [closedStatuses, setClosedStatuses] = useState<
-    Record<string, JoinStatus>
-  >({});
+  const [closedStatuses, setClosedStatuses] = useState<Record<string, JoinStatus>>({});
+  const [closedOrgs, setClosedOrgs] = useState<ClosedOrganization[]>(MOCK_CLOSED_ORGS);
+
+  useEffect(() => {
+    import('../../api/client').then(({default: apiClient}) => {
+      apiClient.get('/organizations', {params: {type: 'PRIVATE', size: 10}})
+        .then(res => {
+          const payload = res.data.data ?? res.data;
+          const items = (Array.isArray(payload) ? payload : payload.content ?? []).map((o: any) => ({
+            id: String(o.id),
+            logoUrl: o.logoUrl ?? '',
+            name: o.name,
+            sport: o.sportName ?? '',
+            memberCount: o.memberCount ?? 0,
+            description: o.description ?? '',
+            region: o.siGunGuCode ?? '',
+            accessType: 'CLOSED' as const,
+            requiresApproval: true,
+          }));
+          if (items.length > 0) setClosedOrgs(items);
+        })
+        .catch(() => { /* keep mock */ });
+    });
+  }, []);
 
   const handleApply = useCallback((orgId: string) => {
     Alert.alert(
@@ -251,7 +272,7 @@ export default function ClubHomeScreen() {
           <Text style={styles.closedSubtitle}>
             매니저 승인이 필요한 프리미엄 클럽
           </Text>
-          {MOCK_CLOSED_ORGS.map(org => (
+          {closedOrgs.map(org => (
             <ClosedOrgCard
               key={org.id}
               org={org}

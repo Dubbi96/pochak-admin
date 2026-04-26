@@ -200,6 +200,20 @@ class JwtValidationFilterTest {
         }
 
         @Test
+        @DisplayName("/api/v1/channels/popular - public path, no JWT required")
+        void channelsPopular_isPublic_passesWithoutJwt() {
+            MockServerHttpRequest request = MockServerHttpRequest
+                    .get("/api/v1/channels/popular")
+                    .build();
+            MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+            filter.filter(exchange, chain).block();
+
+            assertThat(exchange.getResponse().getStatusCode()).isNotEqualTo(HttpStatus.UNAUTHORIZED);
+            assertThat(exchange.getResponse().getStatusCode()).isNotEqualTo(HttpStatus.FORBIDDEN);
+        }
+
+        @Test
         @DisplayName("/api/v1/contents - public path, USER with JWT passes through with context")
         void publicContents_withUserJwt_passesWithContext() {
             String token = generateToken("user-10", "USER");
@@ -213,6 +227,20 @@ class JwtValidationFilterTest {
 
             assertThat(exchange.getResponse().getStatusCode()).isNotEqualTo(HttpStatus.UNAUTHORIZED);
             assertThat(exchange.getResponse().getStatusCode()).isNotEqualTo(HttpStatus.FORBIDDEN);
+        }
+
+        @Test
+        @DisplayName("/api/v1/contents - public path with invalid JWT -> 401 Unauthorized")
+        void publicContents_withInvalidJwt_returns401() {
+            MockServerHttpRequest request = MockServerHttpRequest
+                    .get("/api/v1/contents")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer not-a-valid-jwt")
+                    .build();
+            MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+            filter.filter(exchange, chain).block();
+
+            assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         }
     }
 

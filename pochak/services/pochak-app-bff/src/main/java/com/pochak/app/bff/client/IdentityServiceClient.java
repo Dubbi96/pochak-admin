@@ -9,6 +9,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -17,29 +18,33 @@ public class IdentityServiceClient {
 
     private final RestClient identityClient;
 
-    public JsonNode getCurrentUser(Long userId) {
+    public Optional<JsonNode> getCurrentUser(Long userId) {
         try {
-            return identityClient.get()
-                    .uri("/users/me")
-                    .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                identityClient.get()
+                        .uri("/users/me")
+                        .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Identity service /users/me call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
-    public JsonNode getMyGuardian(Long userId) {
+    public Optional<JsonNode> getMyGuardian(Long userId) {
         try {
-            return identityClient.get()
-                    .uri("/guardians/my-guardian")
-                    .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                identityClient.get()
+                        .uri("/guardians/my-guardian")
+                        .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Identity service guardian call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -76,8 +81,11 @@ public class IdentityServiceClient {
 
     public JsonNode verifyGuardian(String token) {
         try {
-            return identityClient.get()
-                    .uri("/guardians/verify?token={token}", token)
+            return identityClient.post()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/auth/guardian/verify")
+                            .queryParam("guardianVerifiedToken", token)
+                            .build())
                     .retrieve()
                     .body(JsonNode.class);
         } catch (RestClientException e) {
@@ -89,7 +97,7 @@ public class IdentityServiceClient {
     public JsonNode registerPushToken(Long userId, Map<String, Object> pushRequest) {
         try {
             return identityClient.post()
-                    .uri("/users/me/push-token")
+                    .uri("/users/me/push-tokens")
                     .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
                     .body(pushRequest)
                     .retrieve()
@@ -100,11 +108,59 @@ public class IdentityServiceClient {
         }
     }
 
-    public JsonNode unregisterPushToken(Long userId) {
+    public Optional<JsonNode> getPushPreferences(Long userId) {
         try {
-            return identityClient.delete()
-                    .uri("/users/me/push-token")
+            return Optional.ofNullable(
+                identityClient.get()
+                        .uri("/users/me/push-preferences")
+                        .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
+        } catch (RestClientException e) {
+            log.warn("Identity service push preferences call failed: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    public JsonNode togglePushPreference(Long userId, String category, Map<String, Object> body) {
+        return identityClient.patch()
+                .uri("/users/me/push-preferences/{category}", category)
+                .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
+                .body(body)
+                .retrieve()
+                .body(JsonNode.class);
+    }
+
+    public Optional<JsonNode> getMySessions(Long userId) {
+        try {
+            return Optional.ofNullable(
+                identityClient.get()
+                        .uri("/users/me/sessions")
+                        .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
+        } catch (RestClientException e) {
+            log.warn("Identity service sessions call failed: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    public void revokeSession(Long userId, Long sessionId) {
+        identityClient.delete()
+                .uri("/users/me/sessions/{sessionId}", sessionId)
+                .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    public JsonNode unregisterPushToken(Long userId, Map<String, Object> body) {
+        try {
+            return identityClient.method(org.springframework.http.HttpMethod.DELETE)
+                    .uri("/users/me/push-tokens")
                     .header(HeaderConstants.X_USER_ID, String.valueOf(userId))
+                    .body(body)
                     .retrieve()
                     .body(JsonNode.class);
         } catch (RestClientException e) {

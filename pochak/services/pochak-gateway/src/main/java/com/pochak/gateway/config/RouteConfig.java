@@ -27,7 +27,10 @@ public class RouteConfig {
     @Value("${services.web-bff-url:http://localhost:9080}")
     private String webBffUrl;
 
-    @Value("${services.bo-bff-url:http://localhost:9081}")
+    @Value("${services.app-bff-url:http://localhost:9081}")
+    private String appBffUrl;
+
+    @Value("${services.bo-bff-url:http://localhost:9090}")
     private String boBffUrl;
 
     @Value("${services.partner-bff-url:http://localhost:9091}")
@@ -46,6 +49,16 @@ public class RouteConfig {
                         .path("/api/v1/web/**")
                         .filters(f -> f.stripPrefix(3))
                         .uri(webBffUrl))
+                // 0b. app-bff (/api/v1/app/** → app-bff root paths)
+                .route("app-bff-service", r -> r
+                        .path("/api/v1/app/**")
+                        .filters(f -> f.stripPrefix(3))
+                        .uri(appBffUrl))
+                // 0c. bo-bff (/admin/bff/** → bo-bff; must be before /admin/** → admin-service)
+                .route("bo-bff-service", r -> r
+                        .path("/admin/bff/**")
+                        .filters(f -> f.stripPrefix(2))
+                        .uri(boBffUrl))
                 // 1. content-user-routes (FIRST - resolves ISSUE-004 /users/** path conflict)
                 .route("content-user-routes", r -> r
                         .path("/api/v1/users/me/watch-history/**",
@@ -72,6 +85,14 @@ public class RouteConfig {
                               "/api/v1/recording-notifications/**")
                         .filters(f -> f.stripPrefix(2))
                         .uri(operationUrl))
+                // 3b. Consumer alias: /api/v1/channels/** → content-service /clubs/** (no separate controller)
+                .route("content-channels-alias", r -> r
+                        .path("/api/v1/channels/**")
+                        .filters(f -> f.rewritePath(
+                                "/api/v1/channels/(?<segment>.*)",
+                                "/api/v1/clubs/${segment}")
+                                .stripPrefix(2))
+                        .uri(contentUrl))
                 // 4. content-service (all content routes including consumer-facing streaming)
                 .route("content-service", r -> r
                         .path("/api/v1/contents/**",
@@ -118,6 +139,15 @@ public class RouteConfig {
                         .uri(adminUrl))
                 // 6a. admin-api-v1: /api/v1/admin/** → admin (/admin/api/v1/**)
                 // Note: /api/v1/admin/members/** is handled by identity-service above
+                // Align BO commerce refunds with /api/v1/admin/commerce/* (same JWT/admin rules as admin-api-v1)
+                .route("admin-commerce-refunds-via-bo-bff", r -> r
+                        .path("/api/v1/admin/commerce/refunds",
+                              "/api/v1/admin/commerce/refunds/**")
+                        .filters(f -> f.rewritePath(
+                                        "/api/v1/admin/commerce/refunds(?<segment>.*)",
+                                        "/admin/bff/refunds${segment}")
+                                .stripPrefix(2))
+                        .uri(boBffUrl))
                 .route("admin-api-v1-service", r -> r
                         .path("/api/v1/admin/**")
                         .filters(f -> f.rewritePath("/api/v1/admin/(?<segment>.*)", "/admin/api/v1/${segment}"))

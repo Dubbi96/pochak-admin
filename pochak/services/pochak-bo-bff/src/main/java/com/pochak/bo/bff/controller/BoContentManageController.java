@@ -28,8 +28,9 @@ public class BoContentManageController {
             @PathVariable String resource,
             @RequestParam Map<String, String> params) {
         log.debug("BO listing {} with params={}", resource, params);
-        JsonNode result = contentClient.list(resource, params);
-        return ResponseEntity.ok(result);
+        return contentClient.list(resource, params)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 
     @GetMapping("/{resource}/{id}")
@@ -37,8 +38,9 @@ public class BoContentManageController {
             @PathVariable String resource,
             @PathVariable Long id) {
         log.debug("BO getting {}/{}", resource, id);
-        JsonNode result = contentClient.get(resource, id);
-        return ResponseEntity.ok(result);
+        return contentClient.get(resource, id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 
     @PostMapping("/{resource}")
@@ -66,6 +68,33 @@ public class BoContentManageController {
             @PathVariable Long id) {
         log.debug("BO deleting {}/{}", resource, id);
         contentClient.delete(resource, id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // --- Community Admin ---
+
+    @GetMapping("/community/posts")
+    public ResponseEntity<JsonNode> listCommunityPosts(@RequestParam Map<String, String> params) {
+        log.debug("BO listing community posts with params={}", params);
+        return contentClient.listCommunityPosts(params)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
+    }
+
+    @PatchMapping("/community/posts/{id}/status")
+    public ResponseEntity<JsonNode> updatePostStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body) {
+        log.debug("BO updating community post status/{}", id);
+        return ResponseEntity.ok(contentClient.updateCommunityPostStatus(id, body));
+    }
+
+    @DeleteMapping("/community/posts/{id}")
+    public ResponseEntity<Void> deletePost(
+            @PathVariable Long id,
+            @RequestParam String reason) {
+        log.debug("BO deleting community post/{} reason={}", id, reason);
+        contentClient.deleteCommunityPost(id, reason);
         return ResponseEntity.noContent().build();
     }
 }

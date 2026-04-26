@@ -9,6 +9,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -17,43 +18,49 @@ public class IdentityServiceClient {
 
     private final RestClient identityClient;
 
-    public JsonNode getMemberStats() {
+    public Optional<JsonNode> getMemberStats() {
         try {
-            return identityClient.get()
-                    .uri("/admin/members/stats")
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                identityClient.get()
+                        .uri("/admin/members/stats")
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Identity service member stats call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
-    public JsonNode getMembers(Map<String, String> params) {
+    public Optional<JsonNode> getMembers(Map<String, String> params) {
         try {
-            return identityClient.get()
-                    .uri(uriBuilder -> {
-                        var builder = uriBuilder.path("/admin/members");
-                        params.forEach(builder::queryParam);
-                        return builder.build();
-                    })
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                identityClient.get()
+                        .uri(uriBuilder -> {
+                            var builder = uriBuilder.path("/admin/members");
+                            params.forEach(builder::queryParam);
+                            return builder.build();
+                        })
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Identity service members call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 
-    public JsonNode getMember(Long memberId) {
+    public Optional<JsonNode> getMember(Long memberId) {
         try {
-            return identityClient.get()
-                    .uri("/admin/members/{id}", memberId)
-                    .retrieve()
-                    .body(JsonNode.class);
+            return Optional.ofNullable(
+                identityClient.get()
+                        .uri("/admin/members/{id}", memberId)
+                        .retrieve()
+                        .body(JsonNode.class)
+            );
         } catch (RestClientException e) {
             log.warn("Identity service member detail call failed: {}", e.getMessage());
-            return null;
+            return Optional.empty();
         }
     }
 

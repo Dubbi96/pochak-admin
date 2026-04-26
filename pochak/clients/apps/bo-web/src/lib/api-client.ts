@@ -99,11 +99,37 @@ async function request<T>(
   throw lastError ?? new Error(`Request failed: ${path}`);
 }
 
+async function requestText(
+  baseUrl: string,
+  path: string,
+  params?: Record<string, string>
+): Promise<string> {
+  const url = new URL(path, baseUrl);
+  if (params) {
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  }
+  const headers: Record<string, string> = {};
+  const token = getAdminToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  const res = await fetch(url.toString(), { method: "GET", headers });
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+  }
+  return res.text();
+}
+
 // ── Admin API client ──────────────────────────────────────────────────────────
 
 export const adminApi = {
   async get<T>(path: string, params?: Record<string, string>): Promise<T> {
     return request<T>(GATEWAY_URL, path, { method: "GET" }, params);
+  },
+
+  /** GET response as plain text (CSV, etc.). */
+  async getText(path: string, params?: Record<string, string>): Promise<string> {
+    return requestText(GATEWAY_URL, path, params);
   },
 
   async post<T>(path: string, body?: unknown): Promise<T> {
@@ -122,6 +148,26 @@ export const adminApi = {
 
   async delete<T>(path: string): Promise<T> {
     return request<T>(GATEWAY_URL, path, { method: "DELETE" });
+  },
+
+  /** DELETE with JSON body (e.g. admin-service RBAC member/role removal). */
+  async deleteWithBody(path: string, body?: unknown): Promise<void> {
+    const url = new URL(path, GATEWAY_URL);
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    const token = getAdminToken();
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    const res = await fetch(url.toString(), {
+      method: "DELETE",
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
   },
 
   async patch<T>(path: string, body?: unknown): Promise<T> {

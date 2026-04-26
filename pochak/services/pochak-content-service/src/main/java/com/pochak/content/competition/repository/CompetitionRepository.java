@@ -25,6 +25,8 @@ public interface CompetitionRepository extends JpaRepository<Competition, Long>,
 
     Optional<Competition> findByIdAndActiveTrue(Long id);
 
+    Optional<Competition> findByPublicSlugAndActiveTrue(String publicSlug);
+
     @Query("SELECT c FROM Competition c WHERE c.active = true AND c.isDisplayed = true " +
             "AND c.status IN ('SCHEDULED', 'IN_PROGRESS') " +
             "AND (CAST(:sportId AS long) IS NULL OR c.sport.id = :sportId) " +

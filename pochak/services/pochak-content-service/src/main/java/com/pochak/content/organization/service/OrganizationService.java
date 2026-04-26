@@ -34,6 +34,7 @@ public class OrganizationService {
     private EntityManager entityManager;
 
     public Page<OrganizationListResponse> listOrganizations(String orgType,
+                                                             String accessType,
                                                              Long parentId,
                                                              Long sportId,
                                                              String keyword,
@@ -47,7 +48,16 @@ public class OrganizationService {
             }
         }
 
-        Page<Organization> page = organizationRepository.findWithFilters(type, parentId, sportId, keyword, pageable);
+        Organization.AccessType access = null;
+        if (accessType != null) {
+            try {
+                access = Organization.AccessType.valueOf(accessType);
+            } catch (IllegalArgumentException e) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "Invalid access type: " + accessType);
+            }
+        }
+
+        Page<Organization> page = organizationRepository.findWithFilters(type, access, parentId, sportId, keyword, pageable);
         return page.map(OrganizationListResponse::from);
     }
 

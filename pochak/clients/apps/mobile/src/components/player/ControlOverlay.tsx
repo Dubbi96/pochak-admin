@@ -126,7 +126,7 @@ function formatTime(t: number, forceH = false): string {
 
 /** Circular center button (YouTube style) */
 const CenterBtn: React.FC<{
-  icon: string;
+  icon: React.ComponentProps<typeof MaterialIcons>['name'];
   size?: number;
   onPress: () => void;
   disabled?: boolean;
@@ -137,7 +137,7 @@ const CenterBtn: React.FC<{
     disabled={disabled}
     activeOpacity={0.7}
     hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
-    <MaterialIcons name={icon as any} size={size} color={colors.white} />
+    <MaterialIcons name={icon} size={size} color={colors.white} />
   </TouchableOpacity>
 );
 

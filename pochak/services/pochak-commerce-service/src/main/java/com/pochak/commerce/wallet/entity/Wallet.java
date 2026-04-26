@@ -26,9 +26,6 @@ public class Wallet {
     @Builder.Default
     private Integer balance = 0;
 
-    @Version
-    private Long version;
-
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -67,3 +67,11 @@ export type {
   QualityLevel,
   DrmConfig,
 } from './streamingService';
+
+export { supportService } from './supportService';
+export type {
+  ISupportService,
+  FaqItem,
+  InquiryItem,
+  InquiryCreateRequest,
+} from './supportService';

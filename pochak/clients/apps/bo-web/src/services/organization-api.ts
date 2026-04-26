@@ -28,34 +28,41 @@ export type MembershipApprovalStatusFilter = "ALL" | MembershipApprovalStatus;
 
 export interface Organization {
   id: number;
-  sportName: string;
-  type: OrganizationType;
-  operationStatus: OperationStatus;
-  accessType: AccessType;
-  contentVisibility: ContentVisibility;
-  displayArea: DisplayArea;
-  isVerified: boolean;
-  joinPolicy: JoinPolicy;
-  reservationPolicy: ReservationPolicy;
-  isCug: boolean;
-  siGunGuCode: string;
   name: string;
-  shortName: string;
-  district: string;
-  teamCount: number;
-  memberCount: number;
-  pendingMemberCount: number;
-  parentOrganizationId: number | null;
-  parentOrganizationName: string | null;
+  type: OrganizationType;
+  accessType: AccessType;
+  isVerified: boolean;
+  published: boolean;      // mapped from content-service 'active'
+  active?: boolean;        // raw active flag from content-service
+  isCug: boolean;
+  siGunGuCode: string | null;
+  displayArea: DisplayArea | null;
+  joinPolicy: JoinPolicy | null;
+  reservationPolicy: ReservationPolicy | null;
+  contentVisibility: ContentVisibility | null;
   canHostCompetition: boolean;
   autoJoin: boolean;
   managerOnlyBooking: boolean;
-  logoUrl: string;
-  phone: string;
-  website: string;
-  description: string;
-  memberLimit: number | null;
-  published: boolean;
+  logoUrl: string | null;
+  website: string | null;   // mapped from content-service 'websiteUrl'
+  websiteUrl?: string | null;
+  description: string | null;
+  parentOrganizationId: number | null;  // mapped from content-service 'parentId'
+  parentId?: number | null;
+  nameEn?: string | null;
+  sportId?: number | null;
+  createdAt?: string | null;
+  // Legacy/mock-only fields (may be null when fetching from API)
+  sportName?: string | null;
+  operationStatus?: OperationStatus | null;
+  district?: string | null;
+  shortName?: string | null;
+  teamCount?: number | null;
+  memberCount?: number | null;
+  pendingMemberCount?: number | null;
+  parentOrganizationName?: string | null;
+  phone?: string | null;
+  memberLimit?: number | null;
 }
 
 export interface OrganizationFilter {

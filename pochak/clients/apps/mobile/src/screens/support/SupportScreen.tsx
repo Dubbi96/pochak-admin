@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from 'react';
+import React, {useState, useCallback, useEffect} from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,55 +8,19 @@ import {
   ScrollView,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {MaterialIcons, Ionicons} from '@expo/vector-icons';
 import {colors} from '../../theme';
+import {supportService} from '../../api/supportService';
+import type {FaqItem, InquiryItem} from '../../api/supportService';
 
 // ─── Types ───────────────────────────────────────────────
 
 type MainTab = 'FAQ' | '1:1 문의' | '문의내역';
 type FaqCategory = '전체' | '계정' | '결제' | '영상' | '이용권' | '기타';
-
-interface FaqItem {
-  id: string;
-  category: FaqCategory;
-  question: string;
-  answer: string;
-}
-
-interface InquiryItem {
-  id: string;
-  category: string;
-  title: string;
-  date: string;
-  status: '답변완료' | '답변대기';
-  answer?: string;
-}
-
-// ─── Mock Data ───────────────────────────────────────────
-
-const MOCK_FAQ: FaqItem[] = [
-  {id: 'f1', category: '계정', question: '회원가입은 어떻게 하나요?', answer: '포착 앱을 다운로드한 후, 앱 실행 시 나타나는 회원가입 화면에서 본인인증 후 가입하실 수 있습니다. 카카오, 네이버, 구글, 애플 소셜 로그인도 지원합니다.'},
-  {id: 'f2', category: '계정', question: '비밀번호를 잊어버렸어요.', answer: '로그인 화면 하단의 "계정 찾기"를 통해 비밀번호를 재설정하실 수 있습니다. 가입 시 등록한 이메일 또는 전화번호로 인증 후 새 비밀번호를 설정해 주세요.'},
-  {id: 'f3', category: '결제', question: '이용권은 어떤 종류가 있나요?', answer: '월간 이용권, 연간 이용권, 개별 경기 이용권이 있습니다. 월간 이용권은 9,900원, 연간 이용권은 99,000원이며, 개별 경기는 콘텐츠별 가격이 다릅니다.'},
-  {id: 'f4', category: '결제', question: '결제 취소 및 환불은 어떻게 하나요?', answer: '설정 > 이용권 관리에서 결제 내역을 확인하시고, 해당 건을 선택하여 취소 요청이 가능합니다. 이미 시청한 콘텐츠의 경우 부분 환불이 적용될 수 있습니다.'},
-  {id: 'f5', category: '영상', question: '영상이 재생되지 않아요.', answer: '네트워크 연결 상태를 확인해 주세요. Wi-Fi 환경에서 이용을 권장하며, 앱을 최신 버전으로 업데이트해 주세요. 문제가 지속되면 앱을 재시작하거나 캐시를 삭제해 보세요.'},
-  {id: 'f6', category: '영상', question: '클립은 어떻게 만드나요?', answer: '영상 재생 중 하단의 가위 아이콘을 탭하면 클립 편집 화면으로 이동합니다. 원하는 구간을 선택한 후 저장하시면 나만의 클립이 생성됩니다.'},
-  {id: 'f7', category: '이용권', question: '가족 계정은 무엇인가요?', answer: '가족 계정은 하나의 이용권으로 최대 4명의 가족 구성원이 함께 이용할 수 있는 서비스입니다. 각자 개별 프로필을 가지며 시청 기록이 분리됩니다.'},
-  {id: 'f8', category: '이용권', question: '이용권 자동 갱신을 해지하고 싶어요.', answer: '설정 > 이용권 관리에서 자동 갱신을 해지하실 수 있습니다. 해지 후에도 결제 기간이 만료될 때까지 서비스를 이용하실 수 있습니다.'},
-  {id: 'f9', category: '기타', question: '포착 시티와 포착 클럽의 차이가 뭔가요?', answer: '포착 시티는 누구나 자유롭게 가입하고 콘텐츠를 시청할 수 있는 개방형 단체입니다. 포착 클럽은 가입 승인이 필요한 폐쇄형 단체로, 멤버만 콘텐츠를 이용할 수 있습니다.'},
-  {id: 'f10', category: '영상', question: '라이브 방송은 언제 볼 수 있나요?', answer: '라이브 방송 일정은 홈 > 일정 탭에서 확인하실 수 있습니다. 방송 시작 전 알림 설정을 해두시면 시작 시 푸시 알림을 받으실 수 있습니다.'},
-  {id: 'f11', category: '계정', question: '회원 탈퇴를 하고 싶어요.', answer: '설정 > 계정 관리 > 회원 탈퇴에서 진행하실 수 있습니다. 탈퇴 시 모든 데이터가 삭제되며, 30일 이내에 재가입하시면 데이터를 복구할 수 있습니다.'},
-  {id: 'f12', category: '기타', question: '앱 알림이 오지 않아요.', answer: '기기 설정 > 알림에서 포착 앱의 알림이 허용되어 있는지 확인해 주세요. 앱 내 설정 > 알림 설정에서도 원하는 알림 항목을 활성화해 주세요.'},
-];
-
-const MOCK_INQUIRIES: InquiryItem[] = [
-  {id: 'i1', category: '결제', title: '이용권 결제가 중복으로 진행되었습니다', date: '2026.03.15', status: '답변완료', answer: '안녕하세요, 포착입니다. 확인 결과 중복 결제가 확인되어 1건에 대해 환불 처리를 완료하였습니다. 3~5영업일 이내에 환불이 반영됩니다.'},
-  {id: 'i2', category: '영상', title: '특정 경기 영상에서 소리가 나오지 않습니다', date: '2026.03.10', status: '답변완료', answer: '안녕하세요, 포착입니다. 해당 경기 영상의 오디오 문제를 확인하여 수정 완료하였습니다. 현재 정상적으로 재생되오니 다시 확인해 주세요.'},
-  {id: 'i3', category: '계정', title: '소셜 로그인 연동 해제 요청', date: '2026.03.20', status: '답변대기'},
-];
 
 const FAQ_CATEGORIES: FaqCategory[] = ['전체', '계정', '결제', '영상', '이용권', '기타'];
 const MAIN_TABS: MainTab[] = ['FAQ', '1:1 문의', '문의내역'];
@@ -71,18 +35,55 @@ export default function SupportScreen() {
   const [expandedFaqId, setExpandedFaqId] = useState<string | null>(null);
   const [expandedInquiryId, setExpandedInquiryId] = useState<string | null>(null);
 
+  // FAQ state
+  const [faqs, setFaqs] = useState<FaqItem[]>([]);
+  const [faqLoading, setFaqLoading] = useState(false);
+
+  // Inquiry history state
+  const [inquiries, setInquiries] = useState<InquiryItem[]>([]);
+  const [inquiriesLoading, setInquiriesLoading] = useState(false);
+
   // Inquiry form state
   const [inquiryCategory, setInquiryCategory] = useState('');
   const [inquiryTitle, setInquiryTitle] = useState('');
   const [inquiryContent, setInquiryContent] = useState('');
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
 
-  const filteredFaq =
-    faqCategory === '전체'
-      ? MOCK_FAQ
-      : MOCK_FAQ.filter(f => f.category === faqCategory);
+  const fetchFaqs = useCallback(async (category: FaqCategory) => {
+    setFaqLoading(true);
+    try {
+      const result = await supportService.getFaqs(category !== '전체' ? category : undefined);
+      setFaqs(result);
+    } catch {
+      // Keep empty list on error
+    } finally {
+      setFaqLoading(false);
+    }
+  }, []);
 
-  const handleSubmitInquiry = useCallback(() => {
+  const fetchInquiries = useCallback(async () => {
+    setInquiriesLoading(true);
+    try {
+      const result = await supportService.getMyInquiries();
+      setInquiries(result);
+    } catch {
+      // Keep empty list on error
+    } finally {
+      setInquiriesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'FAQ') fetchFaqs(faqCategory);
+  }, [activeTab, faqCategory, fetchFaqs]);
+
+  useEffect(() => {
+    if (activeTab === '문의내역') fetchInquiries();
+  }, [activeTab, fetchInquiries]);
+
+  const filteredFaq = faqs;
+
+  const handleSubmitInquiry = useCallback(async () => {
     if (!inquiryCategory) {
       Alert.alert('알림', '카테고리를 선택해 주세요.');
       return;
@@ -95,10 +96,19 @@ export default function SupportScreen() {
       Alert.alert('알림', '내용을 입력해 주세요.');
       return;
     }
-    Alert.alert('문의 접수 완료', '빠른 시일 내에 답변드리겠습니다.');
-    setInquiryCategory('');
-    setInquiryTitle('');
-    setInquiryContent('');
+    try {
+      await supportService.createInquiry({
+        category: inquiryCategory,
+        title: inquiryTitle.trim(),
+        content: inquiryContent.trim(),
+      });
+      Alert.alert('문의 접수 완료', '빠른 시일 내에 답변드리겠습니다.');
+      setInquiryCategory('');
+      setInquiryTitle('');
+      setInquiryContent('');
+    } catch {
+      Alert.alert('오류', '문의 등록에 실패하였습니다. 다시 시도해 주세요.');
+    }
   }, [inquiryCategory, inquiryTitle, inquiryContent]);
 
   return (
@@ -195,7 +205,14 @@ export default function SupportScreen() {
             </ScrollView>
 
             {/* FAQ List */}
-            {filteredFaq.map(faq => {
+            {faqLoading ? (
+              <ActivityIndicator color={colors.green} style={{marginTop: 32}} />
+            ) : filteredFaq.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>FAQ가 없습니다</Text>
+              </View>
+            ) : null}
+            {!faqLoading && filteredFaq.map(faq => {
               const isExpanded = expandedFaqId === faq.id;
               return (
                 <TouchableOpacity
@@ -317,7 +334,10 @@ export default function SupportScreen() {
         {/* 문의내역 Tab */}
         {activeTab === '문의내역' && (
           <View>
-            {MOCK_INQUIRIES.map(inquiry => {
+            {inquiriesLoading && (
+              <ActivityIndicator color={colors.green} style={{marginTop: 32}} />
+            )}
+            {!inquiriesLoading && inquiries.map(inquiry => {
               const isExpanded = expandedInquiryId === inquiry.id;
               const isCompleted = inquiry.status === '답변완료';
               return (
@@ -399,7 +419,7 @@ export default function SupportScreen() {
               );
             })}
 
-            {MOCK_INQUIRIES.length === 0 && (
+            {!inquiriesLoading && inquiries.length === 0 && (
               <View style={styles.emptyContainer}>
                 <MaterialIcons name="inbox" size={48} color={colors.grayDark} />
                 <Text style={styles.emptyText}>문의 내역이 없습니다</Text>

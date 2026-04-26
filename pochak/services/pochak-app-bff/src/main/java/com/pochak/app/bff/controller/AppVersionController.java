@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Optional;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -22,15 +24,16 @@ public class AppVersionController {
             @RequestParam(defaultValue = "AOS") String platform) {
 
         log.debug("Checking app version for platform={}", platform);
-        JsonNode versionData = adminClient.getLatestAppVersion(platform);
+        Optional<JsonNode> versionData = adminClient.getLatestAppVersion(platform);
 
-        if (versionData == null) {
+        if (versionData.isEmpty()) {
             return ApiResponse.success(AppVersionResponse.builder()
                     .forceUpdate(false)
                     .build());
         }
 
-        JsonNode data = versionData.has("data") ? versionData.get("data") : versionData;
+        JsonNode raw = versionData.get();
+        JsonNode data = raw.has("data") ? raw.get("data") : raw;
 
         AppVersionResponse response = AppVersionResponse.builder()
                 .currentVersion(data.has("currentVersion") ? data.get("currentVersion").asText() : null)

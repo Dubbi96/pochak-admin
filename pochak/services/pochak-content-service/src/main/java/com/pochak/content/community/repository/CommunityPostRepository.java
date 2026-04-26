@@ -1,6 +1,7 @@
 package com.pochak.content.community.repository;
 
 import com.pochak.content.community.entity.CommunityPost;
+import com.pochak.content.community.entity.ModerationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,6 +28,21 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
                                         @Param("siGunGuCode") String siGunGuCode,
                                         @Param("organizationId") Long organizationId,
                                         Pageable pageable);
+
+    /**
+     * [Admin] Find posts with optional filters including deleted posts.
+     * status=null, keyword=null, organizationId=null 이면 전체 조회.
+     */
+    @Query("SELECT p FROM CommunityPost p WHERE " +
+           "(:status IS NULL OR p.moderationStatus = :status) " +
+           "AND (:organizationId IS NULL OR p.organizationId = :organizationId) " +
+           "AND (:keyword IS NULL OR LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "     OR LOWER(p.body) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "ORDER BY p.createdAt DESC")
+    Page<CommunityPost> findForAdmin(@Param("status") ModerationStatus status,
+                                     @Param("keyword") String keyword,
+                                     @Param("organizationId") Long organizationId,
+                                     Pageable pageable);
 
     /**
      * DATA-001: Anonymize author for withdrawn users — set authorUserId to -1 (탈퇴한 사용자).

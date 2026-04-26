@@ -18,4 +18,7 @@ public class BoDashboardResponse {
     private JsonNode memberStats;
     private JsonNode assetStats;
     private JsonNode revenueStats;
+    private JsonNode pendingRefunds;
+    private JsonNode pendingReports;
+    private JsonNode recentAuditLogs;
 }

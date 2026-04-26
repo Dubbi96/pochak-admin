@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Alert,
   StyleSheet,
   Text,
   View,
@@ -12,6 +13,7 @@ import {colors} from '../../theme';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../../navigation/types';
+import {authService} from '../../api/authService';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -25,13 +27,15 @@ const GRAY_DARK = colors.grayDark;
 
 // ── Menu data matching PDF p28 ──
 
-interface MenuItemDef {
+type MenuItemDef = (
+  | {iconFamily: 'Ionicons'; iconName: React.ComponentProps<typeof Ionicons>['name']}
+  | {iconFamily: 'MaterialIcons'; iconName: React.ComponentProps<typeof MaterialIcons>['name']}
+  | {iconFamily: 'MaterialCommunityIcons'; iconName: React.ComponentProps<typeof MaterialCommunityIcons>['name']}
+) & {
   label: string;
-  iconFamily: 'Ionicons' | 'MaterialIcons' | 'MaterialCommunityIcons';
-  iconName: string;
   route?: keyof RootStackParamList;
   params?: object;
-}
+};
 
 interface MenuSection {
   section: string;
@@ -80,12 +84,12 @@ function MenuIcon({item}: {item: MenuItemDef}) {
   const size = 20;
   const color = GRAY_LIGHT;
   if (item.iconFamily === 'Ionicons') {
-    return <Ionicons name={item.iconName as any} size={size} color={color} />;
+    return <Ionicons name={item.iconName} size={size} color={color} />;
   }
   if (item.iconFamily === 'MaterialCommunityIcons') {
-    return <MaterialCommunityIcons name={item.iconName as any} size={size} color={color} />;
+    return <MaterialCommunityIcons name={item.iconName} size={size} color={color} />;
   }
-  return <MaterialIcons name={item.iconName as any} size={size} color={color} />;
+  return <MaterialIcons name={item.iconName} size={size} color={color} />;
 }
 
 export default function MyMenuHubScreen() {
@@ -93,12 +97,21 @@ export default function MyMenuHubScreen() {
 
   const handleMenuPress = (item: MenuItemDef) => {
     if (item.route) {
-      nav.navigate(item.route as any, item.params as any);
+      nav.navigate(item.route, item.params as never);
     }
   };
 
   const handleLogout = () => {
-    // TODO: implement logout
+    Alert.alert('로그아웃', '정말 로그아웃 하시겠습니까?', [
+      {text: '취소', style: 'cancel'},
+      {
+        text: '로그아웃',
+        style: 'destructive',
+        onPress: async () => {
+          await authService.signOut();
+        },
+      },
+    ]);
   };
 
   return (

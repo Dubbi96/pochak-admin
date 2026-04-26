@@ -19,7 +19,7 @@ public class PartnerVenueController {
     public String getPartnerVenues(
             @RequestHeader(HeaderConstants.X_USER_ID) Long userId) {
         return operationClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/api/v1/venues")
+                .uri(uriBuilder -> uriBuilder.path("/venues")
                         .queryParam("ownerId", userId)
                         .build())
                 .header(HeaderConstants.X_USER_ID, userId.toString())

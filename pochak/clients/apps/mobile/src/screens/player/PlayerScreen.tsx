@@ -15,6 +15,7 @@ import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../../navigation/types';
 import {colors} from '../../theme';
 import {playerService} from '../../api/playerService';
+import apiClient from '../../api/client';
 import type {PlayerData, TimelineEvent} from '../../api/playerService';
 import type {Chapter} from '../../components/player/ControlOverlay';
 import {useFullscreen} from '../../hooks/useFullscreen';
@@ -433,6 +434,7 @@ const PlayerScreen: React.FC<Props> = ({navigation, route}) => {
   const [playerData, setPlayerData] = useState<PlayerData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tags, setTags] = useState<string[]>(MOCK_TAGS);
 
   // ---- UI state ----------------------------------------------------------
   const {isFullscreen, toggleFullscreen} = useFullscreen();
@@ -472,6 +474,19 @@ const PlayerScreen: React.FC<Props> = ({navigation, route}) => {
   useEffect(() => {
     loadPlayerData();
   }, [loadPlayerData]);
+
+  // Fetch content tags from real API
+  useEffect(() => {
+    if (!contentId) return;
+    const assetType = isLiveContent ? 'LIVE' : (contentType ?? 'VOD').toUpperCase();
+    apiClient.get('/contents/tags', {params: {assetType, assetId: contentId}})
+      .then(res => {
+        const data = res.data.data ?? res.data;
+        const tagList = Array.isArray(data) ? data.map((t: any) => t.tag ?? t.name ?? String(t)) : [];
+        if (tagList.length > 0) setTags(tagList);
+      })
+      .catch(() => { /* keep mock tags */ });
+  }, [contentId, contentType, isLiveContent]);
 
   // ---- Chapters ----------------------------------------------------------
   const chapters = useMemo(
@@ -652,7 +667,7 @@ const PlayerScreen: React.FC<Props> = ({navigation, route}) => {
             title={playerData.title}
             round={playerData.competitionName}
             broadcastDate={new Date().toLocaleDateString('ko-KR')}
-            tags={MOCK_TAGS}
+            tags={tags}
             competition={playerData.competitionName}
             likeCount={100}
             onClipPress={handleClipPress}
@@ -665,7 +680,7 @@ const PlayerScreen: React.FC<Props> = ({navigation, route}) => {
           {activeTab === '추천영상' && (
             <RecommendedTabContent
               events={playerData.timeline}
-              tags={MOCK_TAGS}
+              tags={tags}
               onSeekTo={handleSeekTo}
             />
           )}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,154 +15,115 @@ import {
 import { ExportButton } from "@/components/common/export-button";
 import { Search, Plus } from "lucide-react";
 import {
-  SPORT_OPTIONS,
-  DISTRICT_OPTIONS,
-  OPERATION_STATUS_LABELS,
-  type OperationStatus,
+  getOrganizations,
+  RESERVATION_POLICY_LABELS,
+  type Organization,
+  type OrganizationFilter,
 } from "@/services/organization-api";
-
-// ── Types ──────────────────────────────────────────────────────────
-
-interface PrivateHQ {
-  id: number;
-  sportName: string;
-  operationStatus: OperationStatus;
-  name: string;
-  district: string;
-  branchCount: number;
-  registeredBy: string;
-  published: boolean;
-}
-
-// ── Mock Data ──────────────────────────────────────────────────────
-
-const MOCK_DATA: PrivateHQ[] = [
-  { id: 1, sportName: "축구", operationStatus: "ACTIVE", name: "FC강남 본점", district: "서울 강남구", branchCount: 5, registeredBy: "김관리", published: true },
-  { id: 2, sportName: "야구", operationStatus: "ACTIVE", name: "서울베이스볼 본점", district: "서울 송파구", branchCount: 3, registeredBy: "이운영", published: true },
-  { id: 3, sportName: "농구", operationStatus: "SUSPENDED", name: "점프업 농구 본점", district: "서울 마포구", branchCount: 2, registeredBy: "박매니저", published: false },
-  { id: 4, sportName: "배구", operationStatus: "ACTIVE", name: "스파이크 배구 본점", district: "서울 서초구", branchCount: 4, registeredBy: "최관리", published: true },
-  { id: 5, sportName: "풋살", operationStatus: "ACTIVE", name: "풋살매니아 본점", district: "경기 성남시", branchCount: 6, registeredBy: "정운영", published: true },
-  { id: 6, sportName: "축구", operationStatus: "DISSOLVED", name: "수원FC 본점", district: "경기 수원시", branchCount: 0, registeredBy: "한관리", published: false },
-  { id: 7, sportName: "야구", operationStatus: "ACTIVE", name: "부산 슬러거즈 본점", district: "부산 해운대구", branchCount: 2, registeredBy: "강운영", published: true },
-  { id: 8, sportName: "축구", operationStatus: "ACTIVE", name: "서초 유나이티드 본점", district: "서울 서초구", branchCount: 3, registeredBy: "윤관리", published: true },
-];
-
-const STATUS_BADGE_VARIANT: Record<string, "success" | "warning" | "destructive"> = {
-  ACTIVE: "success",
-  SUSPENDED: "warning",
-  DISSOLVED: "destructive",
-};
+import type { PageResponse } from "@/types/common";
 
 const EXPORT_COLUMNS = [
   { header: "NO", accessor: "id" },
-  { header: "종목", accessor: "sportName" },
-  { header: "운영상태", accessor: "operationStatus" },
   { header: "단체명", accessor: "name" },
-  { header: "시/군/구", accessor: "district" },
-  { header: "지점수", accessor: "branchCount" },
-  { header: "등록자", accessor: "registeredBy" },
+  { header: "지역코드", accessor: "siGunGuCode" },
+  { header: "예약정책", accessor: "reservationPolicy" },
+  { header: "인증", accessor: "isVerified" },
+  { header: "활성", accessor: "published" },
+  { header: "등록일", accessor: "createdAt" },
 ];
 
 const PAGE_SIZE = 20;
 
 export default function PrivateHQPage() {
-  // Filters
-  const [publishFilter, setPublishFilter] = useState("ALL");
-  const [statusFilter, setStatusFilter] = useState("ALL");
-  const [sportFilter, setSportFilter] = useState("ALL");
-  const [districtFilter, setDistrictFilter] = useState("ALL");
-  const [searchKeyword, setSearchKeyword] = useState("");
-
-  // Pagination
+  const [data, setData] = useState<PageResponse<Organization> | null>(null);
+  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
 
-  // Filtering logic
-  const filtered = MOCK_DATA.filter((item) => {
-    if (publishFilter === "ACTIVE" && !item.published) return false;
-    if (publishFilter === "INACTIVE" && item.published) return false;
-    if (statusFilter !== "ALL" && item.operationStatus !== statusFilter) return false;
-    if (sportFilter !== "ALL" && item.sportName !== sportFilter) return false;
-    if (districtFilter !== "ALL" && item.district !== districtFilter) return false;
-    if (searchKeyword && !item.name.includes(searchKeyword)) return false;
-    return true;
-  });
+  const [activeFilter, setActiveFilter] = useState("ALL");
+  const [verifiedFilter, setVerifiedFilter] = useState("ALL");
+  const [pendingKeyword, setPendingKeyword] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const filters: OrganizationFilter = {
+        type: "PRIVATE",
+        operationStatus: "ALL",
+        accessType: "ALL",
+        sportName: "",
+        district: "",
+        searchKeyword,
+      };
+      const result = await getOrganizations(filters, page, PAGE_SIZE);
+      setData(result);
+    } catch (err) {
+      console.error("[PrivateHQ] fetch error", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchKeyword, page]);
 
-  const handleSearch = () => setPage(0);
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const handleSearch = () => { setSearchKeyword(pendingKeyword); setPage(0); };
   const handleReset = () => {
-    setPublishFilter("ALL");
-    setStatusFilter("ALL");
-    setSportFilter("ALL");
-    setDistrictFilter("ALL");
+    setActiveFilter("ALL");
+    setVerifiedFilter("ALL");
+    setPendingKeyword("");
     setSearchKeyword("");
     setPage(0);
   };
 
+  // HQ = PRIVATE orgs without a parent
+  const items = (data?.content ?? []).filter((item) => {
+    if (item.parentOrganizationId) return false; // must NOT have a parent
+    if (verifiedFilter === "VERIFIED" && !item.isVerified) return false;
+    if (verifiedFilter === "UNVERIFIED" && item.isVerified) return false;
+    if (activeFilter === "ACTIVE" && !item.published) return false;
+    if (activeFilter === "INACTIVE" && item.published) return false;
+    return true;
+  });
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-bold text-gray-900">단체(폐쇄형) 본점 관리</h1>
-          <p className="mt-1 text-sm text-gray-500">폐쇄형 단체의 본점 목록을 조회하고 관리합니다.</p>
+          <p className="mt-1 text-sm text-gray-500">폐쇄형(PRIVATE) 단체의 본점 목록을 조회하고 관리합니다.</p>
         </div>
         <div className="flex items-center gap-2">
           <ExportButton
-            data={filtered as unknown as Record<string, unknown>[]}
+            data={items as unknown as Record<string, unknown>[]}
             columns={EXPORT_COLUMNS}
             filename="private-hq"
             label="Export"
           />
-          <Button>
-            <Plus className="mr-1.5 h-4 w-4" />
-            등록
-          </Button>
+          <Button><Plus className="mr-1.5 h-4 w-4" />등록</Button>
         </div>
       </div>
 
-      {/* Filter Bar */}
       <div className="flex flex-wrap items-end gap-4 rounded-lg border border-gray-200 bg-white p-4">
         <div className="space-y-1.5">
-          <Label className="text-xs text-gray-500">게시 상태</Label>
-          <Select value={publishFilter} onValueChange={setPublishFilter}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue />
-            </SelectTrigger>
+          <Label className="text-xs text-gray-500">인증 상태</Label>
+          <Select value={verifiedFilter} onValueChange={setVerifiedFilter}>
+            <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">전체</SelectItem>
-              <SelectItem value="ACTIVE">활성화</SelectItem>
-              <SelectItem value="INACTIVE">비활성화</SelectItem>
+              <SelectItem value="VERIFIED">인증</SelectItem>
+              <SelectItem value="UNVERIFIED">미인증</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs text-gray-500">운영 상태</Label>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue />
-            </SelectTrigger>
+          <Label className="text-xs text-gray-500">활성 상태</Label>
+          <Select value={activeFilter} onValueChange={setActiveFilter}>
+            <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">전체</SelectItem>
-              <SelectItem value="ACTIVE">운영중</SelectItem>
-              <SelectItem value="SUSPENDED">운영중단</SelectItem>
-              <SelectItem value="DISSOLVED">해체</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs text-gray-500">종목</Label>
-          <Select value={sportFilter} onValueChange={setSportFilter}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {SPORT_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
+              <SelectItem value="ACTIVE">활성</SelectItem>
+              <SelectItem value="INACTIVE">비활성</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -170,81 +131,62 @@ export default function PrivateHQPage() {
         <div className="space-y-1.5">
           <Label className="text-xs text-gray-500">단체명</Label>
           <Input
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
+            value={pendingKeyword}
+            onChange={(e) => setPendingKeyword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             placeholder="단체명 검색"
             className="w-[180px]"
           />
         </div>
 
-        <div className="space-y-1.5">
-          <Label className="text-xs text-gray-500">시/군/구</Label>
-          <Select value={districtFilter} onValueChange={setDistrictFilter}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DISTRICT_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         <div className="flex items-end gap-2">
-          <Button onClick={handleSearch}>
-            <Search size={16} className="mr-1.5" />
-            검색
-          </Button>
-          <Button variant="outline" onClick={handleReset}>
-            초기화
-          </Button>
+          <Button onClick={handleSearch}><Search size={16} className="mr-1.5" />검색</Button>
+          <Button variant="outline" onClick={handleReset}>초기화</Button>
         </div>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 text-xs font-medium uppercase tracking-wider text-gray-500">
               <th className="px-4 py-3 text-center w-[60px]">NO</th>
-              <th className="px-4 py-3">종목</th>
-              <th className="px-4 py-3 text-center">운영상태</th>
               <th className="px-4 py-3">단체명</th>
-              <th className="px-4 py-3">시/군/구</th>
-              <th className="px-4 py-3 text-center">지점수</th>
-              <th className="px-4 py-3">등록자</th>
+              <th className="px-4 py-3">지역코드</th>
+              <th className="px-4 py-3 text-center">예약정책</th>
+              <th className="px-4 py-3 text-center">인증</th>
+              <th className="px-4 py-3 text-center">활성</th>
+              <th className="px-4 py-3">등록일</th>
             </tr>
           </thead>
           <tbody>
-            {paged.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
-                  데이터가 없습니다.
-                </td>
-              </tr>
+            {loading ? (
+              <tr><td colSpan={7} className="px-4 py-12 text-center text-gray-400">로딩 중...</td></tr>
+            ) : items.length === 0 ? (
+              <tr><td colSpan={7} className="px-4 py-12 text-center text-gray-400">데이터가 없습니다.</td></tr>
             ) : (
-              paged.map((item, idx) => (
-                <tr
-                  key={item.id}
-                  className={`border-b border-gray-100 transition-colors hover:bg-gray-50 ${idx % 2 === 1 ? "bg-gray-50/50" : ""}`}
-                >
-                  <td className="px-4 py-3 text-center text-gray-500">
-                    {page * PAGE_SIZE + idx + 1}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{item.sportName}</td>
-                  <td className="px-4 py-3 text-center">
-                    <Badge variant={STATUS_BADGE_VARIANT[item.operationStatus]}>
-                      {OPERATION_STATUS_LABELS[item.operationStatus]}
-                    </Badge>
-                  </td>
+              items.map((item, idx) => (
+                <tr key={item.id} className={`border-b border-gray-100 transition-colors hover:bg-gray-50 ${idx % 2 === 1 ? "bg-gray-50/50" : ""}`}>
+                  <td className="px-4 py-3 text-center text-gray-500">{page * PAGE_SIZE + idx + 1}</td>
                   <td className="px-4 py-3 font-medium cursor-pointer hover:underline" style={{ color: "var(--c-primary)" }}>
                     {item.name}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{item.district}</td>
-                  <td className="px-4 py-3 text-center text-gray-600">{item.branchCount}</td>
-                  <td className="px-4 py-3 text-gray-600">{item.registeredBy}</td>
+                  <td className="px-4 py-3 text-gray-500 text-xs">{item.siGunGuCode ?? "-"}</td>
+                  <td className="px-4 py-3 text-center text-gray-600 text-xs">
+                    {item.reservationPolicy ? (RESERVATION_POLICY_LABELS[item.reservationPolicy as keyof typeof RESERVATION_POLICY_LABELS] ?? item.reservationPolicy) : "-"}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <Badge variant={item.isVerified ? "success" : "secondary"}>
+                      {item.isVerified ? "인증" : "미인증"}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <Badge variant={item.published ? "success" : "secondary"}>
+                      {item.published ? "활성" : "비활성"}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 text-xs">
+                    {item.createdAt ? item.createdAt.slice(0, 10) : "-"}
+                  </td>
                 </tr>
               ))
             )}
@@ -252,18 +194,11 @@ export default function PrivateHQPage() {
         </table>
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
+      {data && data.totalPages > 1 && (
         <div className="flex items-center justify-center gap-2">
-          <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>
-            이전
-          </Button>
-          <span className="text-sm text-gray-600">
-            {page + 1} / {totalPages}
-          </span>
-          <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
-            다음
-          </Button>
+          <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>이전</Button>
+          <span className="text-sm text-gray-600">{page + 1} / {data.totalPages}</span>
+          <Button variant="outline" size="sm" disabled={page >= data.totalPages - 1} onClick={() => setPage(page + 1)}>다음</Button>
         </div>
       )}
     </div>

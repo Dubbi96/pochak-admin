@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,41 +13,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Search, Download, Trash2 } from "lucide-react";
+import { getVpuDevices } from "@/services/equipment-api";
+import type { VpuDevice, PlatformType, ActivationStatus } from "@/services/equipment-api";
 
-// ── Types ────────────────────────────────────────────────────────────
-
-type PlatformType = "PIXELLOT" | "ARENA" | "UNDECIDED";
-type ActivationStatus =
-  | "ACTIVATED"
-  | "DEACTIVATED"
-  | "ACTIVATING"
-  | "ERROR"
-  | "SUSPENDED"
-  | "TERMINATED"
-  | "TEST";
-
-interface VpuDevice {
-  id: number;
-  name: string;
-  modelName: string;
-  serialNumber: string;
-  activationStatus: ActivationStatus;
-  platformType: PlatformType;
-  vendor: string;
-}
-
-// ── Mock Data ────────────────────────────────────────────────────────
-
-const MOCK_DEVICES: VpuDevice[] = [
-  { id: 1, name: "VPU-서울-001", modelName: "VPU-3000", serialNumber: "SN-VPU-20240101", activationStatus: "ACTIVATED", platformType: "PIXELLOT", vendor: "호각" },
-  { id: 2, name: "VPU-부산-002", modelName: "VPU-3000", serialNumber: "SN-VPU-20240102", activationStatus: "ACTIVATED", platformType: "ARENA", vendor: "스카이라이프" },
-  { id: 3, name: "VPU-대전-003", modelName: "VPU-5000", serialNumber: "SN-VPU-20240103", activationStatus: "DEACTIVATED", platformType: "PIXELLOT", vendor: "호각" },
-  { id: 4, name: "VPU-인천-004", modelName: "VPU-5000", serialNumber: "SN-VPU-20240104", activationStatus: "ACTIVATING", platformType: "UNDECIDED", vendor: "미정" },
-  { id: 5, name: "VPU-광주-005", modelName: "VPU-3000", serialNumber: "SN-VPU-20240105", activationStatus: "ERROR", platformType: "PIXELLOT", vendor: "호각" },
-  { id: 6, name: "VPU-대구-006", modelName: "VPU-7000", serialNumber: "SN-VPU-20240106", activationStatus: "SUSPENDED", platformType: "ARENA", vendor: "스카이라이프" },
-  { id: 7, name: "VPU-울산-007", modelName: "VPU-7000", serialNumber: "SN-VPU-20240107", activationStatus: "TERMINATED", platformType: "PIXELLOT", vendor: "호각" },
-  { id: 8, name: "VPU-수원-008", modelName: "VPU-3000", serialNumber: "SN-VPU-20240108", activationStatus: "TEST", platformType: "UNDECIDED", vendor: "미정" },
-];
+// ── Constants ─────────────────────────────────────────────────────────
 
 const ACTIVATION_LABELS: Record<ActivationStatus, string> = {
   ACTIVATED: "개통",
@@ -84,6 +53,12 @@ export default function VpuDevicesPage() {
   const [page, setPage] = useState(0);
   const pageSize = 20;
 
+  // API state
+  const [devices, setDevices] = useState<VpuDevice[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // Filters
   const [platformFilter, setPlatformFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -94,23 +69,33 @@ export default function VpuDevicesPage() {
   // Selection
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
-  // Filtered data
-  const filtered = MOCK_DEVICES.filter((d) => {
-    if (platformFilter !== "ALL" && d.platformType !== platformFilter) return false;
-    if (statusFilter !== "ALL" && d.activationStatus !== statusFilter) return false;
-    if (modelFilter !== "ALL" && d.modelName !== modelFilter) return false;
-    if (keyword) {
-      const term = keyword.toLowerCase();
-      if (searchCondition === "NAME" && !d.name.toLowerCase().includes(term)) return false;
-      if (searchCondition === "SERIAL" && !d.serialNumber.toLowerCase().includes(term)) return false;
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await getVpuDevices(
+        {
+          platformType: platformFilter,
+          activationStatus: statusFilter,
+          modelName: modelFilter,
+          searchCondition,
+          keyword: keyword || undefined,
+        },
+        page,
+        pageSize
+      );
+      setDevices(result.content);
+      setTotalPages(Math.max(1, result.totalPages));
+    } catch {
+      setError("데이터를 불러오지 못했습니다.");
+    } finally {
+      setIsLoading(false);
     }
-    return true;
-  });
+  }, [platformFilter, statusFilter, modelFilter, searchCondition, keyword, page]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const pageData = filtered.slice(page * pageSize, (page + 1) * pageSize);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  const modelNames = [...new Set(MOCK_DEVICES.map((d) => d.modelName))];
+  const pageData = devices;
 
   const toggleAll = () => {
     if (selectedIds.size === pageData.length) {
@@ -206,11 +191,9 @@ export default function VpuDevicesPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">전체</SelectItem>
-              {modelNames.map((m) => (
-                <SelectItem key={m} value={m}>
-                  {m}
-                </SelectItem>
-              ))}
+              <SelectItem value="VPU-3000">VPU-3000</SelectItem>
+              <SelectItem value="VPU-5000">VPU-5000</SelectItem>
+              <SelectItem value="VPU-7000">VPU-7000</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -268,7 +251,15 @@ export default function VpuDevicesPage() {
             </tr>
           </thead>
           <tbody>
-            {pageData.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={8} className="px-4 py-12 text-center text-gray-400">로딩 중...</td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={8} className="px-4 py-12 text-center text-red-400">{error}</td>
+              </tr>
+            ) : pageData.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
                   데이터가 없습니다.

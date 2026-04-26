@@ -28,8 +28,8 @@ public class WebPlayerController {
         Long userId = UserContextHolder.getUserId();
         log.debug("Fetching player data for {}/{} userId={}", type, id, userId);
 
-        JsonNode playerData = contentClient.getPlayerData(type, id);
-        JsonNode accessData = contentClient.checkAccess(type, id, userId);
+        JsonNode playerData = contentClient.getPlayerData(type, id).orElse(null);
+        JsonNode accessData = contentClient.checkAccess(type, id, userId).orElse(null);
 
         boolean accessGranted = isAccessGranted(accessData);
         String deniedReason = null;
@@ -37,7 +37,7 @@ public class WebPlayerController {
 
         if (!accessGranted) {
             deniedReason = extractDeniedReason(accessData);
-            productSuggestions = extractData(commerceClient.getProductSuggestions(type, id));
+            productSuggestions = extractData(commerceClient.getProductSuggestions(type, id).orElse(null));
         }
 
         WebPlayerResponse response = WebPlayerResponse.builder()

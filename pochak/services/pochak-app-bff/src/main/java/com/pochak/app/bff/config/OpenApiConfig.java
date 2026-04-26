@@ -3,6 +3,7 @@ package com.pochak.app.bff.config;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -21,5 +22,24 @@ public class OpenApiConfig {
                                 + "Identity, Content, Commerce, Operation 서비스를 집약하여 모바일 클라이언트에 최적화된 엔드포인트를 제공합니다."))
                 .servers(List.of(
                         new Server().url("http://localhost:9081").description("Local Dev")));
+    }
+
+    @Bean
+    public GroupedOpenApi appPublicApi() {
+        return GroupedOpenApi.builder()
+                .group("app-public")
+                .displayName("App Public API")
+                .pathsToMatch("/home", "/version/**", "/resolve/**", "/qr/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi appAuthenticatedApi() {
+        return GroupedOpenApi.builder()
+                .group("app-authenticated")
+                .displayName("App Authenticated API")
+                .pathsToMatch("/auth/**", "/mypage", "/player/**",
+                        "/push/**", "/settings/**")
+                .build();
     }
 }

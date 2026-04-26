@@ -20,7 +20,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import { Ionicons as Icon, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import type {RootStackParamList} from '../../navigation/types';
+import type {MainTabParamList, RootStackParamList} from '../../navigation/types';
 import MediaImage from '../../components/common/MediaImage';
 import {colors} from '../../theme';
 import {
@@ -168,7 +168,7 @@ interface SidebarProps {
 }
 
 // Map sidebar menu labels to navigation routes
-const SIDEBAR_NAV_MAP: Record<string, {route: keyof RootStackParamList; params?: object} | {tab: string}> = {
+const SIDEBAR_NAV_MAP: Record<string, {route: keyof RootStackParamList; params?: object} | {tab: keyof MainTabParamList}> = {
   '시청내역': {route: 'WatchHistory'},
   '관심콘텐츠': {route: 'Favorites'},
   '내클립': {route: 'MyClips'},
@@ -214,9 +214,9 @@ function Sidebar({visible, onClose}: SidebarProps) {
     if (navTarget) {
       if ('tab' in navTarget) {
         // Switch to a tab within MainTab
-        navigation.navigate('MainTab', {screen: navTarget.tab as any});
+        navigation.navigate('MainTab', {screen: navTarget.tab});
       } else {
-        navigation.navigate(navTarget.route as any, navTarget.params as any);
+        navigation.navigate(navTarget.route, navTarget.params as never);
       }
     }
   }, [navigation, onClose]);

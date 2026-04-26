@@ -5,19 +5,24 @@ import com.pochak.commerce.entitlement.dto.EntitlementResponse;
 import com.pochak.commerce.entitlement.entity.Entitlement;
 import com.pochak.commerce.entitlement.entity.EntitlementType;
 import com.pochak.commerce.entitlement.repository.EntitlementRepository;
+import com.pochak.commerce.event.EntitlementExpiredEvent;
+import com.pochak.common.event.EventPublisher;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class EntitlementService {
 
     private final EntitlementRepository entitlementRepository;
+    private final EventPublisher eventPublisher;
 
     public EntitlementCheckResponse checkEntitlement(Long userId, EntitlementType type, String scopeType, Long scopeId) {
         LocalDateTime now = LocalDateTime.now();
@@ -126,6 +131,18 @@ public class EntitlementService {
     @Transactional
     public void revokeByPurchaseId(Long purchaseId) {
         List<Entitlement> entitlements = entitlementRepository.findByPurchaseId(purchaseId);
-        entitlements.forEach(Entitlement::revoke);
+        entitlements.forEach(entitlement -> {
+            entitlement.revoke();
+            eventPublisher.publish(new EntitlementExpiredEvent(
+                    entitlement.getUserId(),
+                    entitlement.getId(),
+                    entitlement.getEntitlementType().name(),
+                    entitlement.getScopeType(),
+                    entitlement.getScopeId()
+            ));
+            log.info("[Entitlement] Revoked entitlementId={} userId={} type={} purchaseId={}",
+                    entitlement.getId(), entitlement.getUserId(),
+                    entitlement.getEntitlementType(), purchaseId);
+        });
     }
 }

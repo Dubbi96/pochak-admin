@@ -13,25 +13,20 @@ import type {RouteProp} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {colors} from '../../theme';
 import type {RootStackParamList} from '../../navigation/types';
+import apiClient from '../../api/client';
 
 type InviteRouteProp = RouteProp<RootStackParamList, 'CompetitionInvite'>;
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
-// Mock invite code validation
-const MOCK_INVITE_CODES: Record<string, string> = {
-  SOCCER2026: 'comp1',
-  BASKET3ON3: 'comp8',
-  BASEBALL25: 'comp5',
-};
-
 async function validateInviteCode(
   code: string,
 ): Promise<{valid: boolean; competitionId?: string}> {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  const competitionId = MOCK_INVITE_CODES[code.toUpperCase()];
-  if (competitionId) {
-    return {valid: true, competitionId};
+  const res = await apiClient.post('/competitions/access', null, {
+    params: {inviteCode: code},
+  });
+  const data = res.data.data ?? res.data;
+  if (data && (data.id || data.competitionId)) {
+    return {valid: true, competitionId: String(data.id ?? data.competitionId)};
   }
   return {valid: false};
 }

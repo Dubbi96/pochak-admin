@@ -27,7 +27,7 @@ interface MoreOptionsSheetProps {
 
 interface OptionItem {
   key: string;
-  icon: string;
+  icon: React.ComponentProps<typeof MaterialIcons>['name'];
   label: string;
   value?: string;
   onPress: () => void;
@@ -154,7 +154,7 @@ const MoreOptionsSheet: React.FC<MoreOptionsSheetProps> = ({
                 disabled={option.disabled}>
                 <View style={styles.optionLeft}>
                   <MaterialIcons
-                    name={option.icon as any}
+                    name={option.icon}
                     size={22}
                     color={
                       option.disabled ? colors.gray : colors.grayLight

@@ -52,6 +52,9 @@ public class Team {
     @Column(precision = 10, scale = 7)
     private BigDecimal longitude;
 
+    @Column(name = "public_slug", length = 100)
+    private String publicSlug;
+
     @Column(name = "organization_id")
     private Long organizationId;
 

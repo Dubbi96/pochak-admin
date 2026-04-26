@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
   Text,
@@ -12,6 +12,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {MaterialIcons} from '@expo/vector-icons';
 import {colors} from '../../theme';
+import apiClient from '../../api/client';
 
 type Member = {
   id: string;
@@ -20,7 +21,7 @@ type Member = {
   role: 'admin' | 'family';
 };
 
-const MOCK_MEMBERS: Member[] = [
+const INITIAL_MEMBERS: Member[] = [
   {
     id: '1',
     nickname: '포착이',
@@ -39,6 +40,24 @@ const MAX_MEMBERS = 5;
 
 export default function FamilyAccountScreen() {
   const navigation = useNavigation();
+  const [members, setMembers] = useState<Member[]>(INITIAL_MEMBERS);
+
+  useEffect(() => {
+    apiClient.get('/users/me/family')
+      .then(res => {
+        const data = res.data.data ?? res.data;
+        const list = Array.isArray(data) ? data : [];
+        if (list.length > 0) {
+          setMembers(list.map((m: any) => ({
+            id: String(m.id),
+            nickname: m.nickname ?? m.name ?? '',
+            email: m.email ?? '',
+            role: m.role === 'GUARDIAN' ? 'admin' : 'family',
+          })));
+        }
+      })
+      .catch(() => { /* keep mock */ });
+  }, []);
 
   const handleAddMember = () => {
     Alert.alert('멤버 추가', `최대 ${MAX_MEMBERS}명까지 추가 가능합니다.`);
@@ -92,14 +111,14 @@ export default function FamilyAccountScreen() {
         <View style={styles.planCard}>
           <Text style={styles.planTitle}>대가족 무제한 시청권</Text>
           <Text style={styles.planCount}>
-            {MOCK_MEMBERS.length}/{MAX_MEMBERS}명
+            {members.length}/{MAX_MEMBERS}명
           </Text>
         </View>
 
         {/* Member list */}
         <View style={styles.memberSection}>
           <Text style={styles.sectionLabel}>멤버</Text>
-          {MOCK_MEMBERS.length === 0 ? (
+          {members.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>
                 아직 가족 멤버가 없습니다.{'\n'}아래 버튼을 눌러 멤버를
@@ -107,7 +126,7 @@ export default function FamilyAccountScreen() {
               </Text>
             </View>
           ) : (
-            MOCK_MEMBERS.map(member => (
+            members.map(member => (
               <View key={member.id} style={styles.memberRow}>
                 {renderAvatar(member)}
                 <View style={styles.memberInfo}>

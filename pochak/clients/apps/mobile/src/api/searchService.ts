@@ -30,28 +30,55 @@ export interface ISearchService {
 // ─── Concrete implementation ──────────────────────────────────────
 
 class SearchService implements ISearchService {
-  async search(query: string): Promise<SearchResults> {
-    // TODO: Phase 5+ — return apiClient.get('/search', { params: { q: query } }).then(r => r.data);
-    const lowerQuery = query.toLowerCase().trim();
-    return {
-      teams: mockSearchTeams.filter(t => t.name.toLowerCase().includes(lowerQuery)),
-      clubs: mockSearchClubs.filter(c => c.name.toLowerCase().includes(lowerQuery)),
-      lives: mockSearchLives,
-      schedules: mockSearchSchedules,
-      competitions: mockSearchCompetitions.filter(c => c.title.toLowerCase().includes(lowerQuery)),
-      videos: mockSearchVideos.filter(v => v.title.toLowerCase().includes(lowerQuery)),
-      clips: mockSearchClips.filter(c => c.title.toLowerCase().includes(lowerQuery)),
-    };
+  async search(
+    query: string,
+    type?: string,
+    page: number = 0,
+  ): Promise<SearchResults> {
+    try {
+      const res = await apiClient.get('/search', {
+        params: { q: query, type, page, size: 20 },
+      });
+      const d = res.data.data ?? res.data;
+      return {
+        teams: d.teams ?? [],
+        clubs: d.clubs ?? [],
+        lives: d.lives ?? [],
+        schedules: d.schedules ?? [],
+        competitions: d.competitions ?? [],
+        videos: d.videos ?? [],
+        clips: d.clips ?? [],
+      };
+    } catch {
+      // Graceful fallback: return empty results on error
+      return {
+        teams: [],
+        clubs: [],
+        lives: [],
+        schedules: [],
+        competitions: [],
+        videos: [],
+        clips: [],
+      };
+    }
   }
 
   async getSuggestions(query: string): Promise<SearchSuggestionItem[]> {
-    // TODO: Phase 5+ — return apiClient.get('/search/suggest', { params: { q: query } }).then(r => r.data);
-    return getMockSuggestions(query);
+    try {
+      const res = await apiClient.get('/search/suggest', { params: { q: query } });
+      return res.data.data ?? res.data ?? [];
+    } catch {
+      return getMockSuggestions(query);
+    }
   }
 
   async getTrending(): Promise<TrendingSearchTerm[]> {
-    // TODO: Phase 5+ — return apiClient.get('/search/trending').then(r => r.data);
-    return mockTrendingSearches;
+    try {
+      const res = await apiClient.get('/search/trending');
+      return res.data.data ?? res.data ?? [];
+    } catch {
+      return mockTrendingSearches;
+    }
   }
 }
 

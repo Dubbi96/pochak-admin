@@ -14,9 +14,9 @@ spring:
       minimum-idle: 5
       connection-timeout: 30000
   flyway:
-    enabled: false  # Disabled for dev; enable for production
+    enabled: true
     baseline-on-migrate: true
-    baseline-version: "0"
+    baseline-version: "029"
     locations: classpath:db/migration
     schemas:
       - content
@@ -36,7 +36,7 @@ spring:
       time-to-live: 300000  # 5 minutes
   jpa:
     hibernate:
-      ddl-auto: update  # Revert from validate to update for dev
+      ddl-auto: validate
     properties:
       hibernate:
         default_schema: content

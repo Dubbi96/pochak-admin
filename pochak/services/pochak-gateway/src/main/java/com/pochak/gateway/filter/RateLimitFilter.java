@@ -26,8 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * In-memory rate limiter for gateway requests.
  * Tracks request counts per client IP within sliding time windows.
  *
- * Auth routes: 10 requests per minute (brute-force protection).
- * General API routes: 100 requests per minute.
+ * Limits and window are configurable (see application.yml pochak.rate-limit.*).
  *
  * Trusted proxy validation prevents X-Forwarded-For spoofing.
  */
@@ -35,10 +34,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 @ConditionalOnProperty(name = "pochak.rate-limit.type", havingValue = "in-memory")
 public class RateLimitFilter implements GlobalFilter, Ordered {
-
-    private static final int AUTH_MAX_REQUESTS = 10;
-    private static final int API_MAX_REQUESTS = 100;
-    private static final long WINDOW_MILLIS = 60_000L; // 1 minute
 
     private final Map<String, TokenBucket> buckets = new ConcurrentHashMap<>();
 
@@ -48,8 +43,24 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     @Value("${pochak.rate-limit.trusted-proxies:127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}")
     private String trustedProxiesConfig;
 
+    @Value("${pochak.rate-limit.api-max-requests:100}")
+    private int apiMaxRequests;
+
+    @Value("${pochak.rate-limit.auth-max-requests:10}")
+    private int authMaxRequests;
+
+    @Value("${pochak.rate-limit.window-seconds:60}")
+    private int windowSeconds;
+
+    @Value("${pochak.rate-limit.skip-loopback-clients:false}")
+    private boolean skipLoopbackClients;
+
+    private long windowMillis;
+
     @PostConstruct
-    void parseTrustedProxies() {
+    void initWindowAndParseProxies() {
+        this.windowSeconds = Math.max(1, windowSeconds);
+        this.windowMillis = windowSeconds * 1000L;
         String[] entries = trustedProxiesConfig.split(",");
         for (String entry : entries) {
             String trimmed = entry.trim();
@@ -68,14 +79,18 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         String path = exchange.getRequest().getURI().getPath();
         String clientIp = resolveClientIp(exchange);
 
+        if (skipLoopbackClients && isLoopbackClient(clientIp)) {
+            return chain.filter(exchange);
+        }
+
         boolean isOAuthCallback = path.startsWith("/api/v1/auth/oauth2/callback")
                 || path.startsWith("/api/v1/auth/oauth2/authorize");
         boolean isAuthRoute = !isOAuthCallback && path.startsWith("/api/v1/auth");
-        int maxRequests = isAuthRoute ? AUTH_MAX_REQUESTS : API_MAX_REQUESTS;
+        int maxRequests = isAuthRoute ? authMaxRequests : apiMaxRequests;
 
         String bucketKey = clientIp + ":" + (isAuthRoute ? "auth" : "api");
 
-        TokenBucket bucket = buckets.computeIfAbsent(bucketKey, k -> new TokenBucket(maxRequests));
+        TokenBucket bucket = buckets.computeIfAbsent(bucketKey, k -> new TokenBucket(maxRequests, windowMillis));
 
         long secondsUntilReset = bucket.secondsUntilReset();
         int remaining = bucket.remaining();
@@ -84,11 +99,22 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         if (!bucket.tryConsume()) {
             log.warn("Rate limit exceeded for IP={} path={}", clientIp, path);
             exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
-            exchange.getResponse().getHeaders().add("Retry-After", "60");
+            exchange.getResponse().getHeaders().add("Retry-After", String.valueOf(windowSeconds));
             return exchange.getResponse().setComplete();
         }
 
         return chain.filter(exchange);
+    }
+
+    private boolean isLoopbackClient(String clientIp) {
+        if ("unknown".equals(clientIp)) {
+            return false;
+        }
+        try {
+            return InetAddress.getByName(clientIp).isLoopbackAddress();
+        } catch (UnknownHostException e) {
+            return false;
+        }
     }
 
     private void addRateLimitHeaders(ServerWebExchange exchange, int limit, long remaining, long resetSeconds) {
@@ -149,11 +175,13 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
      */
     private static class TokenBucket {
         private final int maxTokens;
+        private final long windowMillis;
         private final AtomicInteger tokens;
         private volatile long windowStart;
 
-        TokenBucket(int maxTokens) {
+        TokenBucket(int maxTokens, long windowMillis) {
             this.maxTokens = maxTokens;
+            this.windowMillis = windowMillis;
             this.tokens = new AtomicInteger(maxTokens);
             this.windowStart = Instant.now().toEpochMilli();
         }
@@ -170,15 +198,15 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
 
         long secondsUntilReset() {
             long elapsed = Instant.now().toEpochMilli() - windowStart;
-            long remaining = WINDOW_MILLIS - elapsed;
+            long remaining = windowMillis - elapsed;
             return Math.max(0, remaining / 1000);
         }
 
         private void resetIfExpired() {
             long now = Instant.now().toEpochMilli();
-            if (now - windowStart > WINDOW_MILLIS) {
+            if (now - windowStart > windowMillis) {
                 synchronized (this) {
-                    if (now - windowStart > WINDOW_MILLIS) {
+                    if (now - windowStart > windowMillis) {
                         tokens.set(maxTokens);
                         windowStart = now;
                     }
@@ -193,7 +221,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     public void evictStaleBuckets() {
         long now = Instant.now().toEpochMilli();
         buckets.entrySet().removeIf(entry ->
-                now - entry.getValue().windowStart > WINDOW_MILLIS * 5);
+                now - entry.getValue().windowStart > windowMillis * 5);
     }
 
     // --- CIDR range matching ---

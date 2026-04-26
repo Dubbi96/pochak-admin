@@ -29,24 +29,13 @@ export interface IPhoneVerificationService {
   checkPhoneRegistration(phone: string): Promise<PhoneRegistrationInfo>;
 }
 
-// ─── Mock helpers ────────────────────────────────────────────────
-
-const MOCK_CODE = '123456';
-const MOCK_VERIFIED_TOKEN = 'mock-phone-verified-token';
-
 // ─── Implementation ──────────────────────────────────────────────
 
 class PhoneVerificationService implements IPhoneVerificationService {
   async sendCode(phone: string, purpose: VerificationPurpose): Promise<SendCodeResponse> {
-    try {
-      const res = await apiClient.post('/auth/phone/send', { phone, purpose });
-      const data = res.data.data ?? res.data;
-      return { success: !!data.success };
-    } catch {
-      console.warn('[PhoneVerification] API unavailable, using mock');
-      console.log(`[PhoneVerification] Mock code for ${phone}: ${MOCK_CODE}`);
-      return { success: true };
-    }
+    const res = await apiClient.post('/auth/phone/send-code', { phone, purpose });
+    const data = res.data.data ?? res.data;
+    return { success: !!data.success };
   }
 
   async verifyCode(
@@ -54,36 +43,23 @@ class PhoneVerificationService implements IPhoneVerificationService {
     code: string,
     purpose: VerificationPurpose,
   ): Promise<VerifyCodeResponse> {
-    try {
-      const res = await apiClient.post('/auth/phone/verify', { phone, code, purpose });
-      const data = res.data.data ?? res.data;
-      return {
-        verified: !!data.verified,
-        verifiedToken: data.verifiedToken ?? '',
-      };
-    } catch {
-      console.warn('[PhoneVerification] API unavailable, using mock');
-      if (code === MOCK_CODE) {
-        return { verified: true, verifiedToken: MOCK_VERIFIED_TOKEN };
-      }
-      return { verified: false, verifiedToken: '' };
-    }
+    const res = await apiClient.post('/auth/phone/verify-code', { phone, code, purpose });
+    const data = res.data.data ?? res.data;
+    return {
+      verified: !!data.verified,
+      verifiedToken: data.verifiedToken ?? data.verifiedToken ?? '',
+    };
   }
 
   async checkPhoneRegistration(phone: string): Promise<PhoneRegistrationInfo> {
-    try {
-      const res = await apiClient.post('/auth/phone/check-registration', { phone });
-      const data = res.data.data ?? res.data;
-      return {
-        registered: !!data.registered,
-        accountType: data.accountType,
-        linkedProviders: data.linkedProviders,
-        maskedUsername: data.maskedUsername,
-      };
-    } catch {
-      console.warn('[PhoneVerification] API unavailable, using mock');
-      return { registered: false };
-    }
+    const res = await apiClient.get('/auth/phone/check', { params: { phone } });
+    const data = res.data.data ?? res.data;
+    return {
+      registered: !!data.registered,
+      accountType: data.accountType,
+      linkedProviders: data.linkedProviders,
+      maskedUsername: data.maskedUsername,
+    };
   }
 }
 

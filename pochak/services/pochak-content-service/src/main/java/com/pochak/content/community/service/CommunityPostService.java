@@ -123,6 +123,49 @@ public class CommunityPostService {
         post.unpin();
     }
 
+    // ──────────────────────────────────────────────
+    // Admin methods
+    // ──────────────────────────────────────────────
+
+    /**
+     * [Admin] List all posts with optional status/keyword/org filters (includes deleted).
+     */
+    public Page<CommunityPostResponse> findAllForAdmin(ModerationStatus status,
+                                                       String keyword,
+                                                       Long organizationId,
+                                                       Pageable pageable) {
+        return communityPostRepository
+                .findForAdmin(status, keyword, organizationId, pageable)
+                .map(CommunityPostResponse::from);
+    }
+
+    /**
+     * [Admin] Update post moderation status with optional reason.
+     */
+    @Transactional
+    public CommunityPostResponse updateStatus(Long postId, ModerationStatus status, String reason) {
+        CommunityPost post = communityPostRepository.findById(postId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND,
+                        "Community post not found: " + postId));
+
+        post.setModerationStatus(status);
+        log.info("Admin updated post {} status to {} (reason: {})", postId, status, reason);
+        return CommunityPostResponse.from(post);
+    }
+
+    /**
+     * [Admin] Force-delete a post regardless of ownership, with reason logging.
+     */
+    @Transactional
+    public void adminDelete(Long postId, String reason) {
+        CommunityPost post = communityPostRepository.findById(postId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND,
+                        "Community post not found: " + postId));
+
+        post.softDelete();
+        log.info("Admin force-deleted post {} (reason: {})", postId, reason);
+    }
+
     private CommunityPost findActivePost(Long id) {
         CommunityPost post = communityPostRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND,

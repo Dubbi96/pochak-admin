@@ -22,6 +22,12 @@ public class Report {
     @Column(name = "reporter_user_id", nullable = false)
     private Long reporterUserId;
 
+    @Column(name = "reported_user_id")
+    private Long reportedUserId;
+
+    @Column(name = "report_type")
+    private String reportType;
+
     @Column(name = "target_type", nullable = false)
     private String targetType;
 
@@ -37,6 +43,9 @@ public class Report {
     @Column(nullable = false)
     @Builder.Default
     private String status = "PENDING";
+
+    @Column(name = "admin_comment", columnDefinition = "TEXT")
+    private String adminComment;
 
     @Column(name = "processed_by")
     private Long processedBy;

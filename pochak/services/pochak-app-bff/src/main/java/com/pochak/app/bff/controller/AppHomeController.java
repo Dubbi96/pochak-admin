@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Optional;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -22,31 +24,29 @@ public class AppHomeController {
     public ApiResponse<AppHomeResponse> getHome() {
         log.debug("Fetching app home page data");
 
-        JsonNode homeData = contentClient.getHome();
-        JsonNode productsData = commerceClient.getActiveProducts(3);
+        Optional<JsonNode> homeData = contentClient.getHome();
+        Optional<JsonNode> productsData = commerceClient.getActiveProducts(3);
 
-        JsonNode liveNow = extractField(homeData, "liveNow");
+        JsonNode liveNow = homeData.map(d -> extractField(d, "liveNow")).orElse(null);
         int liveCount = liveNow != null && liveNow.isArray() ? liveNow.size() : 0;
 
         AppHomeResponse response = AppHomeResponse.builder()
-                .banners(extractField(homeData, "banners"))
+                .banners(homeData.map(d -> extractField(d, "banners")).orElse(null))
                 .liveNow(liveNow)
                 .liveCount(liveCount)
-                .recommended(extractField(homeData, "recommended"))
-                .featuredProducts(extractData(productsData))
+                .recommended(homeData.map(d -> extractField(d, "recommended")).orElse(null))
+                .featuredProducts(productsData.map(this::extractData).orElse(null))
                 .build();
 
         return ApiResponse.success(response);
     }
 
     private JsonNode extractField(JsonNode node, String field) {
-        if (node == null) return null;
         JsonNode data = node.has("data") ? node.get("data") : node;
         return data.has(field) ? data.get(field) : null;
     }
 
     private JsonNode extractData(JsonNode node) {
-        if (node == null) return null;
         return node.has("data") ? node.get("data") : node;
     }
 }

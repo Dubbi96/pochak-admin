@@ -11,6 +11,68 @@ import {
   ClipContentItem,
 } from '../services/homeApi';
 
+// ─── Competition types ────────────────────────────────────────────
+
+export interface CompetitionData {
+  id: string;
+  name: string;
+  sport: string;
+  imageUrl: string;
+  bannerUrl: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+  isFree: boolean;
+  organizer: string;
+  venue: string;
+  participantCount: number;
+  tags: string[];
+}
+
+export interface CompetitionVideoItem {
+  id: string;
+  thumbnailUrl: string;
+  title: string;
+  date: string;
+  viewCount: number;
+  duration: string;
+  type: 'VIDEO' | 'CLIP';
+}
+
+export interface CompetitionMatchItem {
+  id: string;
+  date: string;
+  time: string;
+  round: string;
+  status: 'COMPLETED' | 'LIVE' | 'SCHEDULED';
+  homeName: string;
+  awayName: string;
+  homeScore?: number;
+  awayScore?: number;
+}
+
+export interface CompetitionContentsResponse {
+  videos: CompetitionVideoItem[];
+  clips: CompetitionVideoItem[];
+}
+
+// ─── Clip creation types ──────────────────────────────────────────
+
+export interface CreateClipParams {
+  title: string;
+  description: string;
+  tags: string[];
+  visibility: 'public' | 'club' | 'private';
+  startTime: number;
+  endTime: number;
+  sourceContentType: string;
+  sourceContentId: string;
+}
+
+export interface CreateClipResponse {
+  clipId: string;
+}
+
 // ─── Response types ───────────────────────────────────────────────
 
 export interface ContentDetailResponse {
@@ -47,6 +109,14 @@ export interface IContentService {
   getVideos(): Promise<VideoItem[]>;
   /** Get all matches */
   getMatches(): Promise<Match[]>;
+  /** Get competition detail by ID */
+  getCompetition(competitionId: string): Promise<CompetitionData>;
+  /** Get competition videos and clips */
+  getCompetitionVideos(competitionId: string): Promise<CompetitionContentsResponse>;
+  /** Get competition matches */
+  getCompetitionMatches(competitionId: string): Promise<CompetitionMatchItem[]>;
+  /** Create a clip from a content */
+  createClip(params: CreateClipParams): Promise<CreateClipResponse>;
 }
 
 // ─── Mock data helpers ────────────────────────────────────────────
@@ -109,6 +179,84 @@ class ContentService implements IContentService {
   async getMatches(): Promise<Match[]> {
     // TODO: Phase 5+ — return apiClient.get('/content/matches').then(r => r.data);
     return mockMatches;
+  }
+
+  async getCompetition(competitionId: string): Promise<CompetitionData> {
+    const res = await apiClient.get(`/competitions/${competitionId}`);
+    const d = res.data.data ?? res.data;
+    return {
+      id: String(d.id ?? competitionId),
+      name: d.name ?? '',
+      sport: d.sportName ?? d.sport ?? '',
+      imageUrl: d.imageUrl ?? d.logoUrl ?? '',
+      bannerUrl: d.bannerUrl ?? '',
+      startDate: d.startDate ?? '',
+      endDate: d.endDate ?? '',
+      description: d.description ?? '',
+      isFree: d.isFree ?? false,
+      organizer: d.organizer ?? d.organizerName ?? '',
+      venue: d.venue ?? d.location ?? '',
+      participantCount: d.participantCount ?? d.teamCount ?? 0,
+      tags: d.tags ?? [],
+    };
+  }
+
+  async getCompetitionVideos(competitionId: string): Promise<CompetitionContentsResponse> {
+    const res = await apiClient.get(`/competitions/${competitionId}/contents`);
+    const items: CompetitionVideoItem[] = (res.data.data ?? res.data.items ?? res.data ?? []).map(
+      (item: { id: string | number; thumbnailUrl?: string; title?: string; date?: string; createdAt?: string; viewCount?: number; duration?: string; type?: string }) => ({
+        id: String(item.id),
+        thumbnailUrl: item.thumbnailUrl ?? '',
+        title: item.title ?? '',
+        date: item.date ?? item.createdAt ?? '',
+        viewCount: item.viewCount ?? 0,
+        duration: item.duration ?? '',
+        type: (item.type === 'CLIP' ? 'CLIP' : 'VIDEO') as 'VIDEO' | 'CLIP',
+      }),
+    );
+    return {
+      videos: items.filter(i => i.type === 'VIDEO'),
+      clips: items.filter(i => i.type === 'CLIP'),
+    };
+  }
+
+  async getCompetitionMatches(competitionId: string): Promise<CompetitionMatchItem[]> {
+    const res = await apiClient.get(`/competitions/${competitionId}/matches`);
+    const raw: Array<{
+      id: string | number;
+      date?: string;
+      matchDate?: string;
+      time?: string;
+      matchTime?: string;
+      round?: string;
+      roundName?: string;
+      status?: string;
+      homeName?: string;
+      homeTeamName?: string;
+      awayName?: string;
+      awayTeamName?: string;
+      homeScore?: number;
+      awayScore?: number;
+    }> = res.data.data ?? res.data.items ?? res.data ?? [];
+    return raw.map(m => ({
+      id: String(m.id),
+      date: m.date ?? m.matchDate ?? '',
+      time: m.time ?? m.matchTime ?? '',
+      round: m.round ?? m.roundName ?? '',
+      status: (['COMPLETED', 'LIVE', 'SCHEDULED'].includes(m.status ?? '')
+        ? m.status
+        : 'SCHEDULED') as 'COMPLETED' | 'LIVE' | 'SCHEDULED',
+      homeName: m.homeName ?? m.homeTeamName ?? '',
+      awayName: m.awayName ?? m.awayTeamName ?? '',
+      homeScore: m.homeScore,
+      awayScore: m.awayScore,
+    }));
+  }
+
+  async createClip(params: CreateClipParams): Promise<CreateClipResponse> {
+    const res = await apiClient.post('/clips', params);
+    const d = res.data.data ?? res.data;
+    return { clipId: String(d.clipId ?? d.id ?? '') };
   }
 }
 

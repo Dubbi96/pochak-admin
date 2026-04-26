@@ -220,7 +220,7 @@ export default function OrganizationsPage() {
     setForm({
       type: org.type,
       accessType: org.accessType,
-      contentVisibility: org.contentVisibility,
+      contentVisibility: org.contentVisibility ?? 'PUBLIC',
       displayArea: org.displayArea,
       isVerified: org.isVerified,
       joinPolicy: org.joinPolicy,

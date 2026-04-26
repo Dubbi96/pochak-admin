@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__agentation__agentation_get_all_pending",
+      "mcp__agentation__agentation_resolve"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "agentation"
+  ]
+}

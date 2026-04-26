@@ -16,6 +16,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Optional;
+
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -57,11 +59,11 @@ class AppMyPageControllerTest {
         ObjectNode watchHistory = mapper.createObjectNode().put("total", 5);
         ObjectNode favorites = mapper.createObjectNode().put("total", 3);
 
-        when(identityClient.getCurrentUser(USER_ID)).thenReturn(profile);
-        when(identityClient.getMyGuardian(USER_ID)).thenReturn(guardian);
-        when(commerceClient.getWallet(USER_ID)).thenReturn(wallet);
-        when(contentClient.getWatchHistory(USER_ID, 10)).thenReturn(watchHistory);
-        when(contentClient.getFavorites(USER_ID, 10)).thenReturn(favorites);
+        when(identityClient.getCurrentUser(USER_ID)).thenReturn(Optional.of(profile));
+        when(identityClient.getMyGuardian(USER_ID)).thenReturn(Optional.of(guardian));
+        when(commerceClient.getWallet(USER_ID)).thenReturn(Optional.of(wallet));
+        when(contentClient.getWatchHistory(USER_ID, 10)).thenReturn(Optional.of(watchHistory));
+        when(contentClient.getFavorites(USER_ID, 10)).thenReturn(Optional.of(favorites));
 
         mockMvc.perform(get("/mypage"))
                 .andExpect(status().isOk())
@@ -82,11 +84,11 @@ class AppMyPageControllerTest {
         ObjectNode guardian = mapper.createObjectNode().put("name", "guardian1");
         ObjectNode wallet = mapper.createObjectNode().put("balance", 500);
 
-        when(identityClient.getCurrentUser(USER_ID)).thenReturn(profile);
-        when(identityClient.getMyGuardian(USER_ID)).thenReturn(guardian);
-        when(commerceClient.getWallet(USER_ID)).thenReturn(wallet);
-        when(contentClient.getWatchHistory(USER_ID, 10)).thenReturn(null);
-        when(contentClient.getFavorites(USER_ID, 10)).thenReturn(null);
+        when(identityClient.getCurrentUser(USER_ID)).thenReturn(Optional.of(profile));
+        when(identityClient.getMyGuardian(USER_ID)).thenReturn(Optional.of(guardian));
+        when(commerceClient.getWallet(USER_ID)).thenReturn(Optional.of(wallet));
+        when(contentClient.getWatchHistory(USER_ID, 10)).thenReturn(Optional.empty());
+        when(contentClient.getFavorites(USER_ID, 10)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/mypage"))
                 .andExpect(status().isOk())
@@ -103,11 +105,11 @@ class AppMyPageControllerTest {
         ObjectNode watchHistory = mapper.createObjectNode().put("total", 2);
         ObjectNode favorites = mapper.createObjectNode().put("total", 1);
 
-        when(identityClient.getCurrentUser(USER_ID)).thenReturn(null);
-        when(identityClient.getMyGuardian(USER_ID)).thenReturn(null);
-        when(commerceClient.getWallet(USER_ID)).thenReturn(wallet);
-        when(contentClient.getWatchHistory(USER_ID, 10)).thenReturn(watchHistory);
-        when(contentClient.getFavorites(USER_ID, 10)).thenReturn(favorites);
+        when(identityClient.getCurrentUser(USER_ID)).thenReturn(Optional.empty());
+        when(identityClient.getMyGuardian(USER_ID)).thenReturn(Optional.empty());
+        when(commerceClient.getWallet(USER_ID)).thenReturn(Optional.of(wallet));
+        when(contentClient.getWatchHistory(USER_ID, 10)).thenReturn(Optional.of(watchHistory));
+        when(contentClient.getFavorites(USER_ID, 10)).thenReturn(Optional.of(favorites));
 
         mockMvc.perform(get("/mypage"))
                 .andExpect(status().isOk())

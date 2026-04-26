@@ -5,9 +5,12 @@ import com.pochak.commerce.entitlement.dto.EntitlementResponse;
 import com.pochak.commerce.entitlement.entity.Entitlement;
 import com.pochak.commerce.entitlement.entity.EntitlementType;
 import com.pochak.commerce.entitlement.repository.EntitlementRepository;
+import com.pochak.commerce.event.EntitlementExpiredEvent;
+import com.pochak.common.event.EventPublisher;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,7 +22,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class EntitlementServiceTest {
@@ -29,6 +32,9 @@ class EntitlementServiceTest {
 
     @Mock
     private EntitlementRepository entitlementRepository;
+
+    @Mock
+    private EventPublisher eventPublisher;
 
     @Test
     @DisplayName("Should return hasAccess=true when user has active subscription")
@@ -149,5 +155,68 @@ class EntitlementServiceTest {
         assertEquals(purchaseId, result.getPurchaseId());
         assertEquals(EntitlementType.SEASON_PASS, result.getEntitlementType());
         assertNotNull(result.getExpiresAt());
+    }
+
+    @Test
+    @DisplayName("Should publish EntitlementExpiredEvent for each revoked entitlement")
+    void testRevokeByPurchaseId_publishesEvents() {
+        Long purchaseId = 10L;
+        Entitlement entitlement1 = Entitlement.builder()
+                .id(1L)
+                .userId(100L)
+                .purchaseId(purchaseId)
+                .entitlementType(EntitlementType.MATCH_TICKET)
+                .scopeType("MATCH")
+                .scopeId(200L)
+                .startsAt(LocalDateTime.now().minusDays(1))
+                .expiresAt(LocalDateTime.now().plusDays(1))
+                .isActive(true)
+                .build();
+        Entitlement entitlement2 = Entitlement.builder()
+                .id(2L)
+                .userId(100L)
+                .purchaseId(purchaseId)
+                .entitlementType(EntitlementType.SEASON_PASS)
+                .scopeType(null)
+                .scopeId(null)
+                .startsAt(LocalDateTime.now().minusDays(5))
+                .expiresAt(LocalDateTime.now().plusDays(25))
+                .isActive(true)
+                .build();
+
+        when(entitlementRepository.findByPurchaseId(purchaseId))
+                .thenReturn(List.of(entitlement1, entitlement2));
+
+        entitlementService.revokeByPurchaseId(purchaseId);
+
+        // Both entitlements revoked
+        assertFalse(entitlement1.getIsActive());
+        assertFalse(entitlement2.getIsActive());
+
+        // EntitlementExpiredEvent published for each
+        ArgumentCaptor<EntitlementExpiredEvent> captor =
+                ArgumentCaptor.forClass(EntitlementExpiredEvent.class);
+        verify(eventPublisher, times(2)).publish(captor.capture());
+
+        List<EntitlementExpiredEvent> events = captor.getAllValues();
+        assertEquals(1L, events.get(0).getEntitlementId());
+        assertEquals("MATCH_TICKET", events.get(0).getEntitlementType());
+        assertEquals("MATCH", events.get(0).getScopeType());
+        assertEquals(200L, events.get(0).getScopeId());
+
+        assertEquals(2L, events.get(1).getEntitlementId());
+        assertEquals("SEASON_PASS", events.get(1).getEntitlementType());
+        assertNull(events.get(1).getScopeType());
+    }
+
+    @Test
+    @DisplayName("Should not publish events when no entitlements found for purchaseId")
+    void testRevokeByPurchaseId_noEntitlements() {
+        Long purchaseId = 99L;
+        when(entitlementRepository.findByPurchaseId(purchaseId)).thenReturn(Collections.emptyList());
+
+        entitlementService.revokeByPurchaseId(purchaseId);
+
+        verifyNoInteractions(eventPublisher);
     }
 }

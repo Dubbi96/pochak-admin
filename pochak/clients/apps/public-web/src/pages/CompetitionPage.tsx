@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Heart,
@@ -25,12 +25,12 @@ import MonthSelector from '@/components/MonthSelector';
 import MatchListItem from '@/components/MatchListItem';
 import type { MatchListItemData } from '@/components/MatchListItem';
 import {
-  fetchCompetitions,
-  fetchLiveContents,
-  fetchVodContents,
-  fetchPopularClips,
-  fetchLiveMatches,
-} from '@/services/webApi';
+  useCompetitionsQuery,
+  useLiveContentsQuery,
+  useVodContentsQuery,
+  usePopularClipsQuery,
+  useLiveMatchesQuery,
+} from '@/queries/publicWebQueries';
 import type { PochakContent, PopularClip, PochakMatch, CompetitionCard } from '@/services/webApi';
 
 type TabKey = 'home' | 'videos' | 'schedule' | 'posts' | 'info';
@@ -586,29 +586,24 @@ export default function CompetitionPage() {
   const [month, setMonth] = useState(10);
   const [isFavorite, setIsFavorite] = useState(false);
 
-  const [competitions, setCompetitions] = useState<CompetitionCard[]>([]);
-  const [liveContents, setLiveContents] = useState<PochakContent[]>([]);
-  const [vodContents, setVodContents] = useState<PochakContent[]>([]);
-  const [clips, setClips] = useState<PopularClip[]>([]);
-  const [matches, setMatches] = useState<PochakMatch[]>([]);
-  const [loading, setLoading] = useState(true);
+  const competitionsQ = useCompetitionsQuery();
+  const liveQ = useLiveContentsQuery();
+  const vodQ = useVodContentsQuery();
+  const clipsQ = usePopularClipsQuery();
+  const matchesQ = useLiveMatchesQuery();
 
-  useEffect(() => {
-    Promise.all([
-      fetchCompetitions(),
-      fetchLiveContents(),
-      fetchVodContents(),
-      fetchPopularClips(),
-      fetchLiveMatches(),
-    ]).then(([comps, live, vod, cl, mt]) => {
-      if (comps) setCompetitions(comps);
-      if (live) setLiveContents(live);
-      if (vod) setVodContents(vod);
-      if (cl) setClips(cl);
-      if (mt) setMatches(mt);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
+  const competitions = competitionsQ.data ?? [];
+  const liveContents = liveQ.data ?? [];
+  const vodContents = vodQ.data ?? [];
+  const clips = clipsQ.data ?? [];
+  const matches = matchesQ.data ?? [];
+
+  const loading =
+    competitionsQ.isPending ||
+    liveQ.isPending ||
+    vodQ.isPending ||
+    clipsQ.isPending ||
+    matchesQ.isPending;
 
   /* ── Posts state ────────────────────────────────────────────────────────── */
   const [posts, setPosts] = useState<PostData[]>([]);

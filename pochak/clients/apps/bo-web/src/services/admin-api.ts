@@ -1,6 +1,5 @@
 /**
- * Admin RBAC API service
- * Calls real admin API via gateway.
+ * Admin RBAC API — calls admin-service via gateway (/api/v1/admin/** → /admin/api/v1/**).
  */
 
 import { gatewayApi } from "@/lib/api-client";
@@ -81,112 +80,307 @@ export interface FunctionItem {
   description: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ApiGroupTree = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ApiMenuTree = any;
+
+function mapGroupNode(api: ApiGroupTree): GroupNode {
+  return {
+    id: api.id,
+    name: api.groupName ?? api.name ?? "",
+    code: api.groupCode ?? api.code ?? "",
+    description: api.description ?? "",
+    parentId: api.parentId ?? null,
+    children: (api.children ?? []).map(mapGroupNode),
+  };
+}
+
+function collectMenuIds(node: ApiMenuTree): number[] {
+  if (!node) return [];
+  const self = node.id != null ? [node.id] : [];
+  const kids = (node.children ?? []).flatMap(collectMenuIds);
+  return [...self, ...kids];
+}
+
+function mapMenuNode(api: ApiMenuTree): MenuNode {
+  return {
+    id: api.id,
+    name: api.menuName ?? api.name ?? "",
+    code: api.menuCode ?? api.code ?? "",
+    type: (api.menuType ?? api.type ?? "PAGE") as MenuNode["type"],
+    url: api.menuPath ?? api.url ?? "",
+    icon: api.iconName ?? api.icon ?? "",
+    displayOrder: api.sortOrder ?? api.displayOrder ?? 0,
+    parentId: api.parentId ?? null,
+    children: (api.children ?? []).map(mapMenuNode),
+  };
+}
+
+function mapAdminMember(api: Record<string, unknown>): AdminMember {
+  return {
+    id: Number(api.id),
+    loginId: String(api.loginId ?? ""),
+    name: String(api.name ?? ""),
+    phone: String(api.phone ?? ""),
+    email: String(api.email ?? ""),
+    lastAccessAt: api.lastLoginAt ? String(api.lastLoginAt) : null,
+    isBlocked: Boolean(api.isBlocked),
+    createdAt: api.createdAt ? String(api.createdAt) : "",
+  };
+}
+
+function mapRoleItem(api: Record<string, unknown>): RoleItem {
+  return {
+    id: Number(api.id),
+    name: String(api.roleName ?? api.name ?? ""),
+    code: String(api.roleCode ?? api.code ?? ""),
+    description: String(api.description ?? ""),
+  };
+}
+
+function mapFunctionItem(api: Record<string, unknown>): FunctionItem {
+  const method = api.httpMethod ? String(api.httpMethod) : "";
+  const pathStr = api.apiPath ? String(api.apiPath) : "";
+  return {
+    id: Number(api.id),
+    code: String(api.functionCode ?? api.code ?? ""),
+    name: String(api.functionName ?? api.name ?? ""),
+    controllerName: [method, pathStr].filter(Boolean).join(" ") || pathStr,
+    description: String(api.description ?? ""),
+  };
+}
+
 // ── API Object ─────────────────────────────────────────────────────
 
 export const adminApi = {
   members: {
-    async list(search?: string): Promise<AdminMember[]> {
-      const params: Record<string, string> = {};
-      if (search) params.search = search;
-      return gatewayApi.get<AdminMember[]>("/api/v1/admin/bo-members", params);
+    async list(_search?: string, page = 0, size = 200): Promise<AdminMember[]> {
+      const params: Record<string, string> = {
+        page: String(page),
+        size: String(size),
+      };
+      const pageData = await gatewayApi.get<{
+        content?: Record<string, unknown>[];
+        number?: number;
+      }>("/api/v1/admin/rbac/members", params);
+      const rows = pageData.content ?? [];
+      return rows.map(mapAdminMember);
     },
-    async create(data: Omit<AdminMember, "id" | "lastAccessAt" | "isBlocked" | "createdAt">): Promise<AdminMember> {
-      return gatewayApi.post<AdminMember>("/api/v1/admin/bo-members", data);
+    async create(
+      data: Omit<AdminMember, "id" | "lastAccessAt" | "isBlocked" | "createdAt"> & { password: string }
+    ): Promise<AdminMember> {
+      const body = {
+        loginId: data.loginId,
+        password: data.password,
+        name: data.name,
+        email: data.email || undefined,
+        phone: data.phone || undefined,
+      };
+      const created = await gatewayApi.post<Record<string, unknown>>("/api/v1/admin/rbac/members", body);
+      return mapAdminMember(created);
     },
-    async update(id: number, data: Partial<AdminMember>): Promise<AdminMember> {
-      return gatewayApi.put<AdminMember>(`/api/v1/admin/bo-members/${id}`, data);
+    async update(
+      id: number,
+      data: Partial<Pick<AdminMember, "name" | "phone" | "email">> & { password?: string }
+    ): Promise<AdminMember> {
+      const body: Record<string, string | undefined> = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+      };
+      const updated = await gatewayApi.put<Record<string, unknown>>(`/api/v1/admin/rbac/members/${id}`, body);
+      return mapAdminMember(updated);
     },
     async delete(id: number): Promise<void> {
-      await gatewayApi.delete(`/api/v1/admin/bo-members/${id}`);
+      await gatewayApi.delete(`/api/v1/admin/rbac/members/${id}`);
     },
     async block(id: number): Promise<void> {
-      await gatewayApi.put(`/api/v1/admin/bo-members/${id}/block`);
+      await gatewayApi.patch(`/api/v1/admin/rbac/members/${id}/block`);
     },
     async unblock(id: number): Promise<void> {
-      await gatewayApi.put(`/api/v1/admin/bo-members/${id}/unblock`);
+      await gatewayApi.patch(`/api/v1/admin/rbac/members/${id}/unblock`);
     },
   },
 
   groups: {
     async tree(): Promise<GroupNode[]> {
-      return gatewayApi.get<GroupNode[]>("/api/v1/admin/groups/tree");
+      const raw = await gatewayApi.get<ApiGroupTree[]>("/api/v1/admin/rbac/groups");
+      return (raw ?? []).map(mapGroupNode);
     },
     async detail(id: number): Promise<GroupDetail> {
-      return gatewayApi.get<GroupDetail>(`/api/v1/admin/groups/${id}`);
+      const [g, memberRows, roleRows] = await Promise.all([
+        gatewayApi.get<ApiGroupTree>(`/api/v1/admin/rbac/groups/${id}`),
+        gatewayApi.get<Record<string, unknown>[]>(`/api/v1/admin/rbac/groups/${id}/members`),
+        gatewayApi.get<Record<string, unknown>[]>(`/api/v1/admin/rbac/groups/${id}/roles`),
+      ]);
+      return {
+        id: g.id,
+        name: g.groupName ?? "",
+        code: g.groupCode ?? "",
+        description: g.description ?? "",
+        parentId: g.parentId ?? null,
+        memberIds: (memberRows ?? []).map((m) => Number(m.id)),
+        roleIds: (roleRows ?? []).map((r) => Number(r.id)),
+      };
     },
-    async create(data: { name: string; code: string; description: string; parentId: number | null }): Promise<GroupNode> {
-      return gatewayApi.post<GroupNode>("/api/v1/admin/groups", data);
+    async create(data: {
+      name: string;
+      code: string;
+      description: string;
+      parentId: number | null;
+    }): Promise<GroupNode> {
+      const body = {
+        groupCode: data.code,
+        groupName: data.name,
+        description: data.description || undefined,
+        parentId: data.parentId ?? undefined,
+      };
+      const created = await gatewayApi.post<ApiGroupTree>("/api/v1/admin/rbac/groups", body);
+      return mapGroupNode(created);
     },
     async update(id: number, data: Partial<GroupDetail>): Promise<GroupDetail> {
-      return gatewayApi.put<GroupDetail>(`/api/v1/admin/groups/${id}`, data);
+      const body = {
+        groupName: data.name,
+        description: data.description,
+      };
+      await gatewayApi.put(`/api/v1/admin/rbac/groups/${id}`, body);
+      return adminApi.groups.detail(id);
     },
     async delete(id: number): Promise<void> {
-      await gatewayApi.delete(`/api/v1/admin/groups/${id}`);
+      await gatewayApi.delete(`/api/v1/admin/rbac/groups/${id}`);
     },
     async assignMembers(groupId: number, memberIds: number[]): Promise<void> {
-      await gatewayApi.put(`/api/v1/admin/groups/${groupId}/members`, { memberIds });
+      await gatewayApi.post(`/api/v1/admin/rbac/groups/${groupId}/members`, { memberIds });
     },
     async assignRoles(groupId: number, roleIds: number[]): Promise<void> {
-      await gatewayApi.put(`/api/v1/admin/groups/${groupId}/roles`, { roleIds });
+      await gatewayApi.post(`/api/v1/admin/rbac/groups/${groupId}/roles`, { roleIds });
+    },
+    async removeMembers(groupId: number, memberIds: number[]): Promise<void> {
+      if (memberIds.length === 0) return;
+      await gatewayApi.deleteWithBody(`/api/v1/admin/rbac/groups/${groupId}/members`, { memberIds });
+    },
+    async removeRoles(groupId: number, roleIds: number[]): Promise<void> {
+      if (roleIds.length === 0) return;
+      await gatewayApi.deleteWithBody(`/api/v1/admin/rbac/groups/${groupId}/roles`, { roleIds });
     },
   },
 
   roles: {
     async list(): Promise<RoleItem[]> {
-      return gatewayApi.get<RoleItem[]>("/api/v1/admin/roles");
+      const raw = await gatewayApi.get<Record<string, unknown>[]>("/api/v1/admin/rbac/roles");
+      return (raw ?? []).map(mapRoleItem);
     },
     async detail(id: number): Promise<RoleDetail> {
-      return gatewayApi.get<RoleDetail>(`/api/v1/admin/roles/${id}`);
+      const r = await gatewayApi.get<Record<string, unknown> & { menus?: ApiMenuTree[]; functions?: Record<string, unknown>[] }>(
+        `/api/v1/admin/rbac/roles/${id}`
+      );
+      const base = mapRoleItem(r);
+      const menuIds = (r.menus ?? []).flatMap(collectMenuIds);
+      const functionIds = (r.functions ?? []).map((f) => Number(f.id));
+      return { ...base, menuIds, functionIds };
     },
     async create(data: Omit<RoleItem, "id">): Promise<RoleItem> {
-      return gatewayApi.post<RoleItem>("/api/v1/admin/roles", data);
+      const body = {
+        roleCode: data.code,
+        roleName: data.name,
+        description: data.description || undefined,
+      };
+      const created = await gatewayApi.post<Record<string, unknown>>("/api/v1/admin/rbac/roles", body);
+      return mapRoleItem(created);
     },
     async update(id: number, data: Partial<RoleItem>): Promise<RoleItem> {
-      return gatewayApi.put<RoleItem>(`/api/v1/admin/roles/${id}`, data);
+      const body = {
+        roleName: data.name,
+        description: data.description,
+      };
+      const updated = await gatewayApi.put<Record<string, unknown>>(`/api/v1/admin/rbac/roles/${id}`, body);
+      return mapRoleItem(updated);
     },
     async delete(id: number): Promise<void> {
-      await gatewayApi.delete(`/api/v1/admin/roles/${id}`);
+      await gatewayApi.delete(`/api/v1/admin/rbac/roles/${id}`);
     },
     async assignMenus(roleId: number, menuIds: number[]): Promise<void> {
-      await gatewayApi.put(`/api/v1/admin/roles/${roleId}/menus`, { menuIds });
+      await gatewayApi.put(`/api/v1/admin/rbac/roles/${roleId}/menus`, { menuIds });
     },
     async assignFunctions(roleId: number, functionIds: number[]): Promise<void> {
-      await gatewayApi.put(`/api/v1/admin/roles/${roleId}/functions`, { functionIds });
+      await gatewayApi.put(`/api/v1/admin/rbac/roles/${roleId}/functions`, { functionIds });
     },
   },
 
   menus: {
     async tree(): Promise<MenuNode[]> {
-      return gatewayApi.get<MenuNode[]>("/api/v1/admin/menus/tree");
+      const raw = await gatewayApi.get<ApiMenuTree[]>("/api/v1/admin/rbac/menus");
+      return (raw ?? []).map(mapMenuNode);
     },
     async detail(id: number): Promise<MenuDetail> {
-      return gatewayApi.get<MenuDetail>(`/api/v1/admin/menus/${id}`);
+      const m = await gatewayApi.get<Record<string, unknown>>(`/api/v1/admin/rbac/menus/${id}`);
+      return {
+        id: Number(m.id),
+        name: String(m.menuName ?? m.name ?? ""),
+        code: String(m.menuCode ?? m.code ?? ""),
+        type: (m.menuType ?? m.type ?? "PAGE") as MenuDetail["type"],
+        url: String(m.menuPath ?? m.url ?? ""),
+        icon: String(m.iconName ?? m.icon ?? ""),
+        displayOrder: Number(m.sortOrder ?? m.displayOrder ?? 0),
+        parentId: m.parentId != null ? Number(m.parentId) : null,
+        i18nLabel: String(m.i18nLabel ?? m.menuName ?? ""),
+      };
     },
     async create(data: Omit<MenuDetail, "id">): Promise<MenuDetail> {
-      return gatewayApi.post<MenuDetail>("/api/v1/admin/menus", data);
+      const body = {
+        menuCode: data.code,
+        menuName: data.name,
+        menuPath: data.url || undefined,
+        iconName: data.icon || undefined,
+        parentId: data.parentId ?? undefined,
+        sortOrder: data.displayOrder,
+      };
+      const created = await gatewayApi.post<Record<string, unknown>>("/api/v1/admin/rbac/menus", body);
+      return adminApi.menus.detail(Number(created.id));
     },
     async update(id: number, data: Partial<MenuDetail>): Promise<MenuDetail> {
-      return gatewayApi.put<MenuDetail>(`/api/v1/admin/menus/${id}`, data);
+      const body = {
+        menuName: data.name,
+        menuPath: data.url,
+        iconName: data.icon,
+        sortOrder: data.displayOrder,
+      };
+      await gatewayApi.put(`/api/v1/admin/rbac/menus/${id}`, body);
+      return adminApi.menus.detail(id);
     },
     async delete(id: number): Promise<void> {
-      await gatewayApi.delete(`/api/v1/admin/menus/${id}`);
+      await gatewayApi.delete(`/api/v1/admin/rbac/menus/${id}`);
     },
   },
 
   functions: {
-    async list(search?: string): Promise<FunctionItem[]> {
-      const params: Record<string, string> = {};
-      if (search) params.search = search;
-      return gatewayApi.get<FunctionItem[]>("/api/v1/admin/functions", params);
+    async list(_search?: string): Promise<FunctionItem[]> {
+      const raw = await gatewayApi.get<Record<string, unknown>[]>("/api/v1/admin/rbac/functions");
+      return (raw ?? []).map(mapFunctionItem);
     },
     async create(data: Omit<FunctionItem, "id">): Promise<FunctionItem> {
-      return gatewayApi.post<FunctionItem>("/api/v1/admin/functions", data);
+      const body = {
+        functionCode: data.code,
+        functionName: data.name,
+        apiPath: data.controllerName || undefined,
+        description: data.description || undefined,
+      };
+      const created = await gatewayApi.post<Record<string, unknown>>("/api/v1/admin/rbac/functions", body);
+      return mapFunctionItem(created);
     },
     async update(id: number, data: Partial<FunctionItem>): Promise<FunctionItem> {
-      return gatewayApi.put<FunctionItem>(`/api/v1/admin/functions/${id}`, data);
+      const body = {
+        functionName: data.name,
+        apiPath: data.controllerName,
+        description: data.description,
+      };
+      const updated = await gatewayApi.put<Record<string, unknown>>(`/api/v1/admin/rbac/functions/${id}`, body);
+      return mapFunctionItem(updated);
     },
     async delete(id: number): Promise<void> {
-      await gatewayApi.delete(`/api/v1/admin/functions/${id}`);
+      await gatewayApi.delete(`/api/v1/admin/rbac/functions/${id}`);
     },
   },
 };

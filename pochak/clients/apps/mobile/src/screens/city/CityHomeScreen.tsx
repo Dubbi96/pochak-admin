@@ -475,6 +475,28 @@ export default function CityHomeScreen() {
   const [selectedRegion, setSelectedRegion] = useState('서울');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [joinedIds, setJoinedIds] = useState<Set<string>>(new Set(joinedOrgIds));
+  const [openOrgs, setOpenOrgs] = useState<OpenOrganization[]>(MOCK_OPEN_ORGS);
+
+  useEffect(() => {
+    import('../../api/client').then(({default: apiClient}) => {
+      apiClient.get('/organizations', {params: {accessType: 'OPEN', size: 10}})
+        .then(res => {
+          const payload = res.data.data ?? res.data;
+          const items = (Array.isArray(payload) ? payload : payload.content ?? []).map((o: any) => ({
+            id: String(o.id),
+            logoUrl: o.logoUrl ?? '',
+            name: o.name,
+            sport: o.sportName ?? '',
+            memberCount: o.memberCount ?? 0,
+            description: o.description ?? '',
+            region: o.siGunGuCode ?? '',
+            accessType: 'OPEN' as const,
+          }));
+          if (items.length > 0) setOpenOrgs(items);
+        })
+        .catch(() => { /* keep mock */ });
+    });
+  }, []);
 
   const handleJoinOrg = useCallback((orgId: string) => {
     joinedOrgIds.add(orgId);
@@ -536,7 +558,7 @@ export default function CityHomeScreen() {
               <Text style={styles.sectionMore}>더보기</Text>
             </TouchableOpacity>
           </View>
-          {MOCK_OPEN_ORGS.map(org => (
+          {openOrgs.map(org => (
             <OpenOrgCard
               key={org.id}
               org={org}

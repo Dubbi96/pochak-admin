@@ -65,6 +65,9 @@ public class Competition {
     @Builder.Default
     private CompetitionVisibility visibility = CompetitionVisibility.PUBLIC;
 
+    @Column(name = "public_slug", length = 100)
+    private String publicSlug;
+
     @Column(name = "invite_code", length = 50, unique = true)
     private String inviteCode;
 
